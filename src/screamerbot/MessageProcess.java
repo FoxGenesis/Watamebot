@@ -16,7 +16,9 @@ import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -31,6 +33,7 @@ import net.dv8tion.jda.api.entities.PrivateChannel;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
+import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleAddEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -495,7 +498,49 @@ public class MessageProcess extends ListenerAdapter{
     @Override
     public void onGuildMemberJoin(GuildMemberJoinEvent event){
         //detects when a new user has joined a guild
-        //System.out.println("Just joined "+event.getGuild());
+        System.out.println(event.getMember().toString() + " just joined.");
+        
+        String send = "SELECT Roles FROM RoleList WHERE GuildID=? AND Member=?";
+        try {
+            PreparedStatement ps = consts.getSQLConnection().prepareStatement(send);
+            ps.setString(1, event.getGuild().getId());
+            ps.setString(2, event.getMember().getUser().getId());
+            
+            ResultSet rs = ps.executeQuery();
+            
+            while(rs.next()){
+                System.out.println("Member has been in the server before");
+                String rolesRaw = rs.getString("Roles");
+                
+                String roles[ ] = rolesRaw.split("-");
+                
+                for(int i = 0; i<roles.length; i++){
+                    Role role = discord.getRoleById(roles[i]);
+                    
+                    if(role == null){
+                        //if the role was invalid, just skip it
+                        //System.out.println("invalid role: "+role);
+                        continue;
+                    }
+                    try{
+                    event.getGuild().addRoleToMember(event.getMember(), role).queue();
+                    
+                    }catch(net.dv8tion.jda.api.exceptions.HierarchyException 
+                            | net.dv8tion.jda.api.exceptions.InsufficientPermissionException ex)
+                        //if it's unable to rename the user due to permissions or heirarchy problems,
+                        //dont worry about it
+                    {
+                        System.out.println("Failed to give role to "+event.getMember());
+                    }
+                }
+            
+            }
+            
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(MessageProcess.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
         
     
     }
@@ -505,13 +550,15 @@ public class MessageProcess extends ListenerAdapter{
     public void onGuildJoin(GuildJoinEvent event){
         try {
             //detects when the bot has just joined a new guild
-            System.out.println("Bot just joined "+event.getGuild()); 
-            String toSend = "INSERT OR IGNORE INTO Guild (GuildID, DunceActive, MalwareStat, ScreamerStat) VALUES ('"+event.getGuild().getId()
-                    +"', 0, 0, 0);";
             
-            java.sql.Statement stmt = consts.getSQLConnection().createStatement();
-            stmt.execute(toSend);
+            String toSend = "INSERT OR IGNORE INTO Guild (GuildID, DunceActive, MalwareStat, ScreamerStat) VALUES (?,0,0,0)";
+            PreparedStatement ps = consts.getSQLConnection().prepareStatement(toSend);
+            
+            ps.setString(1, event.getGuild().getId());
+            ps.executeUpdate();
             //add the new Guild to the database
+            
+            
         } catch (SQLException ex) {
             Logger.getLogger(MessageProcess.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -519,7 +566,12 @@ public class MessageProcess extends ListenerAdapter{
     
     }
      
-     
+    @Override
+    public void onGuildMemberRoleAdd(GuildMemberRoleAddEvent event){
+        
+        System.out.println(event.getMember() + " has just had roles updated.");
+    
+    } 
     
     private boolean starts(MessageReceivedEvent event, String in)
             //simple comparison method. this is so I dont need to copy and paste the same thing over and over.

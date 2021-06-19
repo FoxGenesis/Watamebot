@@ -19,3 +19,4 @@ build.xml
 manifest.mf
 token-debug.txt
 token.txt
+logger.log

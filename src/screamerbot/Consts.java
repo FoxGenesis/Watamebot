@@ -36,6 +36,7 @@ import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.dv8tion.jda.api.entities.GuildChannel;
+import net.dv8tion.jda.api.entities.Member;
 /**
  *
  * @author SkibbleBip
@@ -63,7 +64,7 @@ public class Consts {
     errorLogger = new PrintWriter(new FileWriter(Consts.getLogger(), true));
     threads = new ArrayList();
     
-    BufferedReader br = new BufferedReader(new FileReader("token.txt"));
+    BufferedReader br = new BufferedReader(new FileReader("token-debug.txt"));
     token = br.readLine();
     //obtain the token
     br.close();
@@ -84,7 +85,18 @@ public class Consts {
     java.sql.Statement stmt = connectionHandler.createStatement();
     stmt.execute(newTable);
     stmt.execute("CREATE UNIQUE INDEX IF NOT EXISTS GuildString on Guild (GuildID);");
-    /**Create a new table if it doesn't exist**/
+    /**Create a Guild table if it doesn't exist**/
+    
+    newTable = "CREATE TABLE IF NOT EXISTS RoleList (\n"
+            + "GuildID TEXT,\n"
+            + "Member TEXT,\n"
+            + "Roles TEXT\n"
+            +");";
+    
+    stmt.execute(newTable);
+    stmt.execute("CREATE UNIQUE INDEX IF NOT EXISTS MemberString on RoleList (Member);");
+    /**Create a Role table if it doesn't exist**/
+    
         
         discord = JDABuilder.createDefault(getToken(), 
                 GatewayIntent.GUILD_MEMBERS,
@@ -95,17 +107,20 @@ public class Consts {
         //connect the JDA to the bot account through the token passed from the Consts object
         discord.setAutoReconnect(true);
         //enable autoreconnecting so in case it gets disconnected it can reconnect to the internet socket
-        discord.getPresence().setPresence(OnlineStatus.ONLINE, Activity.playing("Type <help>"));
-        //make the game playing status say "Type <help>"
+        discord.getPresence().setPresence(OnlineStatus.ONLINE, Activity.playing("Initializing..."));
+        //make the game playing status say that it's starting up
         discord.awaitReady();
         //set the JDA to waiting for action
         
         List<Guild> guilds = discord.getGuilds();
         for(int i = 0; i < guilds.size(); i++){
             //If the guilds arent already added to the database, then add them
-            String toSend = "INSERT OR IGNORE INTO Guild (GuildID, DunceActive, MalwareStat, ScreamerStat) VALUES ('"+guilds.get(i).getId()
-                    +"', 0, 0, 0);";
-            stmt.execute(toSend);
+            String toSend = "INSERT OR IGNORE INTO Guild (GuildID, DunceActive, MalwareStat, ScreamerStat) VALUES (?,0,0,0)";
+            PreparedStatement ps = connectionHandler.prepareStatement(toSend);
+            
+            ps.setString(1, guilds.get(i).getId());
+            ps.executeUpdate();
+            
         }
         
         String getAll = "SELECT GuildID, DunceActive, Roles, DunceName FROM Guild";
@@ -146,11 +161,47 @@ public class Consts {
                 //create a naming thread using the guild, roles, and name
             }//end if dActive = 1
         
+        }//end while
+        
+        System.out.println("Adding member roles to database if not added already... This may take a bit of time");
+        
+        for(int i = 0; i < guilds.size(); i++){
+            Guild g = guilds.get(i);
+            List<Member> ms = g.loadMembers().get();
+            for(int j = 0; j < ms.size(); j++){
+                Member m = ms.get(j);
+                
+                String roles = "";
+                String guildID = g.getId();
+                String userID = m.getUser().getId();
+                
+                if(m.getRoles().isEmpty())
+                    continue;
+                
+                roles = roles + m.getRoles().get(0).getId();
+                
+                for(int k = 1; k < m.getRoles().size(); k++){
+                    roles = roles + "-" + m.getRoles().get(k).getId();
+                    //add all the user's roles into a string separated by '-'
+                }
+                
+                String toSend = "INSERT OR IGNORE INTO RoleList (GuildID, Member, Roles) VALUES(?,?,?)";
+                
+                PreparedStatement ps = connectionHandler.prepareStatement(toSend);
+                ps.setString(1, guildID);
+                ps.setString(2, userID);
+                ps.setString(3, roles);
+                
+                ps.executeUpdate();
+                
+            }
+        
         }
         
+        System.out.println("Completed loading members");
         
-        
-    
+        discord.getPresence().setPresence(OnlineStatus.ONLINE, Activity.playing("Type <help>"));
+        //set the game to "Type <help>"
     
     }
     
