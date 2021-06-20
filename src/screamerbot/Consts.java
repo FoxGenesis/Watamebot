@@ -109,7 +109,7 @@ public class Consts {
         //enable autoreconnecting so in case it gets disconnected it can reconnect to the internet socket
         discord.getPresence().setPresence(OnlineStatus.ONLINE, Activity.playing("Initializing..."));
         //make the game playing status say that it's starting up
-        //discord.awaitReady();
+        discord.awaitReady();
         //set the JDA to waiting for action
         
         List<Guild> guilds = discord.getGuilds();
@@ -122,6 +122,67 @@ public class Consts {
             ps.executeUpdate();
             
         }
+        
+        
+        
+        System.out.println("Adding member roles to database if not added already... This may take a bit of time");
+        
+        
+        int gSize = guilds.size();
+        for(int i = 0; i < gSize; i++){
+            
+            
+            Guild g = guilds.get(i);
+            List<Member> ms = g.loadMembers().get();
+            int memberSize = ms.size();
+            System.out.println("Adding roles for "+g.toString());
+            System.out.print("Progress:    ");
+            
+            
+            for(int j = 0; j < memberSize; j++){
+                
+                //a bit of math stuff for the progress bar
+                double percent = (double)j / (double)memberSize;
+                int percentDisplay = (int)Math.round(percent * 100);
+                String toPercentOut = Integer.toString(percentDisplay);
+                for(int k = 0; k <=toPercentOut.length(); k++)
+                    System.out.print('\b');
+                System.out.print(toPercentOut + "%");
+                
+                
+                Member m = ms.get(j);
+                
+                String roles = "";
+                String guildID = g.getId();
+                String userID = m.getUser().getId();
+                
+                if(m.getRoles().isEmpty())
+                    continue;
+                
+                roles = roles + m.getRoles().get(0).getId();
+                
+                for(int k = 1; k < m.getRoles().size(); k++){
+                    roles = roles + "-" + m.getRoles().get(k).getId();
+                    //add all the user's roles into a string separated by '-'
+                }
+                
+                String toSend = "INSERT OR IGNORE INTO RoleList (GuildID, Member, Roles) VALUES(?,?,?)";
+                
+                PreparedStatement ps = connectionHandler.prepareStatement(toSend);
+                ps.setString(1, guildID);
+                ps.setString(2, userID);
+                ps.setString(3, roles);
+                
+                ps.executeUpdate();
+                
+            }
+            System.out.println();
+        
+        }
+        
+        System.out.println("\nCompleted loading members");
+        
+        
         
         String getAll = "SELECT GuildID, DunceActive, Roles, DunceName FROM Guild";
         //Statement stmt = connectionHandler.createStatement();
@@ -163,44 +224,8 @@ public class Consts {
         
         }//end while
         
-        System.out.println("Adding member roles to database if not added already... This may take a bit of time");
         
-        for(int i = 0; i < guilds.size(); i++){
-            Guild g = guilds.get(i);
-            List<Member> ms = g.loadMembers().get();
-            for(int j = 0; j < ms.size(); j++){
-                Member m = ms.get(j);
-                
-                String roles = "";
-                String guildID = g.getId();
-                String userID = m.getUser().getId();
-                
-                if(m.getRoles().isEmpty())
-                    continue;
-                
-                roles = roles + m.getRoles().get(0).getId();
-                
-                for(int k = 1; k < m.getRoles().size(); k++){
-                    roles = roles + "-" + m.getRoles().get(k).getId();
-                    //add all the user's roles into a string separated by '-'
-                }
-                
-                String toSend = "INSERT OR IGNORE INTO RoleList (GuildID, Member, Roles) VALUES(?,?,?)";
-                
-                PreparedStatement ps = connectionHandler.prepareStatement(toSend);
-                ps.setString(1, guildID);
-                ps.setString(2, userID);
-                ps.setString(3, roles);
-                
-                ps.executeUpdate();
-                
-            }
-        
-        }
-        
-        System.out.println("Completed loading members");
-        discord.awaitReady();
-        //set the JDA to waiting for action
+        System.out.println("Done loading!");
         
         discord.getPresence().setPresence(OnlineStatus.ONLINE, Activity.playing("Type <help>"));
         //set the game to "Type <help>"
