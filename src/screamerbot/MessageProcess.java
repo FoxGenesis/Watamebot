@@ -34,6 +34,7 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleAddEvent;
+import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleRemoveEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -512,6 +513,13 @@ public class MessageProcess extends ListenerAdapter{
                 System.out.println("Member has been in the server before");
                 String rolesRaw = rs.getString("Roles");
                 
+                if(rolesRaw == null){
+                    return;
+                    //if the roles string is null, then the roles do not exist
+                    //(possible if user had no roles to begin with) if so, don't
+                    //even bother adding roles
+                }
+                
                 String roles[ ] = rolesRaw.split("-");
                 
                 for(int i = 0; i<roles.length; i++){
@@ -569,7 +577,83 @@ public class MessageProcess extends ListenerAdapter{
     @Override
     public void onGuildMemberRoleAdd(GuildMemberRoleAddEvent event){
         
-        System.out.println(event.getMember() + " has just had roles updated.");
+        System.out.println(event.getMember() + " has just had roles added.");
+        
+        List<Role> totalRoles = event.getMember().getRoles();
+        //obtain ALL the roles of the user
+        
+        String roleString = "";
+        String toSend = "UPDATE RoleList SET Roles = ? WHERE GuildID = ? AND Member = ?";
+        
+        if(totalRoles.isEmpty())
+        //if there are no new roles then set the roles list as null (unlikely but id rather have this
+        //prepared than to fail)
+        {
+            roleString = null;
+        }
+        else{
+            roleString += totalRoles.get(0).getId();
+            
+            for(int i = 1; i < totalRoles.size(); i++)
+                roleString += "-" + totalRoles.get(i).getId();
+        }
+        
+        try {
+            PreparedStatement ps = consts.getSQLConnection().prepareStatement(toSend);
+            ps.setString(1, roleString);
+            ps.setString(2, event.getGuild().getId());
+            ps.setString(3, event.getUser().getId());
+            
+            ps.executeUpdate();
+            
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(MessageProcess.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        
+    
+    }
+    
+    @Override
+    public void onGuildMemberRoleRemove(GuildMemberRoleRemoveEvent event){
+        
+        System.out.println(event.getMember() + " has just had roles removed.");
+        
+        List<Role> totalRoles = event.getMember().getRoles();
+        //obtain ALL the roles of the user
+        
+        String roleString = "";
+        String toSend = "UPDATE RoleList SET Roles = ? WHERE GuildID = ? AND Member = ?";
+        
+        if(totalRoles.isEmpty())
+        //if there are no new roles then set the roles list as null (unlikely but id rather have this
+        //prepared than to fail)
+        {
+            roleString = null;
+        }
+        else{
+            roleString += totalRoles.get(0).getId();
+            
+            for(int i = 1; i < totalRoles.size(); i++)
+                roleString += "-" + totalRoles.get(i).getId();
+        }
+        
+        try {
+            PreparedStatement ps = consts.getSQLConnection().prepareStatement(toSend);
+            ps.setString(1, roleString);
+            ps.setString(2, event.getGuild().getId());
+            ps.setString(3, event.getUser().getId());
+            
+            ps.executeUpdate();
+            
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(MessageProcess.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        
+        
     
     } 
     

@@ -64,7 +64,7 @@ public class Consts {
     errorLogger = new PrintWriter(new FileWriter(Consts.getLogger(), true));
     threads = new ArrayList();
     
-    BufferedReader br = new BufferedReader(new FileReader("token-debug.txt"));
+    BufferedReader br = new BufferedReader(new FileReader("token.txt"));
     token = br.readLine();
     //obtain the token
     br.close();
@@ -109,7 +109,7 @@ public class Consts {
         //enable autoreconnecting so in case it gets disconnected it can reconnect to the internet socket
         discord.getPresence().setPresence(OnlineStatus.ONLINE, Activity.playing("Initializing..."));
         //make the game playing status say that it's starting up
-        discord.awaitReady();
+        //discord.awaitReady();
         //set the JDA to waiting for action
         
         List<Guild> guilds = discord.getGuilds();
@@ -199,6 +199,8 @@ public class Consts {
         }
         
         System.out.println("Completed loading members");
+        discord.awaitReady();
+        //set the JDA to waiting for action
         
         discord.getPresence().setPresence(OnlineStatus.ONLINE, Activity.playing("Type <help>"));
         //set the game to "Type <help>"
