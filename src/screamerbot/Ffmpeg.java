@@ -124,7 +124,18 @@ public class Ffmpeg {
         do{line = reader.readLine();}while(line != null);
         //simply take ffmpeg's piped output and discard it, we dont need it
         
-        p.waitFor();
+        int response = 0;
+        boolean success = false;
+        while(!success){
+            //garuntees that it wont fail if interrupted
+            try{
+                response = p.waitFor();
+                success = true;
+            }catch(InterruptedException e){
+                System.out.println("Temporarily interrupted...");
+            }
+        
+        }
         //wait until its done encoding
         Thread.sleep(2000);
         //sleep for 2 seconds. this garuntees that the file wont still be open when its time to delete it, which will hang the program
@@ -159,7 +170,19 @@ public class Ffmpeg {
         do{line = reader.readLine();}while(line != null);
         //cycle through the pipe output buffer and discard it, we do not need it
         
-        int response = p.waitFor();
+        int response = 0;
+        boolean success = false;
+        while(!success){
+            //garuntees that it wont fail if interrupted
+            try{
+                response = p.waitFor();
+                success = true;
+            }catch(InterruptedException e){
+                System.out.println("Temporarily interrupted...");
+            }
+        
+        }
+
         //wait for the ffmpeg process to finish, get the return response of the wrapped ffmpeg
         //Thread.sleep(2000);
         //sleep for 2 seconds. this gives enough time to make sure the media file is done being processed by ffmpeg, so it has had time to close and allow it
@@ -222,7 +245,18 @@ public class Ffmpeg {
         ///keep cycling through the output of the ffmpeg stream and check it until it states the Mean Volume. this is done by repeadiatly checking the buffer
         ///string until it find where it says "mean_volume: ", which is part of the output that tells the acctual value. it then saves this to its own variable for
         //later
-        int response = p.waitFor();
+        int response = 0;
+        boolean success = false;
+        while(!success){
+            //garuntees that it wont fail if interrupted
+            try{
+                response = p.waitFor();
+                success = true;
+            }catch(InterruptedException e){
+                System.out.println("Temporarily interrupted...");
+            }
+        
+        }
         //wait until the process is done
         
         String temp = null;
