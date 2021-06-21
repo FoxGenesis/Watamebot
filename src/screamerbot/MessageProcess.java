@@ -68,17 +68,7 @@ public class MessageProcess extends ListenerAdapter{
     
     private final PrintWriter errorLogger; 
     
-    
-    /*public MessageProcess(JDA d, ArrayList<Role> roles, ArrayList<String[]> names, ArrayList<String[]> running, ArrayList<Consts.MalwareData> mdb) throws IOException{
-        discord = d;
-        dunceRoles = roles;
-        threads = new ArrayList();//new MyThread();
-        dunceNames = names;
-        dunceRunning = running;
-        malwareTimeout = mdb;
-        
-        errorLogger = new PrintWriter(new FileWriter(Consts.getLogger(), true));
-    }*/
+
     public MessageProcess(Consts c) throws IOException{
         consts = c;
         discord = c.getJDA();
@@ -105,7 +95,7 @@ public class MessageProcess extends ListenerAdapter{
         }
         
          
-         if(starts(event, "<help>") && !botFlag)
+         if(starts(event, "<help>") && !botFlag){
              //if the message contains the help command, simply send a message containing the infomration on how the bot works
              event.getChannel().sendMessage("How to use: \n\n\t<help>: Prints this message.\n\t<enable>: enable loud/screamer videos detection."
                      + "\n\t<disable>: disable loud/screamer videos detection\n\t<invite>: Direct Messages user the invite for the bot."
@@ -116,8 +106,9 @@ public class MessageProcess extends ListenerAdapter{
                      + "\n\t<bangtoggle>: toggles this function on or off."
                      + "\n\t<malware> [role] [ChannelID] Removes all roles from a user and gives them the timeout role, pings them in the timeout chat."
                      + "\n\t<malwaretoggle> Enables or disables the act of automatically jailing users who upload malware.").queue();
+         }
          //end help
-         if(starts(event, "<invite>") && !botFlag)
+         else if(starts(event, "<invite>") && !botFlag)
              //if the message contains the invite command, send a private message to the user that contains the bot invite url
          {
              PrivateChannel channel = event.getAuthor().openPrivateChannel().complete();
@@ -140,7 +131,7 @@ public class MessageProcess extends ListenerAdapter{
             //inform the log terminal that a user requested an invite for the bot
              
          }//end invite
-         if(starts(event, "<enable>") && !botFlag && userAllowed(event))
+         else if(starts(event, "<enable>") && !botFlag && userAllowed(event))
              //if the message contains the enable command, the user is not a bot, and the user is an admin
          {
              if(isBlocking(event))
@@ -160,7 +151,7 @@ public class MessageProcess extends ListenerAdapter{
              
                          
          }//end enable
-         if(starts(event, "<disable>") && !botFlag && userAllowed(event))
+         else if(starts(event, "<disable>") && !botFlag && userAllowed(event))
              //if the message contains the disable command, the user is not a bot, and the user is an admin
          {
              if(!isBlocking(event))
@@ -178,7 +169,7 @@ public class MessageProcess extends ListenerAdapter{
              }
                
          }
-         if(starts(event,"<bang>") && !botFlag && userAllowed(event)){
+         else if(starts(event,"<bang>") && !botFlag && userAllowed(event)){
              
              
              //if(!event.getMessage().getMentionedRoles().isEmpty()){
@@ -219,7 +210,7 @@ public class MessageProcess extends ListenerAdapter{
                 
          
          }//end if starts with <bang>
-         if(event.getMessage().getContentDisplay().trim().equals("<bangtoggle>") && userAllowed(event) && !botFlag){
+         else if(event.getMessage().getContentDisplay().trim().equals("<bangtoggle>") && userAllowed(event) && !botFlag){
             //toggle the bang
         
             Consts.GuildInfo gi = consts.getGuildInfo(event.getGuild().getId());
@@ -238,7 +229,7 @@ public class MessageProcess extends ListenerAdapter{
              
          
          }
-         if(starts(event,"<malware>") && !botFlag && userAllowed(event)){
+         else if(starts(event,"<malware>") && !botFlag && userAllowed(event)){
              //<malware> [role] [ChannelID] 
              String msg = event.getMessage().getContentRaw();
              try{
@@ -267,7 +258,7 @@ public class MessageProcess extends ListenerAdapter{
              }
          
          }
-         if(starts(event,"<malwaretoggle>") && !botFlag && userAllowed(event)){
+         else if(starts(event,"<malwaretoggle>") && !botFlag && userAllowed(event)){
              
              Consts.GuildInfo gi = consts.getGuildInfo(event.getGuild().getId());
              if(gi.getGuildChannel() != null){
@@ -291,6 +282,88 @@ public class MessageProcess extends ListenerAdapter{
              }
          
          }
+         
+         /*Temporary*/
+         else if(starts(event, "<nametoggle>") && !botFlag && userAllowed(event)){
+             boolean current = consts.getGuildInfo(event.getGuild().getId()).getRenamingStatus();
+             
+             if(current){
+                 System.out.println("Disabling naming based on text in "+event.getGuild());
+                 event.getChannel().sendMessage("Disabling naming based on text").queue();
+             }
+             else{
+                 System.out.println("Enabling naming based on text in "+event.getGuild());
+                 event.getChannel().sendMessage("Enabling naming based on text").queue();
+             }
+             
+             consts.toggleRenamingStatus(event.getGuild().getId());
+             
+             //event.getMessage().delete().queue();
+         
+         }
+         
+         if(!botFlag && isRenaming(event)){
+             String msgUpper = event.getMessage().getContentRaw().toUpperCase();
+            if(msgUpper.startsWith("IM ")){
+                String m = event.getMessage().getContentRaw();
+                
+                int endingPoint = 29;
+                if(msgUpper.length() < endingPoint)
+                    endingPoint = msgUpper.length();
+                
+                String name = m.substring(3, msgUpper.indexOf("IM")+endingPoint);
+
+                try{
+                event.getGuild().modifyNickname(event.getMember(), name).queue();
+                }catch(net.dv8tion.jda.api.exceptions.HierarchyException 
+                               | net.dv8tion.jda.api.exceptions.InsufficientPermissionException ex)
+                           //if it's unable to rename the user due to permissions or heirarchy problems,
+                           //dont worry about it
+                       {/*Dont do anything, this is a soft error*/}
+
+            }
+            if(msgUpper.startsWith("I'M ")){
+                String m = event.getMessage().getContentRaw();
+                
+                int endingPoint = 28;
+                if(msgUpper.length() < endingPoint)
+                    endingPoint = msgUpper.length();
+                
+                String name = m.substring(4, msgUpper.indexOf("I'M")+endingPoint);
+
+                try{
+                event.getGuild().modifyNickname(event.getMember(), name).queue();
+                }catch(net.dv8tion.jda.api.exceptions.HierarchyException 
+                               | net.dv8tion.jda.api.exceptions.InsufficientPermissionException ex)
+                           //if it's unable to rename the user due to permissions or heirarchy problems,
+                           //dont worry about it
+                       {/*Dont do anything, this is a soft error*/}
+
+            }
+            else if(msgUpper.startsWith("I AM ")){
+                String m = event.getMessage().getContentRaw();
+                
+                int endingPoint = 27;
+                if(msgUpper.length() < endingPoint)
+                    endingPoint = msgUpper.length();
+                
+                String name = m.substring(5, msgUpper.indexOf("I AM")+endingPoint);
+
+                try{
+                event.getGuild().modifyNickname(event.getMember(), name).queue();
+                }catch(net.dv8tion.jda.api.exceptions.HierarchyException 
+                               | net.dv8tion.jda.api.exceptions.InsufficientPermissionException ex)
+                           //if it's unable to rename the user due to permissions or heirarchy problems,
+                           //dont worry about it
+                       {/*Dont do anything, this is a soft error*/}
+
+            }
+         
+         }
+         
+         
+         
+         /*End temporary*/
          
          //end of commands
          String text = event.getMessage().getContentRaw().toUpperCase();
@@ -540,6 +613,7 @@ public class MessageProcess extends ListenerAdapter{
                     {
                         System.out.println("Failed to give role to "+event.getMember());
                     }
+                    
                 }
             
             }
@@ -576,6 +650,7 @@ public class MessageProcess extends ListenerAdapter{
      
     @Override
     public void onGuildMemberRoleAdd(GuildMemberRoleAddEvent event){
+        //when a member has roles given to it
         
         System.out.println(event.getMember() + " has just had roles added.");
         
@@ -617,6 +692,7 @@ public class MessageProcess extends ListenerAdapter{
     
     @Override
     public void onGuildMemberRoleRemove(GuildMemberRoleRemoveEvent event){
+        //when a member has roles taken away
         
         System.out.println(event.getMember() + " has just had roles removed.");
         
@@ -677,7 +753,7 @@ public class MessageProcess extends ListenerAdapter{
     }
     
     private boolean isBlocking(MessageReceivedEvent event){
-        /*check if the server is currently blocking videos or not*/
+        /*check if the guild is currently blocking videos or not*/
         String gid = event.getGuild().getId();
         if(consts.getGuildInfo(gid).getScreamerStatus())
             return true;
@@ -685,6 +761,15 @@ public class MessageProcess extends ListenerAdapter{
         return false;
         //otherwise return false
         
+    }
+    
+    private boolean isRenaming(MessageReceivedEvent event){
+        //check if the guild is renaming users with "i'm" in their message
+        String gid = event.getGuild().getId();
+        if(consts.getGuildInfo(gid).getRenamingStatus())
+            return true;
+        return false;
+    
     }
      
     
