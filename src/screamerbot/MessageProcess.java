@@ -31,6 +31,7 @@ import net.dv8tion.jda.api.entities.GuildChannel;
 import net.dv8tion.jda.api.entities.Message.Attachment;
 import net.dv8tion.jda.api.entities.PrivateChannel;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleAddEvent;
@@ -302,62 +303,68 @@ public class MessageProcess extends ListenerAdapter{
          
          }
          
-         if(!botFlag && isRenaming(event)){
-             String msgUpper = event.getMessage().getContentRaw().toUpperCase();
+         if(!botFlag && isRenaming(event) && !isDunce(event)){
+            String nameMsg = event.getMessage().getContentRaw();
+            String msgUpper = nameMsg.toUpperCase();
+            
+            boolean triggered = false;
+             
+            String toName = "";
+            int endingPoint;
+            int start = 0;
+            
             if(msgUpper.startsWith("IM ")){
-                String m = event.getMessage().getContentRaw();
-                
-                int endingPoint = 29;
-                if(msgUpper.length() < endingPoint)
-                    endingPoint = msgUpper.length();
-                
-                String name = m.substring(3, msgUpper.indexOf("IM")+endingPoint);
-
-                try{
-                event.getGuild().modifyNickname(event.getMember(), name).queue();
-                }catch(net.dv8tion.jda.api.exceptions.HierarchyException 
-                               | net.dv8tion.jda.api.exceptions.InsufficientPermissionException ex)
-                           //if it's unable to rename the user due to permissions or heirarchy problems,
-                           //dont worry about it
-                       {/*Dont do anything, this is a soft error*/}
-
+                toName = "IM ";
+                start = toName.length();
+                triggered = true;
             }
-            if(msgUpper.startsWith("I'M ")){
-                String m = event.getMessage().getContentRaw();
-                
-                int endingPoint = 28;
-                if(msgUpper.length() < endingPoint)
-                    endingPoint = msgUpper.length();
-                
-                String name = m.substring(4, msgUpper.indexOf("I'M")+endingPoint);
-
-                try{
-                event.getGuild().modifyNickname(event.getMember(), name).queue();
-                }catch(net.dv8tion.jda.api.exceptions.HierarchyException 
-                               | net.dv8tion.jda.api.exceptions.InsufficientPermissionException ex)
-                           //if it's unable to rename the user due to permissions or heirarchy problems,
-                           //dont worry about it
-                       {/*Dont do anything, this is a soft error*/}
-
+            else if(msgUpper.startsWith("I'M ")){
+                toName = "I'M ";
+                start = toName.length();
+                triggered = true;
             }
             else if(msgUpper.startsWith("I AM ")){
-                String m = event.getMessage().getContentRaw();
+                toName = "I AM ";
+                start = toName.length();
+                triggered = true;
+            }
+            else if(msgUpper.contains(" IM ")){
+                toName = " IM ";
+                start = msgUpper.indexOf(toName)+ toName.length();
+                triggered = true;
+            }
+            else if(msgUpper.startsWith(" I'M ")){
+                toName = " I'M ";
+                start = msgUpper.indexOf(toName)+ toName.length();
+                triggered = true;
+            }
+            else if(msgUpper.startsWith(" I AM ")){
+                toName = " I AM ";
+                start = msgUpper.indexOf(toName)+ toName.length();
+                triggered = true;
+            }
+            
+            if(triggered == true){
+                int len = nameMsg.length() - start;
+                if(len > 32)
+                    len = 32;
                 
-                int endingPoint = 27;
-                if(msgUpper.length() < endingPoint)
-                    endingPoint = msgUpper.length();
+                endingPoint = start + len;
                 
-                String name = m.substring(5, msgUpper.indexOf("I AM")+endingPoint);
-
+                String name = nameMsg.substring(start, endingPoint);
+                name = name.trim();
+                
                 try{
-                event.getGuild().modifyNickname(event.getMember(), name).queue();
+                    event.getGuild().modifyNickname(event.getMember(), name).queue();
+                    System.out.println("Renamed "+ event.getMember() + " to "+name);
                 }catch(net.dv8tion.jda.api.exceptions.HierarchyException 
                                | net.dv8tion.jda.api.exceptions.InsufficientPermissionException ex)
                            //if it's unable to rename the user due to permissions or heirarchy problems,
                            //dont worry about it
                        {/*Dont do anything, this is a soft error*/}
-
+                
             }
+                
          
          }
          
@@ -374,10 +381,7 @@ public class MessageProcess extends ListenerAdapter{
              //hacky way to see if contains attachments. also checks if the bot is blocking loud videos and if the offender DID NOT
              //say the video was loud. this is doen by converting the message text to uppercase and checking if it mentions being loud 
              //or having "ear rape". I added checking for ||LOUD|| because some *BITCHES* like to hide the loud text using spoiler tags
-             
-             
-             //boolean status = false;
-             //status flag, defauts to false. if true, it means the message is too loud or is a screamer 
+
              int status = 0;
              //status flag, defaults to 0. 0 is no problem, 1 is too loud, 2 is a crasher. 
              
@@ -732,6 +736,18 @@ public class MessageProcess extends ListenerAdapter{
         
     
     } 
+    
+    private boolean isDunce(MessageReceivedEvent event){
+        Role[] dunceRoles = consts.getGuildInfo(event.getGuild().getId()).getDunceRoles();
+        List<Role> roles = event.getMember().getRoles();
+        
+        for(int i = 0; i < roles.size(); i++)
+            for(int j = 0; j < dunceRoles.length; j++)
+                if(roles.get(i).getId().equals(dunceRoles[j].getId()))
+                    return true;
+        return false;
+    }
+    
     
     private boolean starts(MessageReceivedEvent event, String in)
             //simple comparison method. this is so I dont need to copy and paste the same thing over and over.
