@@ -59,16 +59,31 @@ public class MyThread extends Thread{
     }
     
     public void run(){
+        
+        String lastUser = null;
+        
         System.out.println("Started thread "+this.getId());
         while(isRunning){
             //loop while the running flag is true
             
             try {Thread.sleep(1000);} catch (InterruptedException ex) {Logger.getLogger(MyThread.class.getName()).log(Level.SEVERE, null, ex);}
             //sleep so I dont accedently trigger discord's anti-spam
-            List<Member> members = guild.loadMembers().get();
+            
+            
+            List<Member> members = guild.retrieveMembersByPrefix("!", 100).get();
+            
+            members.removeIf(
+                    m -> (guild.getMemberById(guild.getJDA().getSelfUser().getIdLong()).getRoles().get(0).getPosition() <= m.getRoles().get(0).getPosition())
+            
+            
+                );
+            
+            //List<Member> members = guild.loadMembers().get();
             
             for(int i = 0; i<members.size(); i++){
                 //get the member list of the guild, and cycle through each memeber.
+                
+                //System.out.println("Member list size: " + members.size());
                 
                 if(members.get(i).getEffectiveName().startsWith("!")){
                     //if the member has a name with '!' at the beginning
@@ -92,6 +107,22 @@ public class MyThread extends Thread{
                         try {Thread.sleep(1000);} catch (InterruptedException ex) {Logger.getLogger(MyThread.class.getName()).log(Level.SEVERE, null, ex);}
                         //sleep so I dont accedently trigger discord's anti-spam
                         
+                        /*****************DEBUGGING********************/
+                        if(lastUser != null){
+                            if(lastUser.equals(members.get(i).getId())){
+                                System.out.println("DEBUGGING INFINATE LOOP RENAMING\n" +
+                                        "Memberlist size: " + guild.getMembers().size() + "\n"
+                                        + "Total member size: " + guild.getMemberCount() + "\n"
+                                        + "Guild:" + guild + "\n"
+                                        + "Member: " + members.get(i)
+                                        );
+                            }
+                            else
+                                lastUser = members.get(i).getId();
+                        }
+                        
+                        /*********************************************/
+                            
                         
                     for(int j = 0; j<roles.size(); j++)
                         //add each role to the dunce user
@@ -102,8 +133,10 @@ public class MyThread extends Thread{
                         //if it's unable to rename the user due to permissions or heirarchy problems,
                         //dont worry about it
                     {/*Dont do anything, this is a soft error*/}
-                }
-            }
+                }//if(members.get(i).getEffectiveName().startsWith("!"))
+            }//for
+            
+            //System.out.println("sdsdasd");
             
 
         

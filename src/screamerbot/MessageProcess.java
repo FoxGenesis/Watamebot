@@ -396,48 +396,80 @@ public class MessageProcess extends ListenerAdapter{
              
              
              
-             ArrayList<Attachment>list = new ArrayList<>();
+             ArrayList<Attachment>videos = new ArrayList<>();
              //arraylist to hold all the attachments. sometimes messages can have more than one.
-             ArrayList<Attachment>allAttachments = new ArrayList<>();
+             //ArrayList<Attachment>allAttachments = new ArrayList<>();
              
-             for(int i = 0; i< event.getMessage().getAttachments().size(); i++)
-                 list.add(event.getMessage().getAttachments().get(i));
+             ArrayList<Attachment> allAttachments = new ArrayList<>();
+             
+             for(int i = 0; i< event.getMessage().getAttachments().size(); i++){
+                 Attachment a = event.getMessage().getAttachments().get(i);
+                 if(a.isVideo())
+                     videos.add(a);
+                 //if(a.isImage())
+                 allAttachments.add(a);
+                 
+             }
+                 //list.add(event.getMessage().getAttachments().get(i));
              //cycle through the event's attachments and add them to the list
-             for(int i = 0; i< list.size(); i++){
+             //for(int i = 0; i< list.size(); i++){
                  //remove any non-videos
-                 if(!list.get(i).isVideo())
-                     list.remove(i);
-             }
+                 //if(!list.get(i).isVideo())
+                 //    list.remove(i);
+             //}
              
-             for(int i = 0; i< event.getMessage().getAttachments().size(); i++)
-                 allAttachments.add(event.getMessage().getAttachments().get(i));
+             //for(int i = 0; i< event.getMessage().getAttachments().size(); i++)
+              //   allAttachments.add(event.getMessage().getAttachments().get(i));
              
              
-             for(int i = 0; i< allAttachments.size(); i++){
+             //for(int i = 0; i< allAttachments.size(); i++){
                  //remove any non-image
-                 if(!allAttachments.get(i).isImage() && !allAttachments.get(i).isVideo())
-                     allAttachments.remove(i);
-             }
+               //  if(!allAttachments.get(i).isImage() && !allAttachments.get(i).isVideo())
+              //       allAttachments.remove(i);
+             //}
              
              
              
-             for(int i = 0; i<list.size(); i++){
+             for(int i = 0; i<videos.size(); i++){
                  //for each video, download it and process it. this is done by downloaing the media to a temp file,
                  //passing it to the MediaConverter object to test, and getting the boolean value of whether it 
                  //detected an offense.
                  //
                  
-                 String out = "tmp"+fs+"temp."+list.get(i).getFileExtension();
+                 String out = "tmp"+fs+"temp."+videos.get(i).getFileExtension();
                  //get the name of the temp media fie
                  //File temp = new File(out);
                  //initialize that file object
-                 File temp = list.get(i).downloadToFile(out).join();
+                 File temp = videos.get(i).downloadToFile(out).join();
                  //download the media file to that initialized temp file
                  
                  //URL url = null;
                  try {
 
                       status = converter.test(temp);
+                      
+                      if(status != 0){
+                        try{
+                            event.getMessage().delete().queue();
+                            //delete the offending message
+                        }catch(InsufficientPermissionException ex){
+                            System.out.println("Error, bot attempted to delete an offending message in "+event.getGuild()+", but deleting messages is not enabled.");
+                        }
+
+                        System.out.println("Video removed in "+ event.getGuild().toString());///inform the logging terminal that a essage was removed
+
+                        if(status == 1)
+                                event.getChannel().sendMessage(event.getAuthor().getAsMention() + " Please do not post loud videos without first stating that the video is "
+                                + "loud in the message. If you are going to post a loud video, describe in the same message that it is loud."/*\n```Note: this bot is still "
+                                + "in development, mistakes can happen, please let the developer Spazmaster#8989 know of a bug or mistake```"*/).queue();
+                        else if(status == 2)
+                            event.getChannel().sendMessage(event.getAuthor().getAsMention() + "DETECTED CRASHER FILE!!! Uploading files designed to crash discord will"
+                                +" get you banned or timed out. Do not upload them.\n```Note: this feature is still in development, mistakes can happen, please let "
+                                    +"the developer Spazmaster#8989 know of a bug or mistake```").queue();
+                        //deleted the offender's message, post a warning
+                        
+                        break;
+                     }
  
                  }
                  catch (IOException | InterruptedException ex) {
@@ -445,7 +477,8 @@ public class MessageProcess extends ListenerAdapter{
                  }
                  
                  
-             }
+                 
+             }//video loop
              
              for(int i=0; i<allAttachments.size(); i++){
                  URL url = null;
@@ -502,25 +535,7 @@ public class MessageProcess extends ListenerAdapter{
              //download all the files in the one message
              //event.getMessage().
              
-             if(status != 0){
-                try{
-                event.getMessage().delete().queue();///delete the offending message
-                }catch(InsufficientPermissionException ex){
-                    System.out.println("Error, bot attempted to delete an offending message in "+event.getGuild()+", but deleting messages is not enabled.");
-                }
-                
-                System.out.println("Video removed in "+ event.getGuild().toString());///inform the logging terminal that a essage was removed
-                
-                if(status == 1)
-                        event.getChannel().sendMessage(event.getAuthor().getAsMention() + " Please do not post loud videos without first stating that the video is "
-                        + "loud in the message. If you are going to post a loud video, describe in the same message that it is loud."/*\n```Note: this bot is still "
-                        + "in development, mistakes can happen, please let the developer Spazmaster#8989 know of a bug or mistake```"*/).queue();
-                else if(status == 2)
-                    event.getChannel().sendMessage(event.getAuthor().getAsMention() + "DETECTED CRASHER FILE!!! Uploading files designed to crash discord will"
-                        +" get you banned or timed out. Do not upload them.\n```Note: this feature is still in development, mistakes can happen, please let "
-                            +"the developer Spazmaster#8989 know of a bug or mistake```").queue();
-                //deleted the offender's message, post a warning
-             }
+             
              
          }//end get attachments
          

@@ -224,6 +224,15 @@ public class Consts {
         
         }//end while
         
+        if(! new File("tmp").exists()){
+            new File("tmp").mkdirs();
+            System.out.println("Created tmp directory");
+        }
+        if(! new File("repo").exists()){
+            new File("repo").mkdirs();
+            System.out.println("Created repo directory");
+        }
+        
         
         System.out.println("Done loading!");
         
