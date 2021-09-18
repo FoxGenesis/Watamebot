@@ -89,6 +89,9 @@ public class MyThread extends Thread{
                             System.out.println("Set the nickname of "+ members.get(i).toString()+" to "+dunceName);
                         }
                         
+                        try {Thread.sleep(1000);} catch (InterruptedException ex) {Logger.getLogger(MyThread.class.getName()).log(Level.SEVERE, null, ex);}
+                        //sleep so I dont accedently trigger discord's anti-spam
+                        
                         
                     for(int j = 0; j<roles.size(); j++)
                         //add each role to the dunce user

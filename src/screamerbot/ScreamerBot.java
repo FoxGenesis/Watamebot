@@ -48,9 +48,7 @@ public class ScreamerBot {
         
         discord = consts.getJDA();
         
-        //discord.addEventListener(new MessageProcess(discord, consts.getDunces(), consts.getDunceNames(), consts.getDunceActive(), consts.getMalwareDatabasesRaw()));
         discord.addEventListener(new MessageProcess(consts));
-         //discord.addEventListener(new UserJoinModule(consts));
         //start listening
     }
     
@@ -91,7 +89,10 @@ public class ScreamerBot {
                 consts.getSQLConnection().close();
                 System.out.println("Closed connection to SQL Server...");
                 //close the SQL server
-                consts.getJDA().shutdown();
+                consts.terminateAllThreads();
+                System.out.println("Stopped all renaming threads");
+                
+                consts.getJDA().shutdownNow();
                 System.out.println("Shut down bot instance...");
                 //shut down the bot instance
                 System.out.println("Shut down complete. Exiting.");

@@ -19,6 +19,7 @@ import java.net.URLConnection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.ResultSet;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -37,6 +38,7 @@ import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleAddEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleRemoveEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.exceptions.HierarchyException;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.internal.requests.Requester;
@@ -58,6 +60,13 @@ import net.dv8tion.jda.internal.requests.Requester;
  * videos, if it contains the text "off", the it considers the video blocking disabled.
  */  
 public class MessageProcess extends ListenerAdapter{
+    
+    String[] baddies = {"srkpetr", "danila264", "loki064", "cfyzz007", "sunderdt", "keshakesha", "hunterfuck1", "irinateku1a", "fake3203",
+    "sfwselkj", "smertb08", "dsfdsfdsg", "sheriff1", "toshqua94", "djdjdjdj", "setgo95", "nazipzz", "1503957", "I2xGoogle", "fhvfy92",
+    "fake7777", "artemovaleksandr", "msfast92", "Jagged Trade", "Worried Selection", "Dopey Temperature", "Direct", "Fluid Pull", "Admired Parent",
+    "Plump Independence", "Ajar", "Married", "Valuable", "Woeful", "Incomplete", "Disguised", "Exciting", "Shy Flower", "Raw", "Dutiful", 
+    "Generous", "Frank Mouse", "Adorable", "Bossy", "Angry Economics", "Regular Weakness", "Immaterial"};
+    
     
     final private char fs = File.separatorChar;///windows uses '\', Unix uses '/'
     final private JDA discord;
@@ -577,6 +586,65 @@ public class MessageProcess extends ListenerAdapter{
     public void onGuildMemberJoin(GuildMemberJoinEvent event){
         //detects when a new user has joined a guild
         System.out.println(event.getMember().toString() + " just joined.");
+        
+        boolean defaultPfp = false;
+        boolean isNew   = false;
+        boolean isBaddie = false;
+        /*flags if these guys are known to be repeat offenders*/
+        
+        
+        if(event.getUser().getAvatarUrl() == null)
+            defaultPfp = true;
+        
+        OffsetDateTime date = event.getUser().getTimeCreated();
+        
+        if((System.currentTimeMillis()*1000) - date.toEpochSecond() <= 604800 )
+            isNew = true;
+        
+        for(int i = 0; i < baddies.length; i++){
+            if(event.getUser().getName().equals(baddies[i])){
+                isBaddie = true;
+                break;
+            }
+        }
+        
+        int total = 0;
+        if(defaultPfp)
+            total++;
+        if(isNew)
+            total++;
+        if(isBaddie)
+            total++;
+        //calculate if the new joiner is SUS
+        
+        
+        if(total >= 2 && event.getGuild().getId().equals("398590278404931584")){
+            PrivateChannel channel = event.getUser().openPrivateChannel().complete();
+             //get the private message channel of the user who asked for the invite
+             
+            channel.sendMessage("You were banned for being suspected of a spam bot. This bot uses a series of checks to predict"
+                    + " if an account is hijacked by a bot. If this was a mistake, please contact a member of the mod team.").submit().whenComplete((message, error) -> {
+                //send the ban message to DMs
+                if(error!=null)
+                    System.out.println("Attempted to DM a ban message to "+event.getUser()+" but DMs were disabled");
+                //if for whatever reason the bot could not send the dm
+                else{
+                    event.getGuild().getTextChannelById("536462696997060628").sendMessage("Banned "+event.getUser()+" for being suspected of a spambot").queue();
+                }
+
+            });
+            channel.close();
+            try{
+                event.getMember().ban(0, "Automatic detection of being a spambot").queue();
+            }catch(InsufficientPermissionException | HierarchyException ex){
+                System.out.println("Attempted to ban "+event.getUser()+" for being a spambot, but permissions are not enabled");
+            }
+            
+            return;
+            /*user got banned, we can stop*/
+        
+        }
+        
         
         String send = "SELECT Roles FROM RoleList WHERE GuildID=? AND Member=?";
         try {

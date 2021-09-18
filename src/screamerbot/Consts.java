@@ -743,4 +743,13 @@ public class Consts {
         //add it to the heap of threads
     }
     
+    public void terminateAllThreads(){
+        /*close all naming threads*/
+        while(!this.threads.isEmpty()){
+            this.threads.get(0).stopRunning();
+            this.threads.remove(0);
+        
+        }
+    
+    }
 }
