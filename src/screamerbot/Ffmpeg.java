@@ -158,7 +158,7 @@ public class Ffmpeg {
     }
     
     
-    public ArrayList<byte[]> grabSegments(byte[] buffer) throws IOException{
+    public ArrayList<byte[]> grabSegments(byte[] buffer) throws IOException, InterruptedException{
         ArrayList<byte[]> output = new ArrayList<>();
         
         
@@ -201,7 +201,7 @@ public class Ffmpeg {
         }
         p.getInputStream().close();
         p.destroy();
-        p = null;
+        //p = null;
         
         if(seconds < 0)
             return null;
@@ -209,6 +209,8 @@ public class Ffmpeg {
         int count = 0;
         
         while(count < seconds){
+            
+
             
             if(seconds - count < 1.0)
                 //depending on if there is data duration that can occupy a full second, or the remaining
@@ -254,13 +256,32 @@ public class Ffmpeg {
             //flush and close the STDIN stream
             
             
-            while(ffrt.blocking.get())
+            //while(ffrt.blocking.get())
                 //spinblock until thread reader is ready to pass the read data
-                ;
+                //;
+                
+            boolean spinning;
+            
+            do{
+                try{  
+                    spinning = false;
+                    ffrt.join();
+                    //block until reader thread is finished
+                }catch(InterruptedException ex){
+                    System.out.println("Reader was temporarily interrupted");
+                    spinning = true;
+                }
+            
+            }while(spinning == true);
+            //spin while interrupted
+            
+            
             
             stdOut = ffrt.getStdOut();
             //obtain the STDOUT piped data from the reader thread
             
+            if(stdOut == null)
+                throw new NullPointerException();
             
             output.add(stdOut);
             //add the wav data to the collection of datas.
@@ -402,7 +423,7 @@ public class Ffmpeg {
         //convert it into an actual double value from the string value
     }
     
-    public double getVolumeMean(byte[] in) throws IOException{
+    public double getVolumeMean(byte[] in) throws IOException, InterruptedException{
         String nullLocation;
         if(os)
             nullLocation = "NUL";
@@ -435,10 +456,20 @@ public class Ffmpeg {
         p.getOutputStream().flush();
         p.getOutputStream().close();
 
+        boolean spinning;
         
-        while(ffrt.blocking.get())
-            //block until reader thread is garunteed to have finished.
-            ;
+        do{
+                try{  
+                    spinning = false;
+                    ffrt.join();
+                    //block until reader thread is finished
+                }catch(InterruptedException ex){
+                    System.out.println("Reader was temporarily interrupted");
+                    spinning = true;
+                }
+            
+        }while(spinning == true);
+            //spin while interrupted
         
         String[] result = new String(ffrt.getStdOut()).split("\n");
         
@@ -465,40 +496,48 @@ public class Ffmpeg {
         ProcessBuilder pb = new ProcessBuilder(ffprobe.getPath(), "-v", "error", "-show_entries", "frame=pkt_pts_time,width,height", "-select_streams", 
                                                 "v", "-of", "csv=p=0", "-i", "-");
         pb.redirectErrorStream(true);
+        
+        
         Process p = pb.start();
         
-        //BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()));
-        BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        FfmpegReaderThread ffrt = new FfmpegReaderThread(p.getInputStream());
+        
+        ffrt.start();
+        
         p.getOutputStream().write(mutated);
         p.getOutputStream().close();
         
-        String line = reader.readLine();
-        
-        if(line == null){
-            //if it failed to read from stdout, inform the terminal
-            //and return false
-            System.out.println("Failed to read from ffprobe Process");
-            p.destroy();
-            return false;
-        }
-        
-        String res = line.substring(line.indexOf(",")+1);
-        //initial resolution of file
-        //reader.readLine();
-        //burn a byte
-        
-        while((line = reader.readLine())!=null){
+        boolean spinning;
+         do{
+                try{  
+                    spinning = false;
+                    ffrt.join();
+                    //block until reader thread is finished
+                }catch(InterruptedException ex){
+                    System.out.println("Reader was temporarily interrupted");
+                    spinning = true;
+                }
             
-            String clump = line.substring(line.indexOf(",")+1);
+        }while(spinning == true);
+            //spin while interrupted
+        
+        String[] numbers = new String(ffrt.getStdOut()).split("\n");
+        
+        String res = numbers[0].substring(numbers[0].indexOf(",")+1);
+        
+        for(int i = 1; i < numbers.length; i++){
+            String clump = numbers[i].substring(numbers[i].indexOf(",")+1);
+            
+            
             if(!res.equals(clump) && !clump.trim().equals("")){
                 //if the resolution suddenly changes
                 p.destroy();
                 return true;
                 //destroy the process, delete the file, return true
             }
-            
-        
         }
+        
+        
         
         p.destroy();
         return false;
@@ -593,16 +632,10 @@ public class Ffmpeg {
         byteBuff = ByteBuffer.wrap(header);
         
         int startingPoint = byteBuff.getInt();
-                
-                /*(header[0] << (3*8))
-            + (header[1] << (2*8))
-            + (header[2] << (1*8))
-            + header[3];*/
                      
         System.arraycopy(bytes, 0, mutated, 0, startingPoint);
         //copy the first bits of header we want into the mutated file
-        //for(int q = 0; q < startingPoint; q++)
-        //    System.out.println(String.format("0x%02X", mutated[q]));
+
                     
         boolean foundMoov = false;
                      
@@ -628,10 +661,7 @@ public class Ffmpeg {
         
         byteBuff = ByteBuffer.wrap(tmpSize);
 
-        int moovLength = byteBuff.getInt(); /*(bytes[moovLocation-3] << 3*8)
-            + (bytes[moovLocation-2] << 2*8)
-            + (bytes[moovLocation-1] << 8)
-            + (bytes[moovLocation]);*/
+        int moovLength = byteBuff.getInt();
                      
                     
                     
@@ -675,16 +705,9 @@ public class Ffmpeg {
 
                 count = byteBuff.getInt();
 
-                /*count = (mutated[q+1] << 3*8)
-                    + (mutated[q+2] << 2*8 )
-                    + (mutated[q+3] << 8)
-                    + (mutated[q+4]);*/
                 q+=5;
                 for(int qq = 0; qq < count; qq++){
-                    int tmp;/* = (mutated[q] << 3*8)
-                        + (mutated[q+1] << 2*8 )
-                        + (mutated[q+2] << 8)
-                        + (mutated[q+3]);*/
+                    int tmp;
                     byte[] tmpClump2 = {mutated[q], mutated[q+1], mutated[q+2], mutated[q+3]};
                     byteBuff = ByteBuffer.wrap(tmpClump2);
                     tmp = byteBuff.getInt();
@@ -713,7 +736,7 @@ public class Ffmpeg {
     
     
     private class FfmpegReaderThread extends Thread{
-        public AtomicBoolean blocking;
+        //public AtomicBoolean blocking;
         //spinlock
         private final InputStream inputStream;
         private byte[] stdOutTotal;
@@ -722,7 +745,7 @@ public class Ffmpeg {
         
         
         public FfmpegReaderThread(InputStream is){
-            this.blocking = new AtomicBoolean(true);
+            //this.blocking = new AtomicBoolean(true);
             this.inputStream = is;
             this.stdOutTotal = null;
         }
@@ -737,13 +760,13 @@ public class Ffmpeg {
             
             do{
                 byte[] tmp = new byte[1024];
-                boolean wasInterrupted;
+                //boolean wasInterrupted;
                 //int c = 0;
                 
                 
-                do{
+                //do{
                     try {
-                        wasInterrupted = false;
+                        //wasInterrupted = false;
                         readBytes = inputStream.read(tmp);
                         
                         if(readBytes < 0)
@@ -766,14 +789,15 @@ public class Ffmpeg {
                         //System.out.println("im stuck");
 
                     } catch (IOException ex) {
-                        System.out.println("Reader was temporarily interrupted");
-                        wasInterrupted = true;
+                        //System.out.println("Reader was temporarily interrupted");
+                        Logger.getLogger(ScreamerBot.class.getName()).log(Level.SEVERE, null, ex);
+                       //wasInterrupted = true;
                     }
-                }while(wasInterrupted == true);
+                //}while(wasInterrupted == true);
             
             }while(readBytes >= 0 );
             
-            this.blocking.set(false);
+            //this.blocking.set(false);
         
         }
     

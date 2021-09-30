@@ -53,21 +53,22 @@ public class MediaConverter {
         
     }
      
-     public int test(byte[] inputBytes, boolean webm) throws IOException{
+     public int test(byte[] inputBytes, boolean webm) throws IOException, InterruptedException{
         
         //byte[] inputBytes = in.readAllBytes();
         if(webm == false)
             inputBytes = Ffmpeg.mutateBuffer(inputBytes);
         
 
-
+        //System.out.println("about to check");
         //attempt to check if the video is a crasher 
         if(ff.checkCrasher(inputBytes)){
+            //System.out.println("found crash");
             return 2;
         }
-        
+        //System.out.println("checked");
         ArrayList<byte[]> segments = ff.grabSegments(inputBytes);
-        
+        //System.out.println("got segments");
         
         double norm = 0;
         /*norm is the estimated "room-tempature" volume
@@ -126,7 +127,7 @@ public class MediaConverter {
         }//end for loop
         
 
-         
+         //System.out.println("Status: "+triggered);
          return triggered;
          //return whether or not it detected an offender
          
