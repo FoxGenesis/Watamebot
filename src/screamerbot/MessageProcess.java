@@ -16,18 +16,24 @@ import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.ResultSet;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.GuildChannel;
 import net.dv8tion.jda.api.entities.Message.Attachment;
 import net.dv8tion.jda.api.entities.PrivateChannel;
@@ -38,6 +44,7 @@ import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleAddEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleRemoveEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.exceptions.ContextException;
 import net.dv8tion.jda.api.exceptions.HierarchyException;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -398,7 +405,6 @@ public class MessageProcess extends ListenerAdapter{
              
              ArrayList<Attachment>videos = new ArrayList<>();
              //arraylist to hold all the attachments. sometimes messages can have more than one.
-             //ArrayList<Attachment>allAttachments = new ArrayList<>();
              
              ArrayList<Attachment> allAttachments = new ArrayList<>();
              
@@ -410,72 +416,52 @@ public class MessageProcess extends ListenerAdapter{
                  allAttachments.add(a);
                  
              }
-                 //list.add(event.getMessage().getAttachments().get(i));
-             //cycle through the event's attachments and add them to the list
-             //for(int i = 0; i< list.size(); i++){
-                 //remove any non-videos
-                 //if(!list.get(i).isVideo())
-                 //    list.remove(i);
-             //}
-             
-             //for(int i = 0; i< event.getMessage().getAttachments().size(); i++)
-              //   allAttachments.add(event.getMessage().getAttachments().get(i));
-             
-             
-             //for(int i = 0; i< allAttachments.size(); i++){
-                 //remove any non-image
-               //  if(!allAttachments.get(i).isImage() && !allAttachments.get(i).isVideo())
-              //       allAttachments.remove(i);
-             //}
-             
-             
              
              for(int i = 0; i<videos.size(); i++){
                  //for each video, download it and process it. this is done by downloaing the media to a temp file,
                  //passing it to the MediaConverter object to test, and getting the boolean value of whether it 
                  //detected an offense.
                  //
-                 
-                 String out = "tmp"+fs+"temp."+videos.get(i).getFileExtension();
-                 //get the name of the temp media fie
-                 //File temp = new File(out);
-                 //initialize that file object
-                 File temp = videos.get(i).downloadToFile(out).join();
-                 //download the media file to that initialized temp file
-                 
-                 //URL url = null;
+                boolean isWebm = false;
+                
+                if(videos.get(i).getFileExtension().toLowerCase().equals("webm"))
+                    isWebm = true;
+                
+                InputStream is;
                  try {
-
-                      status = converter.test(temp);
-                      
-                      if(status != 0){
-                        try{
-                            event.getMessage().delete().queue();
-                            //delete the offending message
-                        }catch(InsufficientPermissionException ex){
-                            System.out.println("Error, bot attempted to delete an offending message in "+event.getGuild()+", but deleting messages is not enabled.");
-                        }
-
-                        System.out.println("Video removed in "+ event.getGuild().toString());///inform the logging terminal that a essage was removed
-
-                        if(status == 1)
-                                event.getChannel().sendMessage(event.getAuthor().getAsMention() + " Please do not post loud videos without first stating that the video is "
-                                + "loud in the message. If you are going to post a loud video, describe in the same message that it is loud."/*\n```Note: this bot is still "
-                                + "in development, mistakes can happen, please let the developer Spazmaster#8989 know of a bug or mistake```"*/).queue();
-                        else if(status == 2)
-                            event.getChannel().sendMessage(event.getAuthor().getAsMention() + "DETECTED CRASHER FILE!!! Uploading files designed to crash discord will"
-                                +" get you banned or timed out. Do not upload them.\n```Note: this feature is still in development, mistakes can happen, please let "
-                                    +"the developer Spazmaster#8989 know of a bug or mistake```").queue();
-                        //deleted the offender's message, post a warning
-                        
-                        break;
+                     is = videos.get(i).retrieveInputStream().get();
+                     byte[] isPayload = is.readAllBytes();
+                     is.close();
+                     status = converter.test(isPayload, isWebm);
+                     
+                     
+                     if(status != 0){
+                     try{
+                     event.getMessage().delete().queue();
+                     //delete the offending message
+                     }catch(InsufficientPermissionException ex){
+                     System.out.println("Error, bot attempted to delete an offending message in "+event.getGuild()+", but deleting messages is not enabled.");
                      }
- 
-                 }
-                 catch (IOException | InterruptedException ex) {
+                     
+                     System.out.println("Video removed in "+ event.getGuild().toString());///inform the logging terminal that a essage was removed
+
+                     if(status == 1)
+                        event.getChannel().sendMessage(event.getAuthor().getAsMention() + " Please do not post loud videos without first stating that the video is "
+                        + "loud in the message. If you are going to post a loud video, describe in the same message that it is loud."/*\n```Note: this bot is still "
+                        + "in development, mistakes can happen, please let the developer Spazmaster#8989 know of a bug or mistake```"*/).queue();
+                     else if(status == 2)
+                        event.getChannel().sendMessage(event.getAuthor().getAsMention() + "DETECTED CRASHER FILE!!! Uploading files designed to crash discord will"
+                        +" get you banned or timed out. Do not upload them.\n```Note: this feature is still in development, mistakes can happen, please let "
+                        +"the developer Spazmaster#8989 know of a bug or mistake```").queue();
+                        //deleted the offender's message, post a warning
+                     
+                     break;
+                     }
+                     
+                     
+                 } catch (InterruptedException | ExecutionException | IOException ex) {
                      Logger.getLogger(MessageProcess.class.getName()).log(Level.SEVERE, null, ex);
                  }
-                 
                  
                  
              }//video loop
@@ -547,7 +533,7 @@ public class MessageProcess extends ListenerAdapter{
          
         //getUrls
          try {
-            int status = extractUrls(removeUrl, event);
+            int status = extractUrlsToBytes(removeUrl, event);
             //remove the URLS by reference as a hack while also testing the URLS for bad files
             if(status != 0 && isBlocking(event))
                 // && !text.contains("LOUD") && !text.contains("EAR RAPE"){
@@ -586,8 +572,9 @@ public class MessageProcess extends ListenerAdapter{
          if(checkForUrls(event.getMessage().getContentStripped()) && !event.getAuthor().isBot()){
              //anyone who posts a url or embed and doesnt have the permissions, they get bullied for it lol
              
-             if(!event.getMember().getPermissions(event.getTextChannel()).contains(Permission.MESSAGE_EMBED_LINKS))
-             
+             if(!event.getMember().getPermissions(event.getTextChannel()).contains(Permission.MESSAGE_EMBED_LINKS)
+                     && event.getGuild().getMemberById(consts.getJDA().getSelfUser().getId()).getPermissions(event.getTextChannel()).contains(Permission.MESSAGE_EMBED_LINKS))
+             //bullies the user but ONLY IF the bot has the embed perms
                 event.getChannel().sendMessage(event.getAuthor().getAsMention() + " https://tenor.com/view/bobux-roblox-embed-no-embed-perms-0bobux-gif-18287307").queue();
          
          }
@@ -681,6 +668,12 @@ public class MessageProcess extends ListenerAdapter{
                 }
                 
                 String roles[ ] = rolesRaw.split("-");
+                
+                //boolean hasDunceRole = false;
+                
+                //for(int i = 0; i < roles.length; i++)
+                //    if(roles.equals(i))
+                
                 
                 for(int i = 0; i<roles.length; i++){
                     Role role = discord.getRoleById(roles[i]);
@@ -870,8 +863,13 @@ public class MessageProcess extends ListenerAdapter{
         return false;
     
     }
-     
     
+    /*private String getDunceRole(Guild guild){
+        
+    
+    }*/
+     
+    @Deprecated
     private  int extractUrls(String[] text, MessageReceivedEvent event) throws MalformedURLException, IOException, InterruptedException
             //function that takes in a hack reference string to remove the urls from and return it out as a reference 
             //(arrays in java are passed by what could be considered a reference like in C), and the event object that the 
@@ -1033,6 +1031,167 @@ public class MessageProcess extends ListenerAdapter{
     //return the status of whether or not a problem was calculated to be bad
     return triggered;
 }
+    
+    
+    
+    private  int extractUrlsToBytes(String[] text, MessageReceivedEvent event) throws MalformedURLException, IOException, InterruptedException
+            //function that takes in a hack reference string to remove the urls from and return it out as a reference 
+            //(arrays in java are passed by what could be considered a reference like in C), and the event object that the 
+            //message occured in. It then calculates whether or not a file had a problem with it, whether its a crasher file or file with embedded 
+            //malicious code in it, etc
+{
+    int triggered = 0;
+    List<String> containedUrls = new ArrayList<String>();
+    String urlRegex = "\\b((https|http|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|])";//"((https?|ftp|gopher|telnet|file):((//)|(\\\\))+[\\w\\d:#@%/;$()~_?\\+-=\\\\\\.&]*)";
+    Pattern pattern = Pattern.compile(urlRegex, Pattern.CASE_INSENSITIVE);
+    Matcher urlMatcher = pattern.matcher(text[0]);
+    //regex for detecting urls
+
+    while (urlMatcher.find())
+    {
+        String holder = text[0].substring(urlMatcher.start(0),
+                urlMatcher.end(0));
+        if(holder.contains("https://cdn.discordapp.com/attachments/") || holder.contains("http://cdn.discordapp.com/attachments/")
+                || holder.contains("https://media.discordapp.net/attachments/") || holder.contains("http://media.discordapp.net/attachments/"))
+            containedUrls.add(holder);
+        //if the url is an embedable discord link, then add it to a list
+        
+        if(holder.contains("://tornadus.net/")){
+            //hack for detecting an embed crasher
+            //System.out.println(holder);
+                try{///TODO: optimize this
+                            event.getMessage().delete().queue();///delete the offending message
+                            }catch(InsufficientPermissionException ex){
+                                System.out.println("Error, bot attempted to delete an offending message in "+event.getGuild()+", but deleting messages is not enabled.");
+                            }
+                          
+                          
+                          
+                          event.getChannel().sendMessage(event.getAuthor().getAsMention()+ " POTENTIAL MALICIOUS PAYLOAD DETECTED! " + "Discord Embed link crasher."
+                                  + " ```This feature is in beta, please notify the developer Spazmaster#8989 if a mistake was made.```").queue();
+                          break;
+            
+        }
+        
+        
+    }
+    
+    
+    
+    //remove the urls from the inputted reference string
+    for(int i = 0; i<containedUrls.size(); i++)
+        text[0]= text[0].replace(containedUrls.get(i), "");
+    
+
+    
+    for(int i = 0; i<containedUrls.size() && triggered == 0; i++){
+        //for each of the urls in the list, download the file and analyze it
+            
+            String ext = containedUrls.get(i).substring(containedUrls.get(i).lastIndexOf('.'));
+            //get the extension of the file
+            
+            
+            //checks if the file is a video, then download it and scan it
+            if(ext.toLowerCase().contains("mp4")||ext.toLowerCase().contains("webm") ||ext.toLowerCase().contains("mov")){
+                boolean isWebm = false;
+                if(ext.toLowerCase().endsWith("webm"))
+                    isWebm = true;
+                
+                URL url = new URL(containedUrls.get(i));
+                //apply the url string to the url objet
+                URLConnection openConnection = url.openConnection();
+                //open the url connection
+                openConnection.addRequestProperty("User-Agent", Requester.USER_AGENT);//"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11");
+                //declare the http user agent as the discord protcol
+                openConnection.connect();
+                
+                try{   
+                if(openConnection.getContentLength() < 100000000){
+                    //if the file download is not an abysmally large file
+                    InputStream in = new BufferedInputStream(openConnection.getInputStream());
+                    
+                    byte[] bytes = in.readAllBytes();
+                    in.close();
+                    
+                    triggered = converter.test(bytes, isWebm);
+                    //check whether the media converter detected a bad file
+                    
+                    }
+                else
+                    System.out.println("Attempted to download a dangerously large file");
+                //let the logger be aware that the application almost downloaded a dangerously large file
+                
+                //triggered =  converter.test(outFile);
+                }catch(IOException ex){System.out.println("Error, received an error 403 from discord while "
+                        + "trying to download: \n\t"+containedUrls.get(i));}
+                //let logger know that for unknown reasons discord sent a 403 error
+               
+              
+            }//end if is a video
+            if(ext.toLowerCase().contains("png")||ext.toLowerCase().contains("jpg") ||ext.toLowerCase().contains("jpeg")
+                    || ext.toLowerCase().contains("mp4")){///TODO: remove the mp4 part? why am I checking twice for mp4s?
+                URL url = new URL(containedUrls.get(i));
+                //apply the url string to the url objet
+                URLConnection openConnection = url.openConnection();
+                //open the url connection
+                openConnection.addRequestProperty("User-Agent", Requester.USER_AGENT);//"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11");
+                //declare the http user agent as the discord protcol
+                openConnection.connect();
+                
+                try{   
+                if(openConnection.getContentLength() < 100000000){
+                    //if the file download is not an abysmally large file
+                    InputStream in = new BufferedInputStream(openConnection.getInputStream());
+                    //get the input stream of the url
+                    
+                    AntiMalware am = new AntiMalware(in);
+                    //create a new malware scanner object
+                    
+                    
+                    
+                    if(am.payloadDetected){
+                        //if it detected a bad file,
+                        try{
+                            event.getMessage().delete().queue();///delete the offending message
+                            }catch(InsufficientPermissionException ex){
+                                System.out.println("Error, bot attempted to delete an offending message in "+event.getGuild()+", but deleting messages is not enabled.");
+                            }
+                          String reason = "Invalid Reason";
+                          if(am.possibleMalwareFound == 1)
+                              reason = "Non-Malicious Test File detected. No reason to be worried.";
+                          if(am.possibleMalwareFound == 2)
+                              reason = "Detected possble shell script embedded in file.";
+                          //calculate the reason why it it was removed
+                          
+                          event.getChannel().sendMessage(event.getAuthor().getAsMention()+ " POTENTIAL MALICIOUS PAYLOAD DETECTED! " + reason
+                                  + " ```This feature is in beta, please notify the developer Spazmaster#8989 if a mistake was made.```").queue();
+                          break;
+                          //inform the reason it was removed, and break; we dont need to scan the rest of the files
+                    }
+                    
+                    
+                    }
+                else
+                    System.out.println("Attempted to download a dangerously large file");
+                //let the logger be aware that the application almost downloaded a dangerously large file
+                
+                //triggered =  converter.test(outFile);
+                }catch(IOException ex){System.out.println("Error, received an error 403 from discord while "
+                        + "trying to download: \n\t"+containedUrls.get(i));}
+                //let logger know that for unknown reasons discord sent a 403 error
+                
+                
+            
+            }
+            
+            
+        }//for
+
+    //return the status of whether or not a problem was calculated to be bad
+    return triggered;
+}
+    
+    
     
     
     private boolean checkForUrls(String in){

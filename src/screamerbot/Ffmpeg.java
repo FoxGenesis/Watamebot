@@ -7,6 +7,7 @@ package screamerbot;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -15,7 +16,13 @@ import java.nio.file.StandardCopyOption;
 //import com.google.common.jimfs.Jimfs;
 //import com.google.common.jimfs.Configuration;
 import java.io.UncheckedIOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @interface FuckedUp{}
 
@@ -41,9 +48,13 @@ public class Ffmpeg {
     final private boolean os;///true for windows, false for linux
     //FileSystem virtualFileSystem = Jimfs.newFileSystem(Configuration.forCurrentPlatform());
     
+    final int ErrorCode;
+    
     final boolean DEBUG = false; 
     
     public Ffmpeg() throws IOException{
+        ErrorCode = 0;
+        
         InputStream is;
         //used to extract the ffmpeg unwrapped executable
         instDir = new File("exe");
@@ -146,6 +157,125 @@ public class Ffmpeg {
        //return the newly extracted audio file
     }
     
+    
+    public ArrayList<byte[]> grabSegments(byte[] buffer) throws IOException{
+        ArrayList<byte[]> output = new ArrayList<>();
+        
+        
+        String nullLocation;
+        if(os)
+            nullLocation = "NUL";
+        else
+            nullLocation = "/dev/null";
+        ///get the type of null location of the OS
+        
+        
+        //calculate actual duration of video
+        ProcessBuilder pb = new ProcessBuilder(ffmpeg.getPath(), "-hide_banner", "-i", "-", "-f", "null", nullLocation);
+        pb.redirectErrorStream(true);
+        Process p = pb.start();
+        p.getOutputStream().write(buffer);
+        p.getOutputStream().close();
+        //receive the piped data and detect it's format and duration
+
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        
+        String line, time;
+        
+        double seconds = -1.0;
+        
+        while((line=reader.readLine()) != null){
+            if(line.startsWith("frame=")){
+                int start = line.indexOf("time=") + "time=".length();
+                int end = line.indexOf(" ", start);
+                
+                time = line.substring(start, end);
+                
+                String[] tmp = time.split(":");
+                
+                seconds = 3600 * Integer.parseInt(tmp[0]) + 60 * Integer.parseInt(tmp[1]) + Double.parseDouble(tmp[2]);
+                
+            }
+        
+        }
+        p.getInputStream().close();
+        p.destroy();
+        p = null;
+        
+        if(seconds < 0)
+            return null;
+        
+        int count = 0;
+        
+        while(count < seconds){
+            
+            if(seconds - count < 1.0)
+                //depending on if there is data duration that can occupy a full second, or the remaining
+                //bit of audio that is less than a second, we generate a new process for the duration
+                pb = new ProcessBuilder(ffmpeg.getPath(), "-hide_banner", "-i", "-", "-f", "wav", "-ac", "1", "-af", 
+                        "highpass=f=200", "-ss", String.valueOf(count), "-"
+                
+                );
+            else
+                pb = new ProcessBuilder(ffmpeg.getPath(), "-hide_banner", "-i", "-", "-f", "wav", "-ac", "1", "-af", 
+                        "highpass=f=200", "-ss", String.valueOf(count), "-t", "1", "-"
+                
+                );
+            pb.redirectErrorStream(false);
+            
+            
+            p = pb.start();
+            
+            byte[] stdOut;
+            
+            FfmpegReaderThread ffrt = new FfmpegReaderThread(p.getInputStream());
+            
+            ffrt.start();
+            //start the reader thread
+            
+            try{
+                //messy hack to accept a closed stdin to the FFMPEG wrapper, as 
+                //ffmpeg will sometimes close it's stdin early when it figures out it's 
+                //done reading data in in order to finish the wav data (enough data is provided for wav,
+                //we dont need anymore data)
+            
+                p.getOutputStream().write(buffer);
+            }catch(IOException ex){
+                if(!ex.getMessage().equals("Broken pipe")){
+                    //in the event that the exception ISNT a broken pipe, then something fucky has 
+                    //happened and we do in fact need this exception
+                    throw ex;
+                }
+            }
+            
+            p.getOutputStream().flush();
+            p.getOutputStream().close();
+            //flush and close the STDIN stream
+            
+            
+            while(ffrt.blocking.get())
+                //spinblock until thread reader is ready to pass the read data
+                ;
+            
+            stdOut = ffrt.getStdOut();
+            //obtain the STDOUT piped data from the reader thread
+            
+            
+            output.add(stdOut);
+            //add the wav data to the collection of datas.
+            p.destroy();
+            
+            count++;
+        }
+        
+        
+        return output;
+    
+    }
+    
+    
+    
     @Deprecated
     public File[] split(File in) throws IOException, InterruptedException{
         
@@ -208,7 +338,7 @@ public class Ffmpeg {
     }
     
     
-    
+    @Deprecated
     public double getVolumeMean(File in) throws IOException, InterruptedException{
         //ffmpeg -i input.mp4 -af "volumedetect" -f null NUL
         
@@ -272,6 +402,113 @@ public class Ffmpeg {
         //convert it into an actual double value from the string value
     }
     
+    public double getVolumeMean(byte[] in) throws IOException{
+        String nullLocation;
+        if(os)
+            nullLocation = "NUL";
+        else
+            nullLocation = "/dev/null";
+        ///get the type of null location of the OS
+        
+        ProcessBuilder pb = new ProcessBuilder(ffmpeg.getPath(), "-hide_banner", "-i", "-", "-af", "volumedetect", "-f", "null", nullLocation);
+        pb.redirectErrorStream(true);
+        
+        
+        Process p = pb.start();
+        ///create the ffmpeg wrapper and run the commands for hiding the infobanner (this is to save processing time), the input file, the volumedetect filter,
+        ///and the output file as the null location so it's discarded
+        
+        FfmpegReaderThread ffrt = new FfmpegReaderThread(p.getInputStream());
+        
+        ffrt.start();
+        
+        try{
+
+            p.getOutputStream().write(in);
+
+
+        }catch(IOException ex){
+            if(!ex.getMessage().equals("Broken pipe"))
+                throw ex;
+        }
+        
+        p.getOutputStream().flush();
+        p.getOutputStream().close();
+
+        
+        while(ffrt.blocking.get())
+            //block until reader thread is garunteed to have finished.
+            ;
+        
+        String[] result = new String(ffrt.getStdOut()).split("\n");
+        
+        //String meanLine = null;
+        String temp = "-100";
+        
+        for (String result1 : result) {
+            if (result1.contains("mean_volume: ")) {
+                temp = result1.substring(result1.lastIndexOf("mean_volume: ") + "mean_volume: ".length(), result1.lastIndexOf("dB"));
+                break;
+            }
+        }
+        
+        return Double.valueOf(temp);
+        //convert it into an actual double value from the string value
+    }
+    
+    
+    public boolean checkCrasher(byte[] in) throws IOException{
+        
+        //byte[] mutated = mutateBuffer(in);
+        byte[] mutated = in;
+        
+        ProcessBuilder pb = new ProcessBuilder(ffprobe.getPath(), "-v", "error", "-show_entries", "frame=pkt_pts_time,width,height", "-select_streams", 
+                                                "v", "-of", "csv=p=0", "-i", "-");
+        pb.redirectErrorStream(true);
+        Process p = pb.start();
+        
+        //BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        p.getOutputStream().write(mutated);
+        p.getOutputStream().close();
+        
+        String line = reader.readLine();
+        
+        if(line == null){
+            //if it failed to read from stdout, inform the terminal
+            //and return false
+            System.out.println("Failed to read from ffprobe Process");
+            p.destroy();
+            return false;
+        }
+        
+        String res = line.substring(line.indexOf(",")+1);
+        //initial resolution of file
+        //reader.readLine();
+        //burn a byte
+        
+        while((line = reader.readLine())!=null){
+            
+            String clump = line.substring(line.indexOf(",")+1);
+            if(!res.equals(clump) && !clump.trim().equals("")){
+                //if the resolution suddenly changes
+                p.destroy();
+                return true;
+                //destroy the process, delete the file, return true
+            }
+            
+        
+        }
+        
+        p.destroy();
+        return false;
+    
+    
+        
+    }
+    
+    
+    @Deprecated
     public boolean checkCrasher(File in) throws IOException{
         /*
         This method returns true if it detected a suddent change in resolution midway in the video file, which will
@@ -342,5 +579,208 @@ public class Ffmpeg {
             throw new UncheckedIOException(ex);
         }
     }
+    
+    
+    
+    public static byte[] mutateBuffer(byte[] bytes) throws IOException{
+        //byte[] bytes = in.readAllBytes();
+        byte[] mutated = new byte[bytes.length];
+        ByteBuffer byteBuff;
+        byte[] tmpSize = new byte[4];
+                     
+        byte[] header = Arrays.copyOf(bytes, 4);
+        
+        byteBuff = ByteBuffer.wrap(header);
+        
+        int startingPoint = byteBuff.getInt();
+                
+                /*(header[0] << (3*8))
+            + (header[1] << (2*8))
+            + (header[2] << (1*8))
+            + header[3];*/
+                     
+        System.arraycopy(bytes, 0, mutated, 0, startingPoint);
+        //copy the first bits of header we want into the mutated file
+        //for(int q = 0; q < startingPoint; q++)
+        //    System.out.println(String.format("0x%02X", mutated[q]));
+                    
+        boolean foundMoov = false;
+                     
+                     
+        int v = 0;
+        byte[] moov = {'m', 'o', 'o', 'v'};
+        int moovLocation;
+        for(moovLocation = startingPoint; moovLocation <  bytes.length; moovLocation++){
+            if(bytes[moovLocation] == moov[v])
+                v++;
+            else
+                v = 0;
+                        
+            if(v == 4){
+                foundMoov = true;
+                break;
+            }
+        }
+                     
+        moovLocation-=4;
+        
+        System.arraycopy(bytes, moovLocation-3, tmpSize, 0, 4);
+        
+        byteBuff = ByteBuffer.wrap(tmpSize);
+
+        int moovLength = byteBuff.getInt(); /*(bytes[moovLocation-3] << 3*8)
+            + (bytes[moovLocation-2] << 2*8)
+            + (bytes[moovLocation-1] << 8)
+            + (bytes[moovLocation]);*/
+                     
+                    
+                    
+        System.arraycopy(bytes, moovLocation-3, mutated, startingPoint, moovLength);
+        //move the moov atom and container to the front
+        moovLocation-=3;
+        
+        if(moovLocation == startingPoint){
+            //if the moov atom is located EXACTLY after the header, we dont need to perform
+            //any changes
+            return bytes;
+        }
+        
+        
+        //                src       srcPos      dest            destPos                     length
+        System.arraycopy(bytes, startingPoint, mutated, startingPoint + moovLength , moovLocation-startingPoint);
+        //put everything that was before the moov atom, after the moov atom
+        int remaining = bytes.length - (moovLocation+moovLength);
+        int startOfRemaining = startingPoint+moovLength + (moovLocation-startingPoint);
+        System.arraycopy(bytes, (moovLocation+moovLength), mutated, startOfRemaining, remaining);
+        //copy remaining data to end of output stream
+                    
+                    
+                    
+        boolean stcoFound = false;
+        v = 0;
+        
+        byte[] stcoStr = {'s', 't', 'c', 'o'};
+        for(int q = startingPoint; q < moovLength; q++){
+            if(mutated[q] == stcoStr[v])
+                v++;
+            else
+                v = 0;
+                        
+            if(v == 4){
+                stcoFound = true;
+                q+=4;
+                int count;
+                byte[] tmpClump = {mutated[q+1], mutated[q+2], mutated[q+3], mutated[q+4]};
+                byteBuff = ByteBuffer.wrap(tmpClump);
+
+                count = byteBuff.getInt();
+
+                /*count = (mutated[q+1] << 3*8)
+                    + (mutated[q+2] << 2*8 )
+                    + (mutated[q+3] << 8)
+                    + (mutated[q+4]);*/
+                q+=5;
+                for(int qq = 0; qq < count; qq++){
+                    int tmp;/* = (mutated[q] << 3*8)
+                        + (mutated[q+1] << 2*8 )
+                        + (mutated[q+2] << 8)
+                        + (mutated[q+3]);*/
+                    byte[] tmpClump2 = {mutated[q], mutated[q+1], mutated[q+2], mutated[q+3]};
+                    byteBuff = ByteBuffer.wrap(tmpClump2);
+                    tmp = byteBuff.getInt();
+
+
+                    tmp += moovLength;
+                    byteBuff = ByteBuffer.allocate(4);
+                    byteBuff.putInt(tmp);
+                    byte[] result = byteBuff.array();
+                    mutated[q] = result[0];
+                    mutated[q+1] = result[1];
+                    mutated[q+2] = result[2];
+                    mutated[q+3] = result[3];
+
+                    q+=4;
+                }
+                v = 0;
+            }
+                        
+        }
+        
+        return mutated;
+    
+    }
+    
+    
+    
+    private class FfmpegReaderThread extends Thread{
+        public AtomicBoolean blocking;
+        //spinlock
+        private final InputStream inputStream;
+        private byte[] stdOutTotal;
+        
+        public byte[] getStdOut(){return this.stdOutTotal;}
+        
+        
+        public FfmpegReaderThread(InputStream is){
+            this.blocking = new AtomicBoolean(true);
+            this.inputStream = is;
+            this.stdOutTotal = null;
+        }
+        
+        
+        
+        @Override
+        public void run(){
+            
+            
+            int readBytes = 1;
+            
+            do{
+                byte[] tmp = new byte[1024];
+                boolean wasInterrupted;
+                //int c = 0;
+                
+                
+                do{
+                    try {
+                        wasInterrupted = false;
+                        readBytes = inputStream.read(tmp);
+                        
+                        if(readBytes < 0)
+                            break;
+                        
+                        
+                        if(stdOutTotal == null){
+                            stdOutTotal = new byte[readBytes];
+                            System.arraycopy(tmp, 0, stdOutTotal, 0, readBytes);
+                        }
+                        else{
+                            byte[] stdOutTmp = new byte[readBytes + stdOutTotal.length];
+                            System.arraycopy(stdOutTotal, 0, stdOutTmp, 0, stdOutTotal.length);
+                            System.arraycopy(tmp, 0, stdOutTmp, stdOutTotal.length, readBytes);
+                            this.stdOutTotal = stdOutTmp;
+                        }
+                        
+                        
+                        //c+=readBytes;
+                        //System.out.println("im stuck");
+
+                    } catch (IOException ex) {
+                        System.out.println("Reader was temporarily interrupted");
+                        wasInterrupted = true;
+                    }
+                }while(wasInterrupted == true);
+            
+            }while(readBytes >= 0 );
+            
+            this.blocking.set(false);
+        
+        }
+    
+    
+    }
+    
+    
+    
     
 }

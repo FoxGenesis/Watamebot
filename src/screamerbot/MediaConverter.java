@@ -7,7 +7,10 @@ package screamerbot;
 
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -50,6 +53,85 @@ public class MediaConverter {
         
     }
      
+     public int test(byte[] inputBytes, boolean webm) throws IOException{
+        
+        //byte[] inputBytes = in.readAllBytes();
+        if(webm == false)
+            inputBytes = Ffmpeg.mutateBuffer(inputBytes);
+        
+
+
+        //attempt to check if the video is a crasher 
+        if(ff.checkCrasher(inputBytes)){
+            return 2;
+        }
+        
+        ArrayList<byte[]> segments = ff.grabSegments(inputBytes);
+        
+        
+        double norm = 0;
+        /*norm is the estimated "room-tempature" volume
+        this is used to predict what the average video volume is to produce a rough average estimate throughout the video.
+        this is used to check if the next audio sample is suddently substantially louder than the current "room tempature",
+        typically used by screamer videos.
+        */
+        int triggered = 0;
+        ///flag to check whether or not its detected a potential offender
+        
+        int strikes = 0;
+        /*sometimes a video could have a loud peak for less than a second, possibly due to random noise or encoding error.
+        This acts as a sort of "forgiveness meter" so that it takes more than a one-time detection of loud audio
+        */    
+        
+        
+        
+        for(int i = 0; i < segments.size() && triggered != 1; i++){
+            //values[i] = ff.getVolumeMean(segments.get(i));
+            //System.out.println(val);
+            double value = ff.getVolumeMean(segments.get(i));
+            
+            
+            /*
+            due to the nature of the decibel's logarithmic behavior, dividing the current volume by half roughly equals a volume double the loudness.
+            therefor, to check if there has been a sudden leap in volume, we divide norm volume by 2 and check if the next sample volume is even 
+            louder than that. This is for Screamer detection. we also make sure this calculation is greater than -7, which is an unconfortable volume.
+            this is because a video could possibly silent for a while, then someone talks at a reasonable volume, this would technically match 
+            the norm/2<value rule, however this isn't a screamer volume. This is to prevent false positives, as most screamers are louder than -8 dB.
+            */
+            if(i>3 && i<segments.size()-1){
+                if(norm/2 < value && value>-5)
+                    triggered = 1;
+            }
+            
+            
+            /****************
+             * In general, if a volume louder than -5.5 is detected, it could possibly be an annoyingly loud video, but it could also possibly be a one time
+             * loudness for less than a second from noise, or encoding errors. to prevent false positives, this next part creates a sort of 
+             * "3 strikes and you are out" rule
+             */
+            if(value > -5.5)
+                strikes++;
+            //*
+            if(strikes>=5)
+                triggered = 1;
+            //*
+            //********************************//
+            
+            norm = norm + value / 2.0;
+            //recalculate the normal volume average
+            
+            if(triggered == 1)
+                break;
+            
+        }//end for loop
+        
+
+         
+         return triggered;
+         //return whether or not it detected an offender
+         
+         
+     }
     
      @Deprecated
      public int test(File in) throws InterruptedException, IOException{
