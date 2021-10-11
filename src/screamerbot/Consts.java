@@ -71,27 +71,29 @@ public class Consts {
     //create connection to the database
     System.out.println("Successfully connected to the SQLite databbase");
     
-    String newTable = "CREATE TABLE IF NOT EXISTS Guild (\n"
-            + "GuildID TEXT,\n"
-            + "Roles TEXT,\n"
-            + "DunceActive INTEGER,\n"
-            + "DunceName TEXT,\n"
-            + "MalwareRole TEXT,\n"
-            + "MalwareChannel TEXT,\n"
-            + "MalwareStat INTEGER,\n"
-            + "ScreamerStat INTEGER\n"
-            + "Renaming INTEGER\n"
-            +");";
+    String newTable = """
+                      CREATE TABLE IF NOT EXISTS Guild (
+                      GuildID TEXT,
+                      Roles TEXT,
+                      DunceActive INTEGER,
+                      DunceName TEXT,
+                      MalwareRole TEXT,
+                      MalwareChannel TEXT,
+                      MalwareStat INTEGER,
+                      ScreamerStat INTEGER,
+                      Renaming INTEGER
+                      );""";
     java.sql.Statement stmt = connectionHandler.createStatement();
     stmt.execute(newTable);
     stmt.execute("CREATE UNIQUE INDEX IF NOT EXISTS GuildString on Guild (GuildID);");
     /**Create a Guild table if it doesn't exist**/
     
-    newTable = "CREATE TABLE IF NOT EXISTS RoleList (\n"
-            + "GuildID TEXT,\n"
-            + "Member TEXT,\n"
-            + "Roles TEXT\n"
-            +");";
+    newTable = """
+               CREATE TABLE IF NOT EXISTS RoleList (
+               GuildID TEXT,
+               Member TEXT,
+               Roles TEXT
+               );""";
     
     stmt.execute(newTable);
     stmt.execute("CREATE UNIQUE INDEX IF NOT EXISTS MemberString on RoleList (Member);");

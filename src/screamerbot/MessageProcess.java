@@ -423,16 +423,34 @@ public class MessageProcess extends ListenerAdapter{
                  //detected an offense.
                  //
                 boolean isWebm = false;
-                
-                if(videos.get(i).getFileExtension().toLowerCase().equals("webm"))
+                String ext = videos.get(i).getFileExtension();
+                if(ext.toLowerCase().equals("webm"))
                     isWebm = true;
                 
                 InputStream is;
                  try {
-                     is = videos.get(i).retrieveInputStream().get();
-                     byte[] isPayload = is.readAllBytes();
-                     is.close();
-                     status = converter.test(isPayload, isWebm);
+                    is = videos.get(i).retrieveInputStream().get();
+                    byte[] isPayload = is.readAllBytes();
+                    is.close();
+                    try {
+                        byte[] cpy = isPayload;
+                        status = converter.test(cpy, isWebm);
+                    } catch (Ffmpeg.BadVideoFile ex) {
+                        /*attempt to create a ramfs file and analyze it*/
+                        
+                        System.out.println("Defaulting to RAMFS file analysis");
+                        
+                        File testFile = new File("tmp"+fs+"temp."+ext);
+                        try (OutputStream os = new FileOutputStream(testFile)) {
+                            os.write(isPayload);
+                            os.flush();
+                        }
+                        
+                        status = converter.test(testFile);
+                        
+                        
+                        
+                    }
                      
                      
                      if(status != 0){
@@ -1108,13 +1126,27 @@ public class MessageProcess extends ListenerAdapter{
                 try{   
                 if(openConnection.getContentLength() < 100000000){
                     //if the file download is not an abysmally large file
-                    InputStream in = new BufferedInputStream(openConnection.getInputStream());
-                    
-                    byte[] bytes = in.readAllBytes();
-                    in.close();
-                    
-                    triggered = converter.test(bytes, isWebm);
-                    //check whether the media converter detected a bad file
+                    byte[] bytes;
+                    try (InputStream in = new BufferedInputStream(openConnection.getInputStream())) {
+                        bytes = in.readAllBytes();
+                    }
+                    try {
+                        byte[] cpy = bytes;
+                        triggered = converter.test(cpy, isWebm);
+                        //check whether the media converter detected a bad file
+                    } catch (Ffmpeg.BadVideoFile ex) {
+                        System.out.println("Defaulting to RAMFS file analysis");
+                        
+                        File testFile = new File("tmp"+fs+"temp."+ext);
+                        try (OutputStream os = new FileOutputStream(testFile)) {
+                            os.write(bytes);
+                            os.flush();
+                        }
+                        
+                        triggered = converter.test(testFile);
+                        
+                        
+                    }
                     
                     }
                 else

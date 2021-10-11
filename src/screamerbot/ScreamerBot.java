@@ -67,7 +67,7 @@ public class ScreamerBot {
 
             //now its able to read messages
         } catch (LoginException | InterruptedException | IOException | SQLException ex) {
-            ex.printStackTrace(errorLogger);
+            //ex.printStackTrace(errorLogger);
             Logger.getLogger(ScreamerBot.class.getName()).log(Level.SEVERE, null, ex);
         }
         

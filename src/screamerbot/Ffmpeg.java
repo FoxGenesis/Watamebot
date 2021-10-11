@@ -23,8 +23,10 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 @interface FuckedUp{}
+@interface Unneeded{}
 
 /**
  *
@@ -174,7 +176,13 @@ public class Ffmpeg {
         ProcessBuilder pb = new ProcessBuilder(ffmpeg.getPath(), "-hide_banner", "-i", "-", "-f", "null", nullLocation);
         pb.redirectErrorStream(true);
         Process p = pb.start();
-        p.getOutputStream().write(buffer);
+        try{
+            p.getOutputStream().write(buffer);
+        }catch(IOException ex){
+            if(!ex.getMessage().equals("Broken pipe"))
+                throw ex;
+        }
+        p.getOutputStream().flush();
         p.getOutputStream().close();
         //receive the piped data and detect it's format and duration
 
@@ -195,7 +203,7 @@ public class Ffmpeg {
                 String[] tmp = time.split(":");
                 
                 seconds = 3600 * Integer.parseInt(tmp[0]) + 60 * Integer.parseInt(tmp[1]) + Double.parseDouble(tmp[2]);
-                
+                break;
             }
         
         }
@@ -215,13 +223,13 @@ public class Ffmpeg {
             if(seconds - count < 1.0)
                 //depending on if there is data duration that can occupy a full second, or the remaining
                 //bit of audio that is less than a second, we generate a new process for the duration
-                pb = new ProcessBuilder(ffmpeg.getPath(), "-hide_banner", "-i", "-", "-f", "wav", "-ac", "1", "-af", 
-                        "highpass=f=200", "-ss", String.valueOf(count), "-"
+                pb = new ProcessBuilder(ffmpeg.getPath(), "-hide_banner", "-i", "-", "-codec", "copy","-f", "wav", "-ac", "1", /*"-af", 
+                        "highpass=f=200",*/ "-ss", String.valueOf(count), "-"
                 
                 );
             else
-                pb = new ProcessBuilder(ffmpeg.getPath(), "-hide_banner", "-i", "-", "-f", "wav", "-ac", "1", "-af", 
-                        "highpass=f=200", "-ss", String.valueOf(count), "-t", "1", "-"
+                pb = new ProcessBuilder(ffmpeg.getPath(), "-hide_banner", "-i", "-", "-codec", "copy", "-f", "wav", "-ac", "1", /*"-af", 
+                        "highpass=f=200",*/ "-ss", String.valueOf(count), "-t", "1", "-"
                 
                 );
             pb.redirectErrorStream(false);
@@ -229,7 +237,7 @@ public class Ffmpeg {
             
             p = pb.start();
             
-            byte[] stdOut;
+            @Nullable byte[] stdOut;
             
             FfmpegReaderThread ffrt = new FfmpegReaderThread(p.getInputStream());
             
@@ -255,33 +263,35 @@ public class Ffmpeg {
             p.getOutputStream().close();
             //flush and close the STDIN stream
             
+            //System.out.println("AAAAAAAAAAAAA" + new String (p.getErrorStream().readAllBytes()));
             
             //while(ffrt.blocking.get())
                 //spinblock until thread reader is ready to pass the read data
                 //;
                 
-            boolean spinning;
+            boolean success = false;
             
-            do{
+            while(!success){
                 try{  
-                    spinning = false;
+                    //System.out.println("joining");
                     ffrt.join();
+                    success = true;
                     //block until reader thread is finished
                 }catch(InterruptedException ex){
                     System.out.println("Reader was temporarily interrupted");
-                    spinning = true;
                 }
             
-            }while(spinning == true);
+            }
             //spin while interrupted
+            //System.out.println("im out");
             
             
             
             stdOut = ffrt.getStdOut();
             //obtain the STDOUT piped data from the reader thread
             
-            if(stdOut == null)
-                throw new NullPointerException();
+            //if(stdOut == null)
+            //    throw new NullPointerException();
             
             output.add(stdOut);
             //add the wav data to the collection of datas.
@@ -339,6 +349,67 @@ public class Ffmpeg {
         //sleep for 2 seconds. this gives enough time to make sure the media file is done being processed by ffmpeg, so it has had time to close and allow it
         //to be deleted
         in.delete();
+        //delete the media file, we are done with it
+        
+        if(response!=0)
+            //0 is a normal rturn value for ffmpeg to close on, this means everything worked out
+            System.out.println("Error processing the media file");
+        //this just lets me know if something went wrong 
+        
+        int length = new File("tmp").listFiles().length;
+        //get number of audio files in the tmp folder
+        File[] sorted = new File[length];
+        //create an array of files the size of the number of audio sample files
+        for(int i =0; i< length; i++){
+            sorted[i] = new File("tmp"+fs+"audio"+i+".wav");
+        }//sort each file in numeracle order into the array
+        
+        return sorted;
+        //return that array
+    }
+    
+    @Unneeded
+    public File[] split(byte[] in) throws IOException, InterruptedException{
+        
+        /*
+        This method returns an in-numerical order of the extracted 1 second audio samples. this is done by wrapping the ffmpeg executable and having it run
+        a command to extract the audio as a 1 second long series of wav file samples. it will then arrange the files in numerical order where it will 
+        pass them as return data.
+        */
+        
+        ProcessBuilder pb = new ProcessBuilder(ffmpeg.getPath(), "-y", "-i", "-", "-ac", "1", "-af", "highpass=f=200", "-f", "segment", 
+                "-segment_time", "1", "-vn", "tmp"+fs+"audio%d.wav");
+        pb.redirectErrorStream(true);
+        Process p = pb.start();
+        ///call the wrapped ffmpeg and have it run the commands yes to overwrite, input file, combine audio into mono, 1 second long segments,
+        ///and to ignore video streams and only copy audio. Also adds a high pass filter to get rid of bass tones that may be loud but not
+        ///harsh on the ears
+        
+        BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        //set up the ffmpeg wrapper output parser
+        
+        String line = null;
+        do{line = reader.readLine();}while(line != null);
+        //cycle through the pipe output buffer and discard it, we do not need it
+        
+        int response = 0;
+        boolean success = false;
+        while(!success){
+            //garuntees that it wont fail if interrupted
+            try{
+                response = p.waitFor();
+                success = true;
+            }catch(InterruptedException e){
+                System.out.println("Temporarily interrupted...");
+            }
+        
+        }
+
+        //wait for the ffmpeg process to finish, get the return response of the wrapped ffmpeg
+        //Thread.sleep(2000);
+        //sleep for 2 seconds. this gives enough time to make sure the media file is done being processed by ffmpeg, so it has had time to close and allow it
+        //to be deleted
+        //in.delete();
         //delete the media file, we are done with it
         
         if(response!=0)
@@ -488,12 +559,13 @@ public class Ffmpeg {
     }
     
     
-    public boolean checkCrasher(byte[] in) throws IOException{
+    public boolean checkCrasher(byte[] in) throws IOException, BadVideoFile{
+        
         
         //byte[] mutated = mutateBuffer(in);
         byte[] mutated = in;
         
-        ProcessBuilder pb = new ProcessBuilder(ffprobe.getPath(), "-v", "error", "-show_entries", "frame=pkt_pts_time,width,height", "-select_streams", 
+        ProcessBuilder pb = new ProcessBuilder(ffprobe.getPath(), "-v", "error", "-show_entries", "frame=width,height", "-select_streams", 
                                                 "v", "-of", "csv=p=0", "-i", "-");
         pb.redirectErrorStream(true);
         
@@ -503,38 +575,98 @@ public class Ffmpeg {
         FfmpegReaderThread ffrt = new FfmpegReaderThread(p.getInputStream());
         
         ffrt.start();
+        try{
+                p.getOutputStream().write(mutated);
+        }catch(IOException ex){
+            if(!ex.getMessage().equals("Broken pipe"))
+                throw ex;
+        }
         
-        p.getOutputStream().write(mutated);
         p.getOutputStream().close();
         
-        boolean spinning;
-         do{
+        boolean spinning = false;
+        while(!spinning){
                 try{  
-                    spinning = false;
+                    
                     ffrt.join();
+                    spinning = true;
                     //block until reader thread is finished
                 }catch(InterruptedException ex){
                     System.out.println("Reader was temporarily interrupted");
-                    spinning = true;
+                    
                 }
             
-        }while(spinning == true);
+        }
             //spin while interrupted
         
         String[] numbers = new String(ffrt.getStdOut()).split("\n");
         
-        String res = numbers[0].substring(numbers[0].indexOf(",")+1);
+        String[] resString = numbers[0].split(",");
+        
+        if(resString.length != 2){
+            System.out.println("Unable to get initial resolution from piped input");
+            throw new BadVideoFile("Piped Resolution");
+        }
+        
+        int h, w;
+        
+        try{
+            w = Integer.parseInt(resString[0]);
+            h = Integer.parseInt(resString[1]);
+        }catch(NumberFormatException ex){
+            System.out.println("Unable to get initial resolution from piped input");
+            throw new BadVideoFile("Piped Resolution");
+        }
+        
+        
+        
         
         for(int i = 1; i < numbers.length; i++){
-            String clump = numbers[i].substring(numbers[i].indexOf(",")+1);
             
+            if(numbers[i].equals(""))
+                continue;
             
-            if(!res.equals(clump) && !clump.trim().equals("")){
+            String[] clump = numbers[i].split(",");
+            
+            int tmpH, tmpW;
+            
+            try{
+                tmpW = Integer.parseInt(clump[0]);
+                tmpH = Integer.parseInt(clump[1]);
+            
+            }catch(NumberFormatException ex){
+                System.out.println("Failed to obtain testing frame resolution");
+                throw new BadVideoFile("Resolution values: '"+clump[0]+"' by '"+clump[1]+"'");
+            }
+            
+            if(h != tmpH || w != tmpW){
+                System.out.println("Resolution went from "+w+","+h+" to "+tmpW+","+tmpH);
+                p.destroy();
+                return true;
+            
+            }
+            
+            /*if(clump.contains("partial file")){
+                ///TODO: fix the issue with partial files
+                System.out.println("Partial file, bad encoding");
+                
+                java.util.Random r = new java.util.Random();
+            
+                String name = "Partial_" + String.valueOf(r.nextInt());
+            
+                try (FileOutputStream fos = new FileOutputStream("tmp/"+name)) {
+                    fos.write(mutated);
+                }
+            }*/
+            
+            /*if(!res.equals(clump) && !clump.trim().equals("")){
                 //if the resolution suddenly changes
+                
+                System.out.println("Video resolution changed from " + res + " to " + clump);
                 p.destroy();
                 return true;
                 //destroy the process, delete the file, return true
-            }
+            }*/
         }
         
         
@@ -555,7 +687,7 @@ public class Ffmpeg {
         detecting if the resolution has changed
         */
         
-        ProcessBuilder pb = new ProcessBuilder(ffprobe.getPath(), "-v", "error", "-show_entries", "frame=pkt_pts_time,width,height", "-select_streams", 
+        ProcessBuilder pb = new ProcessBuilder(ffprobe.getPath(), "-v", "error", "-show_entries", "frame=width,height", "-select_streams", 
                                                 "v", "-of", "csv=p=0", "-i", in.getPath());
         pb.redirectErrorStream(true);
         Process p = pb.start();
@@ -571,27 +703,79 @@ public class Ffmpeg {
             //and return false
             System.out.println("Failed to read from ffprobe Process");
             p.destroy();
+            //in.delete();
             return false;
         }
         
-        String res = line.substring(line.indexOf(",")+1);
+        //String res = line.substring(line.indexOf(",")+1);
+        String[] resolution = line.split(",");
+        
+        if(resolution.length != 2){
+            System.out.println("Failed to obtain the initial resolution");
+            p.destroy();
+            //in.delete();
+            return false;
+        }
+        
+        
+        int w, h;
+        
+        try{
+            w = Integer.parseInt(resolution[0]);
+            h = Integer.parseInt(resolution[1]);
+        
+        }catch(NumberFormatException ex){
+            System.out.println("Resolutions are not integers");
+            p.destroy();
+            //in.delete();
+            return false;
+        }
+        
         //initial resolution of file
         //reader.readLine();
         //burn a byte
         
         while((line = reader.readLine())!=null){
             
-            String clump = line.substring(line.indexOf(",")+1);
-            if(!res.equals(clump) && !clump.trim().equals("")){
-                //if the resolution suddenly changes
+            if(line.equals(""))
+                continue;
+            //dont actually know if I will need this this time, but who knows
+            
+            
+            
+            String[] clump = line.split(",");
+            if(clump.length != 2){
+                System.out.println("Failed to obtain testing resolution");
                 p.destroy();
-                in.delete();
+                //in.delete();
+                return false;
+            }
+            
+            int tmpH, tmpW;
+            
+            try{
+                tmpW = Integer.parseInt(clump[0]);
+                tmpH = Integer.parseInt(clump[1]);
+            
+            }catch(NumberFormatException ex){
+                System.out.println("Tested resolutions are not integers");
+                p.destroy();
+                //in.delete();
+                return false;
+            }
+            
+            if(tmpH != h || tmpW != w){
+                System.out.println("Resolution changed from "+w+","+h+" to "+tmpW+","+tmpH);
+                p.destroy();
+                //in.delete();
                 return true;
-                //destroy the process, delete the file, return true
             }
             
         
         }
+        
+        p.destroy();
+        //in.delete();
         return false;
     
     }
@@ -621,113 +805,270 @@ public class Ffmpeg {
     
     
     
-    public static byte[] mutateBuffer(byte[] bytes) throws IOException{
+    public static byte[] mutateBuffer(byte[] bytes) throws IOException, BadVideoFile{
         //byte[] bytes = in.readAllBytes();
         byte[] mutated = new byte[bytes.length];
-        ByteBuffer byteBuff;
+        //ByteBuffer byteBuff;
         byte[] tmpSize = new byte[4];
                      
         byte[] header = Arrays.copyOf(bytes, 4);
         
-        byteBuff = ByteBuffer.wrap(header);
-        
-        int startingPoint = byteBuff.getInt();
+        //byteBuff = ByteBuffer.wrap(header).getInt();
+        int startingPoint = ByteBuffer.wrap(header).getInt();
+        //int startingPoint = byteBuff.getInt();
                      
         System.arraycopy(bytes, 0, mutated, 0, startingPoint);
         //copy the first bits of header we want into the mutated file
 
                     
         boolean foundMoov = false;
+        boolean foundMdatFirst = false; 
+        
                      
-                     
-        int v = 0;
+        //int v = 0;
+        //int z = 0;
         byte[] moov = {'m', 'o', 'o', 'v'};
+        byte[] mdat = {'m', 'd', 'a', 't'};
+       // byte last = 0x0;
+        
         int moovLocation;
         for(moovLocation = startingPoint; moovLocation <  bytes.length; moovLocation++){
-            if(bytes[moovLocation] == moov[v])
+            if(bytes[moovLocation] == moov[0]){
+                foundMoov = true;
+                for(int j = 1; j < moov.length; j++){
+                    if(bytes[moovLocation+j] != moov[j]){
+                        foundMoov = false;
+                        break;
+                    }
+                }
+                
+                if(foundMoov == true)
+                    break;
+
+            }
+            
+            if(bytes[moovLocation] == mdat[0] && !foundMdatFirst){
+                foundMdatFirst = true;
+                
+                for(int j = 1; j < mdat.length; j++){
+                    
+                    if(bytes[moovLocation+j] != mdat[j]){
+                        foundMdatFirst = false;
+                        break;
+                    }
+                }
+                
+                
+            
+            }
+            
+            
+        }
+        
+        //moovLocation+=4;
+        
+        /*for(moovLocation = startingPoint; moovLocation <  bytes.length; moovLocation++){
+            if(bytes[moovLocation] == moov[v]){
                 v++;
-            else
+                last = bytes[moovLocation];
+            }
+            else if(last != bytes[moovLocation])
                 v = 0;
+            
+            if(bytes[moovLocation] == mdat[z] && !foundMdatFirst){
+                z++;
+                last = bytes[moovLocation];
+            }
+            else if(last != bytes[moovLocation])
+                z = 0;
                         
             if(v == 4){
                 foundMoov = true;
                 break;
             }
+            if(z == 4){
+                
+                
+                foundMdatFirst = true;
+                z = 0;
+                //break;
+            }
+            
+        }*/
+        
+        
+        if(foundMdatFirst != true){
+            //if mdat was found before the moov atom, then we know the moov atom is after it (a big no no),
+            //in which we need to mutate the data. if moov was found BEFORE mdat, then ffmpeg is capable of 
+            //reading the file unaltered
+            ///DONT FUCKING TOUCH THIS
+            
+            return bytes;
+            
         }
                      
-        moovLocation-=4;
         
-        System.arraycopy(bytes, moovLocation-3, tmpSize, 0, 4);
         
-        byteBuff = ByteBuffer.wrap(tmpSize);
+        System.arraycopy(bytes, moovLocation-4, tmpSize, 0, 4);
+        
+        //byteBuff = ByteBuffer.wrap(tmpSize);
 
-        int moovLength = byteBuff.getInt();
-                     
+        //int moovLength = byteBuff.getInt();
+        int moovLength = ByteBuffer.wrap(tmpSize).getInt();
+        //TODO: garuntee ints fit in this             
+        
+        
+        if(moovLength < 0 /*|| moovLength > bytes.length - moovLocation*/){
+            //moovLength = bytes.length - moovLocation;
+            throw new BadVideoFile("The video file has an moov atom with a bad size");
+            ///TODO: Fix this, I need a way to detect multiple moov atoms
+            
+        }
+        
                     
-                    
-        System.arraycopy(bytes, moovLocation-3, mutated, startingPoint, moovLength);
+        try{           
+        System.arraycopy(bytes, moovLocation-4, mutated, startingPoint, moovLength);
         //move the moov atom and container to the front
-        moovLocation-=3;
+        ///TODO: somehwere here theres an issue with array out of bounds
+        }catch(java.lang.ArrayIndexOutOfBoundsException ex){
+            
+            System.out.println("Bad Array!!!");
+            java.util.Random r = new java.util.Random();
+            
+            String name = String.valueOf(r.nextInt());
+            
+            try (FileOutputStream fos = new FileOutputStream("tmp/"+name)) {
+            fos.write(bytes);
+            
+        }
+        
+        }
+        
+        
+        moovLocation-=4;
         
         if(moovLocation == startingPoint){
             //if the moov atom is located EXACTLY after the header, we dont need to perform
             //any changes
             return bytes;
         }
-        
-        
-        //                src       srcPos      dest            destPos                     length
-        System.arraycopy(bytes, startingPoint, mutated, startingPoint + moovLength , moovLocation-startingPoint);
+
+        byte[] before = new byte[moovLocation-startingPoint];     
+        //                src       srcPos      dest   destPos      length
+        System.arraycopy(bytes, startingPoint, before, 0, moovLocation-startingPoint);
         //put everything that was before the moov atom, after the moov atom
+        
+        
         int remaining = bytes.length - (moovLocation+moovLength);
-        int startOfRemaining = startingPoint+moovLength + (moovLocation-startingPoint);
-        System.arraycopy(bytes, (moovLocation+moovLength), mutated, startOfRemaining, remaining);
+        //int startOfRemaining = startingPoint+moovLength + (moovLocation-startingPoint);
+        //int startOfRemaining = moovLocation+moovLength;
+        
+        byte[] after = new byte[remaining];
+        
+        System.arraycopy(bytes, (moovLocation+moovLength), after, 0, remaining);
         //copy remaining data to end of output stream
                     
-                    
+        System.arraycopy(before, 0, mutated, startingPoint+moovLength, before.length);
+        System.arraycopy(after, 0, mutated, startingPoint+moovLength+before.length, after.length);
                     
         boolean stcoFound = false;
-        v = 0;
+        boolean co64Found = false;
+        
+        
+        
+        
+        //v = 0;
+        //int p = 0;
         
         byte[] stcoStr = {'s', 't', 'c', 'o'};
-        for(int q = startingPoint; q < moovLength; q++){
-            if(mutated[q] == stcoStr[v])
-                v++;
-            else
-                v = 0;
-                        
-            if(v == 4){
+        byte[] co64Str = {'c', 'o', '6', '4'};
+        
+        int count;
+        
+        for(int q = startingPoint; q < moovLength+startingPoint; q++){
+            if(mutated[q] == stcoStr[0]){
                 stcoFound = true;
+                
+                for(int j = 1; j < stcoStr.length && stcoFound; j++){
+                    if(mutated[q+j] != stcoStr[j])
+                        stcoFound = false;
+                }   
+          
+            
+            }
+            
+            if(mutated[q] == co64Str[0]){
+                co64Found = true;
+                
+                for(int j = 1; j < co64Str.length && co64Found; j++){
+                    if(mutated[q+j] != co64Str[j])
+                        co64Found = false;
+                }
+                
+   
+            }
+            
+            if(stcoFound || co64Found){
+                q+=8;
+                byte[] tmpClump = {mutated[q], mutated[q+1], mutated[q+2], mutated[q+3]};
+                count = ByteBuffer.wrap(tmpClump).getInt();
                 q+=4;
-                int count;
-                byte[] tmpClump = {mutated[q+1], mutated[q+2], mutated[q+3], mutated[q+4]};
-                byteBuff = ByteBuffer.wrap(tmpClump);
+                
+                if(stcoFound){
+                    for(int qq = 0; qq < count; qq++){
+                        int tmp;
+                        byte[] tmpClump2 = {mutated[q], mutated[q+1], mutated[q+2], mutated[q+3]};
+                        //byteBuff = ByteBuffer.wrap(tmpClump2);
+                        //tmp = byteBuff.getInt();
+                        tmp = ByteBuffer.wrap(tmpClump2).getInt();
 
-                count = byteBuff.getInt();
 
-                q+=5;
-                for(int qq = 0; qq < count; qq++){
-                    int tmp;
-                    byte[] tmpClump2 = {mutated[q], mutated[q+1], mutated[q+2], mutated[q+3]};
-                    byteBuff = ByteBuffer.wrap(tmpClump2);
-                    tmp = byteBuff.getInt();
+                        tmp += moovLength;
+                        //byteBuff = ByteBuffer.allocate(4);
+                        //byteBuff.putInt(tmp);
+                        byte[] result = ByteBuffer.allocate(4).putInt(tmp).array();//byteBuff.array();
+                        mutated[q] = result[0];
+                        mutated[q+1] = result[1];
+                        mutated[q+2] = result[2];
+                        mutated[q+3] = result[3];
+
+                        q+=4;
+                        
+                        stcoFound = false;
+                        co64Found = false;
+                    }
+                
+                }else{
+                    for(int qq = 0; qq < count; qq++){
+                    long tmp;
+                    byte[] tmpClump2 = {mutated[q], mutated[q+1], mutated[q+2], mutated[q+3], mutated[q+4], mutated[q+5], mutated[q+6], mutated[q+7]};
+                    tmp = ByteBuffer.allocate(8).wrap(tmpClump2).getLong();//byteBuff.getLong();
 
 
                     tmp += moovLength;
-                    byteBuff = ByteBuffer.allocate(4);
-                    byteBuff.putInt(tmp);
-                    byte[] result = byteBuff.array();
+                    byte[] result = ByteBuffer.allocate(8).putLong(tmp).array();
+                    
                     mutated[q] = result[0];
                     mutated[q+1] = result[1];
                     mutated[q+2] = result[2];
                     mutated[q+3] = result[3];
+                    mutated[q+4] = result[4];
+                    mutated[q+5] = result[5];
+                    mutated[q+6] = result[6];
+                    mutated[q+7] = result[7];
 
-                    q+=4;
+                    q+=8;
                 }
-                v = 0;
+                
+                }
+                
+                
+                
+                
             }
-                        
+        
         }
+        
         
         return mutated;
     
@@ -739,7 +1080,7 @@ public class Ffmpeg {
         //public AtomicBoolean blocking;
         //spinlock
         private final InputStream inputStream;
-        private byte[] stdOutTotal;
+        private @Nullable byte[] stdOutTotal;
         
         public byte[] getStdOut(){return this.stdOutTotal;}
         
@@ -755,52 +1096,76 @@ public class Ffmpeg {
         @Override
         public void run(){
             
-            
-            int readBytes = 1;
-            
-            do{
+            try {
+                this.stdOutTotal = this.inputStream.readAllBytes();
+                
+                if(this.stdOutTotal.length == 0){
+                    this.stdOutTotal = null;
+                }
+                //why didnt I fucking think of this before
+                
+                /*int readBytes = 1;
+                
+                do{
                 byte[] tmp = new byte[1024];
                 //boolean wasInterrupted;
                 //int c = 0;
                 
                 
                 //do{
-                    try {
-                        //wasInterrupted = false;
-                        readBytes = inputStream.read(tmp);
-                        
-                        if(readBytes < 0)
-                            break;
-                        
-                        
-                        if(stdOutTotal == null){
-                            stdOutTotal = new byte[readBytes];
-                            System.arraycopy(tmp, 0, stdOutTotal, 0, readBytes);
-                        }
-                        else{
-                            byte[] stdOutTmp = new byte[readBytes + stdOutTotal.length];
-                            System.arraycopy(stdOutTotal, 0, stdOutTmp, 0, stdOutTotal.length);
-                            System.arraycopy(tmp, 0, stdOutTmp, stdOutTotal.length, readBytes);
-                            this.stdOutTotal = stdOutTmp;
-                        }
-                        
-                        
-                        //c+=readBytes;
-                        //System.out.println("im stuck");
-
-                    } catch (IOException ex) {
-                        //System.out.println("Reader was temporarily interrupted");
-                        Logger.getLogger(ScreamerBot.class.getName()).log(Level.SEVERE, null, ex);
-                       //wasInterrupted = true;
-                    }
+                try {
+                //wasInterrupted = false;
+                readBytes = inputStream.read(tmp);
+                
+                if(readBytes < 0)
+                break;
+                
+                
+                if(stdOutTotal == null){
+                stdOutTotal = new byte[readBytes];
+                System.arraycopy(tmp, 0, stdOutTotal, 0, readBytes);
+                }
+                else{
+                byte[] stdOutTmp = new byte[readBytes + stdOutTotal.length];
+                System.arraycopy(stdOutTotal, 0, stdOutTmp, 0, stdOutTotal.length);
+                System.arraycopy(tmp, 0, stdOutTmp, stdOutTotal.length, readBytes);
+                this.stdOutTotal = stdOutTmp;
+                }
+                
+                
+                //c+=readBytes;
+                //System.out.println("im stuck");
+                
+                } catch (IOException ex) {
+                //System.out.println("Reader was temporarily interrupted");
+                Logger.getLogger(ScreamerBot.class.getName()).log(Level.SEVERE, null, ex);
+                //wasInterrupted = true;
+                }
                 //}while(wasInterrupted == true);
-            
-            }while(readBytes >= 0 );
-            
-            //this.blocking.set(false);
-        
+                
+                }while(readBytes >= 0 );
+                */
+                
+                //this.blocking.set(false);
+                //System.out.println("im outskis");
+                
+                //return;
+            } catch (IOException ex) {
+                //Logger.getLogger(Ffmpeg.class.getName()).log(Level.SEVERE, null, ex);
+                this.stdOutTotal = null;
+            }
         }
     
+    
+    }
+    
+    
+    
+    public static class BadVideoFile extends Exception{
+    
+        public BadVideoFile(String errorMessage) {
+            super(errorMessage);
+        }
     
     }
     
