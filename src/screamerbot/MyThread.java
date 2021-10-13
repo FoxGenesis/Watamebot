@@ -137,7 +137,8 @@ public class MyThread extends Thread{
             }//for
             
             //System.out.println("sdsdasd");
-            
+            this.guild = this.guild.getJDA().getGuildById(this.guild.getIdLong());
+            //update the guild
 
         
         }//end while

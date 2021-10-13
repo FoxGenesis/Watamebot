@@ -8,16 +8,14 @@ package screamerbot;
 
 import QtFastStart_Pipes.QtFastStart;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
 
-
+@interface Fallback{};
 
 
 /**
@@ -53,42 +51,27 @@ public class MediaConverter {
         
         
     }
-     @Unneeded
-     public int test(/*InputStream in*/byte[] inputBytes, boolean webm) throws IOException, InterruptedException, Ffmpeg.BadVideoFile{
+
+     public int test(byte[] inputBytes, boolean webm) throws IOException, InterruptedException, Ffmpeg.BadVideoFile{
         
-        //byte[] inputBytes = null;
-        byte[] original = inputBytes;//in.readAllBytes();
-        //in.close();
+        byte[] original = inputBytes;
+        //copy the original bytes in case we need to fall back on them
         
         if (webm == false) {
-            /*inputBytes = Ffmpeg.mutateBuffer(inputBytes);*/
             inputBytes = QtFastStart.fastStart(original);
         }
         
         if(inputBytes == null)
+            //if failed to obtain a mutated quickstart version (ie an error occured,
+            //or the original file is allready quickstart), fall back to the original bytes
             inputBytes = original;
-        
-        
-        
-        
-        /*try (FileOutputStream fos = new FileOutputStream("gay.mp4")) {
-        fos.write(inputBytes);
-        }*/
-        
-        
-        //System.out.println("about to check");
+
         //attempt to check if the video is a crasher 
         if(ff.checkCrasher(inputBytes)){
-            //System.out.println("found crash");
-            /*Random r = new Random();
-            try (FileOutputStream fos = new FileOutputStream("tmp/crasher"+String.valueOf( r.nextInt()) +".mp4")) {
-                fos.write(inputBytes);
-            }*/
             return 2;
         }
-        //System.out.println("checked");
+
         ArrayList<byte[]> segments = ff.grabSegments(inputBytes);
-        //System.out.println("got segments");
         
         if(segments == null){
             System.out.println("Failed to process media file");
@@ -113,8 +96,6 @@ public class MediaConverter {
         
         
         for(int i = 0; i < segments.size() && triggered != 1; i++){
-            //values[i] = ff.getVolumeMean(segments.get(i));
-            //System.out.println(val);
             
             if(segments.get(i) == null){
                 System.out.println("Segment was not processed correctly, skipping...");
@@ -166,7 +147,7 @@ public class MediaConverter {
          
      }
     
-     @Deprecated
+     @Fallback
      public int test(File in) throws InterruptedException, IOException{
          
         

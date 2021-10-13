@@ -16,15 +16,11 @@ import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.ByteBuffer;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.ResultSet;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
@@ -33,18 +29,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.GuildChannel;
 import net.dv8tion.jda.api.entities.Message.Attachment;
 import net.dv8tion.jda.api.entities.PrivateChannel;
 import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleAddEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleRemoveEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.exceptions.ContextException;
 import net.dv8tion.jda.api.exceptions.HierarchyException;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -68,11 +61,14 @@ import net.dv8tion.jda.internal.requests.Requester;
  */  
 public class MessageProcess extends ListenerAdapter{
     
-    String[] baddies = {"srkpetr", "danila264", "loki064", "cfyzz007", "sunderdt", "keshakesha", "hunterfuck1", "irinateku1a", "fake3203",
+    private final String[] baddies = {"srkpetr", "danila264", "loki064", "cfyzz007", "sunderdt", "keshakesha", "hunterfuck1", "irinateku1a", "fake3203",
     "sfwselkj", "smertb08", "dsfdsfdsg", "sheriff1", "toshqua94", "djdjdjdj", "setgo95", "nazipzz", "1503957", "I2xGoogle", "fhvfy92",
     "fake7777", "artemovaleksandr", "msfast92", "Jagged Trade", "Worried Selection", "Dopey Temperature", "Direct", "Fluid Pull", "Admired Parent",
     "Plump Independence", "Ajar", "Married", "Valuable", "Woeful", "Incomplete", "Disguised", "Exciting", "Shy Flower", "Raw", "Dutiful", 
     "Generous", "Frank Mouse", "Adorable", "Bossy", "Angry Economics", "Regular Weakness", "Immaterial"};
+    
+    private final String[] commandStr = {"<help>", "<enable>", "<disable>", "<invite>", "<bang>", "<bangtoggle>", "<malware>", "<malwaretoggle>",
+                                        "<nametoggle>"};
     
     
     final private char fs = File.separatorChar;///windows uses '\', Unix uses '/'
@@ -81,16 +77,19 @@ public class MessageProcess extends ListenerAdapter{
     //private FileWriter fw = null;///the file writer object, this is used for writing the server files
     final static private MediaConverter converter = new MediaConverter();
     //initialize the MediaConverter Object. this is the class that handles all media file conversion for checking the volume of the downloaded media file
+    final private Commands commands;
+    //commands parser
 
     
     private final PrintWriter errorLogger; 
     
 
-    public MessageProcess(Consts c) throws IOException{
+    public MessageProcess(Consts c) throws IOException, Commands.RepeatedCommandException{
         consts = c;
         discord = c.getJDA();
         //threads = new ArrayList();
         errorLogger = new PrintWriter(new FileWriter(Consts.getLogger(), true));
+        commands = new Commands(commandStr);
     }
     
     
@@ -98,7 +97,7 @@ public class MessageProcess extends ListenerAdapter{
     @Override
      public void onMessageReceived(MessageReceivedEvent event){
          //this is the method that processes the event object. all front-end is done here
-        boolean botFlag = event.getAuthor().isBot();
+        //boolean botFlag = event.getAuthor().isBot();
         //simple flag to check if the event is written by another bot. we do not want to react to bots.
         
         
@@ -111,8 +110,17 @@ public class MessageProcess extends ListenerAdapter{
             //dont need to do anything if it's a private message
         }
         
-         
-         if(starts(event, "<help>") && !botFlag){
+        
+        if(event.getAuthor().isBot()){
+            /*dont do anything if the event author is a bot*/
+            return;
+        }
+        
+        
+        int parsedCommand = commands.parse(event.getMessage().getContentRaw());
+        
+         //<help>
+         if(parsedCommand == 0/*starts(event, "<help>") && !botFlag*/){
              //if the message contains the help command, simply send a message containing the infomration on how the bot works
              event.getChannel().sendMessage("How to use: \n\n\t<help>: Prints this message.\n\t<enable>: enable loud/screamer videos detection."
                      + "\n\t<disable>: disable loud/screamer videos detection\n\t<invite>: Direct Messages user the invite for the bot."
@@ -125,7 +133,8 @@ public class MessageProcess extends ListenerAdapter{
                      + "\n\t<malwaretoggle> Enables or disables the act of automatically jailing users who upload malware.").queue();
          }
          //end help
-         else if(starts(event, "<invite>") && !botFlag)
+         //<invite>
+         else if(parsedCommand == 3/*starts(event, "<invite>") && !botFlag*/)
              //if the message contains the invite command, send a private message to the user that contains the bot invite url
          {
              PrivateChannel channel = event.getAuthor().openPrivateChannel().complete();
@@ -148,7 +157,8 @@ public class MessageProcess extends ListenerAdapter{
             //inform the log terminal that a user requested an invite for the bot
              
          }//end invite
-         else if(starts(event, "<enable>") && !botFlag && userAllowed(event))
+         //<enable>
+         else if(1 == parsedCommand/*starts(event, "<enable>") && !botFlag*/ && userAllowed(event))
              //if the message contains the enable command, the user is not a bot, and the user is an admin
          {
              if(isBlocking(event))
@@ -168,7 +178,8 @@ public class MessageProcess extends ListenerAdapter{
              
                          
          }//end enable
-         else if(starts(event, "<disable>") && !botFlag && userAllowed(event))
+         //<disable>
+         else if(2 == parsedCommand/*starts(event, "<disable>") && !botFlag*/ && userAllowed(event))
              //if the message contains the disable command, the user is not a bot, and the user is an admin
          {
              if(!isBlocking(event))
@@ -186,7 +197,8 @@ public class MessageProcess extends ListenerAdapter{
              }
                
          }
-         else if(starts(event,"<bang>") && !botFlag && userAllowed(event)){
+         //<bang>
+         else if(4 == parsedCommand/*starts(event,"<bang>") && !botFlag*/ && userAllowed(event)){
              
              
              //if(!event.getMessage().getMentionedRoles().isEmpty()){
@@ -227,7 +239,8 @@ public class MessageProcess extends ListenerAdapter{
                 
          
          }//end if starts with <bang>
-         else if(event.getMessage().getContentDisplay().trim().equals("<bangtoggle>") && userAllowed(event) && !botFlag){
+         //<bangtoggle>
+         else if(/*event.getMessage().getContentDisplay().trim().equals("<bangtoggle>")*/5 == parsedCommand && userAllowed(event)/* && !botFlag*/){
             //toggle the bang
         
             Consts.GuildInfo gi = consts.getGuildInfo(event.getGuild().getId());
@@ -246,7 +259,8 @@ public class MessageProcess extends ListenerAdapter{
              
          
          }
-         else if(starts(event,"<malware>") && !botFlag && userAllowed(event)){
+         //<malware>
+         else if(6 == parsedCommand/*starts(event,"<malware>") && !botFlag*/ && userAllowed(event)){
              //<malware> [role] [ChannelID] 
              String msg = event.getMessage().getContentRaw();
              try{
@@ -275,7 +289,8 @@ public class MessageProcess extends ListenerAdapter{
              }
          
          }
-         else if(starts(event,"<malwaretoggle>") && !botFlag && userAllowed(event)){
+         //<malwaretoggle>
+         else if(7 == parsedCommand/*starts(event,"<malwaretoggle>") && !botFlag*/ && userAllowed(event)){
              
              Consts.GuildInfo gi = consts.getGuildInfo(event.getGuild().getId());
              if(gi.getGuildChannel() != null){
@@ -301,7 +316,8 @@ public class MessageProcess extends ListenerAdapter{
          }
          
          /*Temporary*/
-         else if(starts(event, "<nametoggle>") && !botFlag && userAllowed(event)){
+         //<nametoggle>
+         else if(8 == parsedCommand/*starts(event, "<nametoggle>") && !botFlag*/ && userAllowed(event)){
              boolean current = consts.getGuildInfo(event.getGuild().getId()).getRenamingStatus();
              
              if(current){
@@ -319,7 +335,9 @@ public class MessageProcess extends ListenerAdapter{
          
          }
          
-         if(!botFlag && isRenaming(event) && !isDunce(event)){
+         /*end of the commands*/
+         
+         if(/*!botFlag && */isRenaming(event) && !isDunce(event)){
             String nameMsg = event.getMessage().getContentRaw();
             String msgUpper = nameMsg.toUpperCase();
             
@@ -587,7 +605,7 @@ public class MessageProcess extends ListenerAdapter{
             Logger.getLogger(MessageProcess.class.getName()).log(Level.SEVERE, null, ex);
         }
          
-         if(checkForUrls(event.getMessage().getContentStripped()) && !event.getAuthor().isBot()){
+         if(checkForUrls(event.getMessage().getContentStripped())/* && !event.getAuthor().isBot()*/){
              //anyone who posts a url or embed and doesnt have the permissions, they get bullied for it lol
              
              if(!event.getMember().getPermissions(event.getTextChannel()).contains(Permission.MESSAGE_EMBED_LINKS)

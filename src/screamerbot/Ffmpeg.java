@@ -7,26 +7,16 @@ package screamerbot;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 //import com.google.common.jimfs.Jimfs;
 //import com.google.common.jimfs.Configuration;
-import java.io.UncheckedIOException;
-import java.nio.ByteBuffer;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
-@interface FuckedUp{}
-@interface Unneeded{}
 
 /**
  *
@@ -116,13 +106,13 @@ public class Ffmpeg {
         
         
     }//end constructor
-    @Deprecated
+    /*@Deprecated
     public File encode(File is) throws IOException, InterruptedException{
         
-        /*
+        
         as of now, this method is never used. It may be used in a later update. all it does in rip the audio out of the downloaded media file
         and save it as a wav file.
-        */
+        
         
         
         ProcessBuilder pb = new ProcessBuilder(ffmpeg.getPath(), "-y", "-i", is.getPath(), "-ac", "1", "-vn", "tmp"+fs+"audio.wav");
@@ -157,7 +147,7 @@ public class Ffmpeg {
         
        return new File("tmp"+fs+"audio.wav");
        //return the newly extracted audio file
-    }
+    }*/
     
     
     public ArrayList<byte[]> grabSegments(byte[] buffer) throws IOException, InterruptedException{
@@ -263,17 +253,11 @@ public class Ffmpeg {
             p.getOutputStream().close();
             //flush and close the STDIN stream
             
-            //System.out.println("AAAAAAAAAAAAA" + new String (p.getErrorStream().readAllBytes()));
-            
-            //while(ffrt.blocking.get())
-                //spinblock until thread reader is ready to pass the read data
-                //;
                 
             boolean success = false;
             
             while(!success){
                 try{  
-                    //System.out.println("joining");
                     ffrt.join();
                     success = true;
                     //block until reader thread is finished
@@ -290,8 +274,6 @@ public class Ffmpeg {
             stdOut = ffrt.getStdOut();
             //obtain the STDOUT piped data from the reader thread
             
-            //if(stdOut == null)
-            //    throw new NullPointerException();
             
             output.add(stdOut);
             //add the wav data to the collection of datas.
@@ -307,7 +289,7 @@ public class Ffmpeg {
     
     
     
-    @Deprecated
+    @Fallback
     public File[] split(File in) throws IOException, InterruptedException{
         
         /*
@@ -344,10 +326,6 @@ public class Ffmpeg {
         
         }
 
-        //wait for the ffmpeg process to finish, get the return response of the wrapped ffmpeg
-        //Thread.sleep(2000);
-        //sleep for 2 seconds. this gives enough time to make sure the media file is done being processed by ffmpeg, so it has had time to close and allow it
-        //to be deleted
         in.delete();
         //delete the media file, we are done with it
         
@@ -368,7 +346,7 @@ public class Ffmpeg {
         //return that array
     }
     
-    @Unneeded
+    @Deprecated
     public File[] split(byte[] in) throws IOException, InterruptedException{
         
         /*
@@ -404,13 +382,6 @@ public class Ffmpeg {
             }
         
         }
-
-        //wait for the ffmpeg process to finish, get the return response of the wrapped ffmpeg
-        //Thread.sleep(2000);
-        //sleep for 2 seconds. this gives enough time to make sure the media file is done being processed by ffmpeg, so it has had time to close and allow it
-        //to be deleted
-        //in.delete();
-        //delete the media file, we are done with it
         
         if(response!=0)
             //0 is a normal rturn value for ffmpeg to close on, this means everything worked out
@@ -430,7 +401,7 @@ public class Ffmpeg {
     }
     
     
-    @Deprecated
+    @Fallback
     public double getVolumeMean(File in) throws IOException, InterruptedException{
         //ffmpeg -i input.mp4 -af "volumedetect" -f null NUL
         
@@ -562,7 +533,6 @@ public class Ffmpeg {
     public boolean checkCrasher(byte[] in) throws IOException, BadVideoFile{
         
         
-        //byte[] mutated = mutateBuffer(in);
         byte[] mutated = in;
         
         ProcessBuilder pb = new ProcessBuilder(ffprobe.getPath(), "-v", "error", "-show_entries", "frame=width,height", "-select_streams", 
@@ -646,27 +616,7 @@ public class Ffmpeg {
             
             }
             
-            /*if(clump.contains("partial file")){
-                ///TODO: fix the issue with partial files
-                System.out.println("Partial file, bad encoding");
-                
-                java.util.Random r = new java.util.Random();
-            
-                String name = "Partial_" + String.valueOf(r.nextInt());
-            
-                try (FileOutputStream fos = new FileOutputStream("tmp/"+name)) {
-                    fos.write(mutated);
-                }
-            }*/
-            
-            /*if(!res.equals(clump) && !clump.trim().equals("")){
-                //if the resolution suddenly changes
-                
-                System.out.println("Video resolution changed from " + res + " to " + clump);
-                p.destroy();
-                return true;
-                //destroy the process, delete the file, return true
-            }*/
+
         }
         
         
@@ -679,7 +629,7 @@ public class Ffmpeg {
     }
     
     
-    @Deprecated
+    @Fallback
     public boolean checkCrasher(File in) throws IOException{
         /*
         This method returns true if it detected a suddent change in resolution midway in the video file, which will
@@ -730,10 +680,7 @@ public class Ffmpeg {
             //in.delete();
             return false;
         }
-        
-        //initial resolution of file
-        //reader.readLine();
-        //burn a byte
+
         
         while((line = reader.readLine())!=null){
             
@@ -780,301 +727,7 @@ public class Ffmpeg {
     
     }
     
-    
-    
-    
-    void create(Path path, String fileName) {
-        //function to create a file by it's name and the path it is located in
-        Path filePath = path.resolve(fileName);
-        try {
-            Files.createFile(filePath);
-        } catch (IOException ex) {
-            throw new UncheckedIOException(ex);
-        }
-    }
-    
-    void update(Path path, byte[] b) {
-        //function to write bytes to a file 
-        try {
-            Files.write(path, b);
-            //return newContent;
-        } catch (IOException ex) {
-            throw new UncheckedIOException(ex);
-        }
-    }
-    
-    
-    
-    public static byte[] mutateBuffer(byte[] bytes) throws IOException, BadVideoFile{
-        //byte[] bytes = in.readAllBytes();
-        byte[] mutated = new byte[bytes.length];
-        //ByteBuffer byteBuff;
-        byte[] tmpSize = new byte[4];
-                     
-        byte[] header = Arrays.copyOf(bytes, 4);
-        
-        //byteBuff = ByteBuffer.wrap(header).getInt();
-        int startingPoint = ByteBuffer.wrap(header).getInt();
-        //int startingPoint = byteBuff.getInt();
-                     
-        System.arraycopy(bytes, 0, mutated, 0, startingPoint);
-        //copy the first bits of header we want into the mutated file
 
-                    
-        boolean foundMoov = false;
-        boolean foundMdatFirst = false; 
-        
-                     
-        //int v = 0;
-        //int z = 0;
-        byte[] moov = {'m', 'o', 'o', 'v'};
-        byte[] mdat = {'m', 'd', 'a', 't'};
-       // byte last = 0x0;
-        
-        int moovLocation;
-        for(moovLocation = startingPoint; moovLocation <  bytes.length; moovLocation++){
-            if(bytes[moovLocation] == moov[0]){
-                foundMoov = true;
-                for(int j = 1; j < moov.length; j++){
-                    if(bytes[moovLocation+j] != moov[j]){
-                        foundMoov = false;
-                        break;
-                    }
-                }
-                
-                if(foundMoov == true)
-                    break;
-
-            }
-            
-            if(bytes[moovLocation] == mdat[0] && !foundMdatFirst){
-                foundMdatFirst = true;
-                
-                for(int j = 1; j < mdat.length; j++){
-                    
-                    if(bytes[moovLocation+j] != mdat[j]){
-                        foundMdatFirst = false;
-                        break;
-                    }
-                }
-                
-                
-            
-            }
-            
-            
-        }
-        
-        //moovLocation+=4;
-        
-        /*for(moovLocation = startingPoint; moovLocation <  bytes.length; moovLocation++){
-            if(bytes[moovLocation] == moov[v]){
-                v++;
-                last = bytes[moovLocation];
-            }
-            else if(last != bytes[moovLocation])
-                v = 0;
-            
-            if(bytes[moovLocation] == mdat[z] && !foundMdatFirst){
-                z++;
-                last = bytes[moovLocation];
-            }
-            else if(last != bytes[moovLocation])
-                z = 0;
-                        
-            if(v == 4){
-                foundMoov = true;
-                break;
-            }
-            if(z == 4){
-                
-                
-                foundMdatFirst = true;
-                z = 0;
-                //break;
-            }
-            
-        }*/
-        
-        
-        if(foundMdatFirst != true){
-            //if mdat was found before the moov atom, then we know the moov atom is after it (a big no no),
-            //in which we need to mutate the data. if moov was found BEFORE mdat, then ffmpeg is capable of 
-            //reading the file unaltered
-            ///DONT FUCKING TOUCH THIS
-            
-            return bytes;
-            
-        }
-                     
-        
-        
-        System.arraycopy(bytes, moovLocation-4, tmpSize, 0, 4);
-        
-        //byteBuff = ByteBuffer.wrap(tmpSize);
-
-        //int moovLength = byteBuff.getInt();
-        int moovLength = ByteBuffer.wrap(tmpSize).getInt();
-        //TODO: garuntee ints fit in this             
-        
-        
-        if(moovLength < 0 /*|| moovLength > bytes.length - moovLocation*/){
-            //moovLength = bytes.length - moovLocation;
-            throw new BadVideoFile("The video file has an moov atom with a bad size");
-            ///TODO: Fix this, I need a way to detect multiple moov atoms
-            
-        }
-        
-                    
-        try{           
-        System.arraycopy(bytes, moovLocation-4, mutated, startingPoint, moovLength);
-        //move the moov atom and container to the front
-        ///TODO: somehwere here theres an issue with array out of bounds
-        }catch(java.lang.ArrayIndexOutOfBoundsException ex){
-            
-            System.out.println("Bad Array!!!");
-            java.util.Random r = new java.util.Random();
-            
-            String name = String.valueOf(r.nextInt());
-            
-            try (FileOutputStream fos = new FileOutputStream("tmp/"+name)) {
-            fos.write(bytes);
-            
-        }
-        
-        }
-        
-        
-        moovLocation-=4;
-        
-        if(moovLocation == startingPoint){
-            //if the moov atom is located EXACTLY after the header, we dont need to perform
-            //any changes
-            return bytes;
-        }
-
-        byte[] before = new byte[moovLocation-startingPoint];     
-        //                src       srcPos      dest   destPos      length
-        System.arraycopy(bytes, startingPoint, before, 0, moovLocation-startingPoint);
-        //put everything that was before the moov atom, after the moov atom
-        
-        
-        int remaining = bytes.length - (moovLocation+moovLength);
-        //int startOfRemaining = startingPoint+moovLength + (moovLocation-startingPoint);
-        //int startOfRemaining = moovLocation+moovLength;
-        
-        byte[] after = new byte[remaining];
-        
-        System.arraycopy(bytes, (moovLocation+moovLength), after, 0, remaining);
-        //copy remaining data to end of output stream
-                    
-        System.arraycopy(before, 0, mutated, startingPoint+moovLength, before.length);
-        System.arraycopy(after, 0, mutated, startingPoint+moovLength+before.length, after.length);
-                    
-        boolean stcoFound = false;
-        boolean co64Found = false;
-        
-        
-        
-        
-        //v = 0;
-        //int p = 0;
-        
-        byte[] stcoStr = {'s', 't', 'c', 'o'};
-        byte[] co64Str = {'c', 'o', '6', '4'};
-        
-        int count;
-        
-        for(int q = startingPoint; q < moovLength+startingPoint; q++){
-            if(mutated[q] == stcoStr[0]){
-                stcoFound = true;
-                
-                for(int j = 1; j < stcoStr.length && stcoFound; j++){
-                    if(mutated[q+j] != stcoStr[j])
-                        stcoFound = false;
-                }   
-          
-            
-            }
-            
-            if(mutated[q] == co64Str[0]){
-                co64Found = true;
-                
-                for(int j = 1; j < co64Str.length && co64Found; j++){
-                    if(mutated[q+j] != co64Str[j])
-                        co64Found = false;
-                }
-                
-   
-            }
-            
-            if(stcoFound || co64Found){
-                q+=8;
-                byte[] tmpClump = {mutated[q], mutated[q+1], mutated[q+2], mutated[q+3]};
-                count = ByteBuffer.wrap(tmpClump).getInt();
-                q+=4;
-                
-                if(stcoFound){
-                    for(int qq = 0; qq < count; qq++){
-                        int tmp;
-                        byte[] tmpClump2 = {mutated[q], mutated[q+1], mutated[q+2], mutated[q+3]};
-                        //byteBuff = ByteBuffer.wrap(tmpClump2);
-                        //tmp = byteBuff.getInt();
-                        tmp = ByteBuffer.wrap(tmpClump2).getInt();
-
-
-                        tmp += moovLength;
-                        //byteBuff = ByteBuffer.allocate(4);
-                        //byteBuff.putInt(tmp);
-                        byte[] result = ByteBuffer.allocate(4).putInt(tmp).array();//byteBuff.array();
-                        mutated[q] = result[0];
-                        mutated[q+1] = result[1];
-                        mutated[q+2] = result[2];
-                        mutated[q+3] = result[3];
-
-                        q+=4;
-                        
-                        stcoFound = false;
-                        co64Found = false;
-                    }
-                
-                }else{
-                    for(int qq = 0; qq < count; qq++){
-                    long tmp;
-                    byte[] tmpClump2 = {mutated[q], mutated[q+1], mutated[q+2], mutated[q+3], mutated[q+4], mutated[q+5], mutated[q+6], mutated[q+7]};
-                    tmp = ByteBuffer.allocate(8).wrap(tmpClump2).getLong();//byteBuff.getLong();
-
-
-                    tmp += moovLength;
-                    byte[] result = ByteBuffer.allocate(8).putLong(tmp).array();
-                    
-                    mutated[q] = result[0];
-                    mutated[q+1] = result[1];
-                    mutated[q+2] = result[2];
-                    mutated[q+3] = result[3];
-                    mutated[q+4] = result[4];
-                    mutated[q+5] = result[5];
-                    mutated[q+6] = result[6];
-                    mutated[q+7] = result[7];
-
-                    q+=8;
-                }
-                
-                }
-                
-                
-                
-                
-            }
-        
-        }
-        
-        
-        return mutated;
-    
-    }
-    
-    
     
     private class FfmpegReaderThread extends Thread{
         //public AtomicBoolean blocking;
@@ -1104,55 +757,11 @@ public class Ffmpeg {
                 }
                 //why didnt I fucking think of this before
                 
-                /*int readBytes = 1;
                 
-                do{
-                byte[] tmp = new byte[1024];
-                //boolean wasInterrupted;
-                //int c = 0;
-                
-                
-                //do{
-                try {
-                //wasInterrupted = false;
-                readBytes = inputStream.read(tmp);
-                
-                if(readBytes < 0)
-                break;
-                
-                
-                if(stdOutTotal == null){
-                stdOutTotal = new byte[readBytes];
-                System.arraycopy(tmp, 0, stdOutTotal, 0, readBytes);
-                }
-                else{
-                byte[] stdOutTmp = new byte[readBytes + stdOutTotal.length];
-                System.arraycopy(stdOutTotal, 0, stdOutTmp, 0, stdOutTotal.length);
-                System.arraycopy(tmp, 0, stdOutTmp, stdOutTotal.length, readBytes);
-                this.stdOutTotal = stdOutTmp;
-                }
-                
-                
-                //c+=readBytes;
-                //System.out.println("im stuck");
-                
-                } catch (IOException ex) {
-                //System.out.println("Reader was temporarily interrupted");
-                Logger.getLogger(ScreamerBot.class.getName()).log(Level.SEVERE, null, ex);
-                //wasInterrupted = true;
-                }
-                //}while(wasInterrupted == true);
-                
-                }while(readBytes >= 0 );
-                */
-                
-                //this.blocking.set(false);
-                //System.out.println("im outskis");
-                
-                //return;
             } catch (IOException ex) {
-                //Logger.getLogger(Ffmpeg.class.getName()).log(Level.SEVERE, null, ex);
+
                 this.stdOutTotal = null;
+                //if interrupted, unfortunately that data is lost
             }
         }
     

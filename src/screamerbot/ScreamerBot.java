@@ -40,7 +40,7 @@ public class ScreamerBot {
     //the error logger
     
     
-    private ScreamerBot() throws LoginException, InterruptedException, IOException, SQLException{
+    private ScreamerBot() throws LoginException, InterruptedException, IOException, SQLException, Commands.RepeatedCommandException{
         //default contructor
         consts = new Consts();
         errorLogger = new PrintWriter(new FileWriter(Consts.getLogger(), true));
@@ -66,7 +66,7 @@ public class ScreamerBot {
             //initialize the main bot object
 
             //now its able to read messages
-        } catch (LoginException | InterruptedException | IOException | SQLException ex) {
+        } catch (LoginException | InterruptedException | IOException | SQLException | Commands.RepeatedCommandException ex) {
             //ex.printStackTrace(errorLogger);
             Logger.getLogger(ScreamerBot.class.getName()).log(Level.SEVERE, null, ex);
         }
