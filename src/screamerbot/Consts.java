@@ -63,10 +63,10 @@ public class Consts {
     errorLogger = new PrintWriter(new FileWriter(Consts.getLogger(), true));
     threads = new ArrayList();
     
-    BufferedReader br = new BufferedReader(new FileReader("token.txt"));
-    token = br.readLine();
-    //obtain the token
-    br.close();
+        try (BufferedReader br = new BufferedReader(new FileReader("token.txt"))) {
+            token = br.readLine();
+            //obtain the token
+        }
     connectionHandler = DriverManager.getConnection("jdbc:sqlite:repo"+File.separatorChar+"database.db");
     //create connection to the database
     System.out.println("Successfully connected to the SQLite databbase");

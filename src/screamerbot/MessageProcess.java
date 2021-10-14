@@ -538,7 +538,7 @@ public class MessageProcess extends ListenerAdapter{
                           
                           
                           event.getChannel().sendMessage(event.getAuthor().getAsMention()+ " POTENTIAL MALICIOUS PAYLOAD DETECTED! " + reason
-                                  + " ```This feature is in beta, please notify the developer Spazmaster#8989 if a mistake was made.```").queue();
+                                  /*+ " ```This feature is in beta, please notify the developer Spazmaster#8989 if a mistake was made.```"*/).queue();
                           break;
                           //post the reason why it was deleted, then break; we dont need to process the rest of the attachments
                       
@@ -861,215 +861,32 @@ public class MessageProcess extends ListenerAdapter{
     }
     
     
-    private boolean starts(MessageReceivedEvent event, String in)
-            //simple comparison method. this is so I dont need to copy and paste the same thing over and over.
-            //this checks if the message text begins with the inputted strings. this is used for checking if the message is a command
-    {
-        if(event.getMessage().getContentStripped().startsWith(in))
-            return true;
-        
-        return false;
-    }
+
     
     private boolean userAllowed(MessageReceivedEvent event){
         //this is another comparison method. I use this to check if the message creator has permission to ban members. this is a simple way to check 
         //if the user is a moderator, since only moderators should have control over this bot
-        if(event.getGuild().getMember(event.getAuthor()).hasPermission(Permission.BAN_MEMBERS))
-            return true;
-        
-        return false;
+            
+        return event.getMember().hasPermission(Permission.BAN_MEMBERS);
+
     }
     
     private boolean isBlocking(MessageReceivedEvent event){
         /*check if the guild is currently blocking videos or not*/
         String gid = event.getGuild().getId();
-        if(consts.getGuildInfo(gid).getScreamerStatus())
-            return true;
-
-        return false;
-        //otherwise return false
+        return consts.getGuildInfo(gid).getScreamerStatus();
         
     }
     
     private boolean isRenaming(MessageReceivedEvent event){
         //check if the guild is renaming users with "i'm" in their message
         String gid = event.getGuild().getId();
-        if(consts.getGuildInfo(gid).getRenamingStatus())
-            return true;
-        return false;
+        return consts.getGuildInfo(gid).getRenamingStatus();
     
     }
     
-    /*private String getDunceRole(Guild guild){
-        
-    
-    }*/
-     
-    @Deprecated
-    private  int extractUrls(String[] text, MessageReceivedEvent event) throws MalformedURLException, IOException, InterruptedException
-            //function that takes in a hack reference string to remove the urls from and return it out as a reference 
-            //(arrays in java are passed by what could be considered a reference like in C), and the event object that the 
-            //message occured in. It then calculates whether or not a file had a problem with it, whether its a crasher file or file with embedded 
-            //malicious code in it, etc
-{
-    int triggered = 0;
-    List<String> containedUrls = new ArrayList<String>();
-    String urlRegex = "\\b((https|http|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|])";//"((https?|ftp|gopher|telnet|file):((//)|(\\\\))+[\\w\\d:#@%/;$()~_?\\+-=\\\\\\.&]*)";
-    Pattern pattern = Pattern.compile(urlRegex, Pattern.CASE_INSENSITIVE);
-    Matcher urlMatcher = pattern.matcher(text[0]);
-    //regex for detecting urls
-
-    while (urlMatcher.find())
-    {
-        String holder = text[0].substring(urlMatcher.start(0),
-                urlMatcher.end(0));
-        if(holder.contains("https://cdn.discordapp.com/attachments/") || holder.contains("http://cdn.discordapp.com/attachments/"))
-            containedUrls.add(holder);
-        //if the url is an embedable discord link, then add it to a list
-        
-        if(holder.contains("://tornadus.net/")){
-            //hack for detecting an embed crasher
-            //System.out.println(holder);
-                try{///TODO: optimize this
-                            event.getMessage().delete().queue();///delete the offending message
-                            }catch(InsufficientPermissionException ex){
-                                System.out.println("Error, bot attempted to delete an offending message in "+event.getGuild()+", but deleting messages is not enabled.");
-                            }
-                          
-                          
-                          
-                          event.getChannel().sendMessage(event.getAuthor().getAsMention()+ " POTENTIAL MALICIOUS PAYLOAD DETECTED! " + "Discord Embed link crasher."
-                                  + " ```This feature is in beta, please notify the developer Spazmaster#8989 if a mistake was made.```").queue();
-                          break;
-            
-        }
-        
-        
-    }
-    
-    
-    
-    //remove the urls from the inputted reference string
-    for(int i = 0; i<containedUrls.size(); i++)
-        text[0]= text[0].replace(containedUrls.get(i), "");
     
 
-    
-    for(int i = 0; i<containedUrls.size() && triggered == 0; i++){
-        //for each of the urls in the list, download the file and analyze it
-            
-            String ext = containedUrls.get(i).substring(containedUrls.get(i).lastIndexOf('.'));
-            //get the extension of the file
-            
-            
-            //checks if the file is a video, then download it and scan it
-            if(ext.toLowerCase().contains("mp4")||ext.toLowerCase().contains("webm") ||ext.toLowerCase().contains("mov")){
-                URL url = new URL(containedUrls.get(i));
-                //apply the url string to the url objet
-                URLConnection openConnection = url.openConnection();
-                //open the url connection
-                openConnection.addRequestProperty("User-Agent", Requester.USER_AGENT);//"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11");
-                //declare the http user agent as the discord protcol
-                openConnection.connect();
-                
-                try{   
-                if(openConnection.getContentLength() < 100000000){
-                    //if the file download is not an abysmally large file
-                    InputStream in = new BufferedInputStream(openConnection.getInputStream());
-                    File temp = new File("tmp"+ fs+"temp"+ext);
-                    //create a temporary file to download to
-                    OutputStream os = new FileOutputStream(temp);
-                    byte[] b = new byte[8192];
-                    int read = 1;
-                    //begin reading in the file in 8 kb chunksand storing it in a file output stream
-                    while((read = in.read(b, 0, 8192)) != -1){
-                        os.write(b, 0, read);
-                        
-                    }
-                    
-                    os.flush();
-                    os.close();
-                    //fflush and close the stream
-                    
-                    
-                    triggered =  converter.test(temp);
-                    //check whether the media converter detected a bad file
-                    
-                    }
-                else
-                    System.out.println("Attempted to download a dangerously large file");
-                //let the logger be aware that the application almost downloaded a dangerously large file
-                
-                //triggered =  converter.test(outFile);
-                }catch(IOException ex){System.out.println("Error, received an error 403 from discord while "
-                        + "trying to download: \n\t"+containedUrls.get(i));}
-                //let logger know that for unknown reasons discord sent a 403 error
-               
-              
-            }//end if is a video
-            if(ext.toLowerCase().contains("png")||ext.toLowerCase().contains("jpg") ||ext.toLowerCase().contains("jpeg")
-                    || ext.toLowerCase().contains("mp4")){///TODO: remove the mp4 part? why am I checking twice for mp4s?
-                URL url = new URL(containedUrls.get(i));
-                //apply the url string to the url objet
-                URLConnection openConnection = url.openConnection();
-                //open the url connection
-                openConnection.addRequestProperty("User-Agent", Requester.USER_AGENT);//"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11");
-                //declare the http user agent as the discord protcol
-                openConnection.connect();
-                
-                try{   
-                if(openConnection.getContentLength() < 100000000){
-                    //if the file download is not an abysmally large file
-                    InputStream in = new BufferedInputStream(openConnection.getInputStream());
-                    //get the input stream of the url
-                    
-                    AntiMalware am = new AntiMalware(in);
-                    //create a new malware scanner object
-                    
-                    if(am.payloadDetected){
-                        //if it detected a bad file,
-                        try{
-                            event.getMessage().delete().queue();///delete the offending message
-                            }catch(InsufficientPermissionException ex){
-                                System.out.println("Error, bot attempted to delete an offending message in "+event.getGuild()+", but deleting messages is not enabled.");
-                            }
-                          String reason = "Invalid Reason";
-                          if(am.possibleMalwareFound == 1)
-                              reason = "Non-Malicious Test File detected. No reason to be worried.";
-                          if(am.possibleMalwareFound == 2)
-                              reason = "Detected possble shell script embedded in file.";
-                          //calculate the reason why it it was removed
-                          
-                          event.getChannel().sendMessage(event.getAuthor().getAsMention()+ " POTENTIAL MALICIOUS PAYLOAD DETECTED! " + reason
-                                  + " ```This feature is in beta, please notify the developer Spazmaster#8989 if a mistake was made.```").queue();
-                          break;
-                          //inform the reason it was removed, and break; we dont need to scan the rest of the files
-                    }
-                    
-                    
-                    }
-                else
-                    System.out.println("Attempted to download a dangerously large file");
-                //let the logger be aware that the application almost downloaded a dangerously large file
-                
-                //triggered =  converter.test(outFile);
-                }catch(IOException ex){System.out.println("Error, received an error 403 from discord while "
-                        + "trying to download: \n\t"+containedUrls.get(i));}
-                //let logger know that for unknown reasons discord sent a 403 error
-                
-                
-            
-            }
-            
-            
-        }//for
-
-    //return the status of whether or not a problem was calculated to be bad
-    return triggered;
-}
-    
-    
-    
     private  int extractUrlsToBytes(String[] text, MessageReceivedEvent event) throws MalformedURLException, IOException, InterruptedException
             //function that takes in a hack reference string to remove the urls from and return it out as a reference 
             //(arrays in java are passed by what could be considered a reference like in C), and the event object that the 
@@ -1214,7 +1031,7 @@ public class MessageProcess extends ListenerAdapter{
                           //calculate the reason why it it was removed
                           
                           event.getChannel().sendMessage(event.getAuthor().getAsMention()+ " POTENTIAL MALICIOUS PAYLOAD DETECTED! " + reason
-                                  + " ```This feature is in beta, please notify the developer Spazmaster#8989 if a mistake was made.```").queue();
+                                  /*+ " ```This feature is in beta, please notify the developer Spazmaster#8989 if a mistake was made.```"*/).queue();
                           break;
                           //inform the reason it was removed, and break; we dont need to scan the rest of the files
                     }
