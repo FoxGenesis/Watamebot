@@ -598,6 +598,11 @@ public class Ffmpeg {
             
             String[] clump = numbers[i].split(",");
             
+            if(clump.length != 2){
+                System.out.println("Failed to obtain testing frame resolution");
+                throw new BadVideoFile("Could not obtain resolution: " + numbers[i]);
+            }
+            
             int tmpH, tmpW;
             
             try{
