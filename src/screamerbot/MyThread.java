@@ -72,11 +72,11 @@ public class MyThread extends Thread{
             
             List<Member> members = guild.retrieveMembersByPrefix("!", 100).get();
             
-            members.removeIf(
+            /*members.removeIf(
                     m -> (guild.getMemberById(guild.getJDA().getSelfUser().getIdLong()).getRoles().get(0).getPosition() <= m.getRoles().get(0).getPosition())
             
             
-                );
+                );*/
             
             //List<Member> members = guild.loadMembers().get();
             
@@ -85,9 +85,10 @@ public class MyThread extends Thread{
                 
                 //System.out.println("Member list size: " + members.size());
                 
-                if(members.get(i).getEffectiveName().startsWith("!")){
+                if(members.get(i).getEffectiveName().startsWith("!") &&
+                    guild.getSelfMember().canInteract(members.get(i))){
                     //if the member has a name with '!' at the beginning
-                    try{
+                    //try{
                     
                         if(dunceName == null){
                             //if the dunce name is null, then append only a z
@@ -128,11 +129,11 @@ public class MyThread extends Thread{
                         //add each role to the dunce user
                         guild.addRoleToMember(members.get(i), roles.get(j)).queue();
                     
-                    }catch(net.dv8tion.jda.api.exceptions.HierarchyException 
+                    /*}catch(net.dv8tion.jda.api.exceptions.HierarchyException 
                             | net.dv8tion.jda.api.exceptions.InsufficientPermissionException ex)
                         //if it's unable to rename the user due to permissions or heirarchy problems,
                         //dont worry about it
-                    {/*Dont do anything, this is a soft error*/}
+                    {Dont do anything, this is a soft error*///}
                 }//if(members.get(i).getEffectiveName().startsWith("!"))
             }//for
             

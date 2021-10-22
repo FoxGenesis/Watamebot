@@ -163,9 +163,11 @@ public class Ffmpeg {
         
         
         //calculate actual duration of video
-        ProcessBuilder pb = new ProcessBuilder(ffmpeg.getPath(), "-hide_banner", "-i", "-", "-f", "null", nullLocation);
+        //ProcessBuilder pb = new ProcessBuilder(ffmpeg.getPath(), "-hide_banner", "-i", "-", "-f", "null", nullLocation);
+        ProcessBuilder pb = new ProcessBuilder(ffprobe.getPath(), "-i", "-", "-show_entries", "format=duration", "-v", "quiet", "-of", "csv=p=0");
         pb.redirectErrorStream(true);
         Process p = pb.start();
+        //obtain estimated time of duration of the video
         try{
             p.getOutputStream().write(buffer);
         }catch(IOException ex){
@@ -176,10 +178,18 @@ public class Ffmpeg {
         p.getOutputStream().close();
         //receive the piped data and detect it's format and duration
 
+        double seconds;
+        try{
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            seconds = Double.parseDouble(new String(p.getInputStream().readAllBytes()));
+        }catch(NumberFormatException ex){
+            return null;
         
-        String line, time;
+        }
+        
+        //BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        
+        /*String line, time;
         
         double seconds = -1.0;
         
@@ -196,13 +206,13 @@ public class Ffmpeg {
                 break;
             }
         
-        }
+        }*/
         p.getInputStream().close();
         p.destroy();
         //p = null;
         
-        if(seconds < 0)
-            return null;
+        /*if(seconds < 0)
+            return null;*/
         
         int count = 0;
         
@@ -213,12 +223,12 @@ public class Ffmpeg {
             if(seconds - count < 1.0)
                 //depending on if there is data duration that can occupy a full second, or the remaining
                 //bit of audio that is less than a second, we generate a new process for the duration
-                pb = new ProcessBuilder(ffmpeg.getPath(), "-hide_banner", "-i", "-", "-codec", "copy","-f", "wav", "-ac", "1", /*"-af", 
+                pb = new ProcessBuilder(ffmpeg.getPath(), "-hide_banner", "-i", "-", /*"-codec", "copy",*/ "-f", "wav", "-ac", "1", /*"-af", 
                         "highpass=f=200",*/ "-ss", String.valueOf(count), "-"
                 
                 );
             else
-                pb = new ProcessBuilder(ffmpeg.getPath(), "-hide_banner", "-i", "-", "-codec", "copy", "-f", "wav", "-ac", "1", /*"-af", 
+                pb = new ProcessBuilder(ffmpeg.getPath(), "-hide_banner", "-i", "-", /*"-codec", "copy",*/ "-f", "wav", "-ac", "1", /*"-af", 
                         "highpass=f=200",*/ "-ss", String.valueOf(count), "-t", "1", "-"
                 
                 );
@@ -274,14 +284,30 @@ public class Ffmpeg {
             stdOut = ffrt.getStdOut();
             //obtain the STDOUT piped data from the reader thread
             
+            if(stdOut == null){
+                output.add(stdOut);
+                continue;
+            }
             
-            output.add(stdOut);
+            
+            byte[] dataChunk = new byte[4];
+            
+            System.arraycopy(stdOut, stdOut.length - 8, dataChunk, 0, 4);
+            
+            if(dataChunk[0] == 'd' && dataChunk[1] == 'a' && dataChunk[2] == 't' && dataChunk[3] == 'a'){
+                System.out.println("Early termination of video file");
+                return output;
+            }
+            //if receiving blank wav files, then the video has malformed duration metadata, and either the video is bad, or we've finished reading all the
+            //actual video content
+                //output.add(null);
+            else
+                output.add(stdOut);
             //add the wav data to the collection of datas.
             p.destroy();
             
             count++;
         }
-        
         
         return output;
     
@@ -503,6 +529,8 @@ public class Ffmpeg {
         do{
                 try{  
                     spinning = false;
+                    //ffrt.join();
+                    p.waitFor();
                     ffrt.join();
                     //block until reader thread is finished
                 }catch(InterruptedException ex){
