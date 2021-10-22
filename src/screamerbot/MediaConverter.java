@@ -71,7 +71,7 @@ public class MediaConverter {
             return 2;
         }
 
-        ArrayList<byte[]> segments = ff.grabSegments(inputBytes);
+        ArrayList<Double> segments = ff.grabSegments(inputBytes);
         
         if(segments == null){
             System.out.println("Failed to process media file");
@@ -102,8 +102,8 @@ public class MediaConverter {
                 continue;
             }
             
-            double value = ff.getVolumeMean(segments.get(i));
-            
+            //double value = ff.getVolumeMean(segments.get(i));
+            double value = segments.get(i);
             
             /*
             due to the nature of the decibel's logarithmic behavior, dividing the current volume by half roughly equals a volume double the loudness.
@@ -112,7 +112,7 @@ public class MediaConverter {
             this is because a video could possibly silent for a while, then someone talks at a reasonable volume, this would technically match 
             the norm/2<value rule, however this isn't a screamer volume. This is to prevent false positives, as most screamers are louder than -8 dB.
             */
-            if(i>3 && i<segments.size()-1){
+            if(i>10 && i<segments.size()-1){
                 if(norm/2 < value && value>-5)
                     triggered = 1;
             }

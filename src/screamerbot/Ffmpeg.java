@@ -38,7 +38,7 @@ public class Ffmpeg {
     final private File ffprobe;//actual ffprobe executable
     final private char fs = File.separatorChar;///windows uses '\', Unix uses '/'
     final private boolean os;///true for windows, false for linux
-    //FileSystem virtualFileSystem = Jimfs.newFileSystem(Configuration.forCurrentPlatform());
+    final private int EBUR128;
     
     final int ErrorCode;
     
@@ -46,6 +46,7 @@ public class Ffmpeg {
     
     public Ffmpeg() throws IOException{
         ErrorCode = 0;
+        EBUR128 = 35;
         
         InputStream is;
         //used to extract the ffmpeg unwrapped executable
@@ -150,164 +151,78 @@ public class Ffmpeg {
     }*/
     
     
-    public ArrayList<byte[]> grabSegments(byte[] buffer) throws IOException, InterruptedException{
-        ArrayList<byte[]> output = new ArrayList<>();
+    public ArrayList<Double> grabSegments(byte[] buffer) throws IOException, InterruptedException{
+        ArrayList<Double> output = new ArrayList<>();
         
         
-        String nullLocation;
-        if(os)
-            nullLocation = "NUL";
-        else
-            nullLocation = "/dev/null";
-        ///get the type of null location of the OS
-        
-        
-        //calculate actual duration of video
-        //ProcessBuilder pb = new ProcessBuilder(ffmpeg.getPath(), "-hide_banner", "-i", "-", "-f", "null", nullLocation);
-        ProcessBuilder pb = new ProcessBuilder(ffprobe.getPath(), "-i", "-", "-show_entries", "format=duration", "-v", "quiet", "-of", "csv=p=0");
-        pb.redirectErrorStream(true);
+        ProcessBuilder pb = new ProcessBuilder(ffmpeg.getPath(), "-hide_banner", "-nostats", "-i", "-", "-filter_complex", "ebur128", "-f", "null", "-");
         Process p = pb.start();
-        //obtain estimated time of duration of the video
+        
+        
+        FfmpegReaderThread ffrt = new FfmpegReaderThread(p.getErrorStream());
+        
+        ffrt.start();
+        
         try{
             p.getOutputStream().write(buffer);
+        
         }catch(IOException ex){
             if(!ex.getMessage().equals("Broken pipe"))
                 throw ex;
         }
+        
         p.getOutputStream().flush();
         p.getOutputStream().close();
-        //receive the piped data and detect it's format and duration
-
-        double seconds;
-        try{
-
-            seconds = Double.parseDouble(new String(p.getInputStream().readAllBytes()));
-        }catch(NumberFormatException ex){
-            return null;
         
-        }
         
-        //BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        boolean spinning = true;
         
-        /*String line, time;
-        
-        double seconds = -1.0;
-        
-        while((line=reader.readLine()) != null){
-            if(line.startsWith("frame=")){
-                int start = line.indexOf("time=") + "time=".length();
-                int end = line.indexOf(" ", start);
-                
-                time = line.substring(start, end);
-                
-                String[] tmp = time.split(":");
-                
-                seconds = 3600 * Integer.parseInt(tmp[0]) + 60 * Integer.parseInt(tmp[1]) + Double.parseDouble(tmp[2]);
-                break;
+        do{
+            try{
+                ffrt.join();
+                spinning = false;
+            }catch(InterruptedException e){
+                System.out.println("Reader was interrupted");
+            
             }
+            
         
-        }*/
-        p.getInputStream().close();
-        p.destroy();
-        //p = null;
+        }while(spinning);
         
-        /*if(seconds < 0)
+        String stdOut = new String(ffrt.getStdOut());
+        p.getErrorStream().close();
+        
+        /*if(stdOut == null)
             return null;*/
         
-        int count = 0;
         
-        while(count < seconds){
-            
-
-            
-            if(seconds - count < 1.0)
-                //depending on if there is data duration that can occupy a full second, or the remaining
-                //bit of audio that is less than a second, we generate a new process for the duration
-                pb = new ProcessBuilder(ffmpeg.getPath(), "-hide_banner", "-i", "-", /*"-codec", "copy",*/ "-f", "wav", "-ac", "1", /*"-af", 
-                        "highpass=f=200",*/ "-ss", String.valueOf(count), "-"
+        String[] results = stdOut.split("\n");
+        
+        if(results.length < 2)
+            return null;
+        
+        for (String tmp : results) {
+            if(tmp.startsWith("[Parsed_ebur128_0")){
+                int start = tmp.indexOf("I:" ,EBUR128)+2;
+                if(start < 2)
+                    continue;
+                int end = tmp.indexOf("LUFS", start);
                 
-                );
-            else
-                pb = new ProcessBuilder(ffmpeg.getPath(), "-hide_banner", "-i", "-", /*"-codec", "copy",*/ "-f", "wav", "-ac", "1", /*"-af", 
-                        "highpass=f=200",*/ "-ss", String.valueOf(count), "-t", "1", "-"
+                String loudStr = tmp.substring(start, end);
                 
-                );
-            pb.redirectErrorStream(false);
-            
-            
-            p = pb.start();
-            
-            @Nullable byte[] stdOut;
-            
-            FfmpegReaderThread ffrt = new FfmpegReaderThread(p.getInputStream());
-            
-            ffrt.start();
-            //start the reader thread
-            
-            try{
-                //messy hack to accept a closed stdin to the FFMPEG wrapper, as 
-                //ffmpeg will sometimes close it's stdin early when it figures out it's 
-                //done reading data in in order to finish the wav data (enough data is provided for wav,
-                //we dont need anymore data)
-            
-                p.getOutputStream().write(buffer);
-            }catch(IOException ex){
-                if(!ex.getMessage().equals("Broken pipe")){
-                    //in the event that the exception ISNT a broken pipe, then something fucky has 
-                    //happened and we do in fact need this exception
-                    throw ex;
+                try{
+                    double val = Double.parseDouble(loudStr);
+                    output.add(val);
+                }catch(NumberFormatException ex){
+                    System.out.println("Bad double value, skipping...");
                 }
-            }
-            
-            p.getOutputStream().flush();
-            p.getOutputStream().close();
-            //flush and close the STDIN stream
-            
                 
-            boolean success = false;
-            
-            while(!success){
-                try{  
-                    ffrt.join();
-                    success = true;
-                    //block until reader thread is finished
-                }catch(InterruptedException ex){
-                    System.out.println("Reader was temporarily interrupted");
-                }
-            
-            }
-            //spin while interrupted
-            //System.out.println("im out");
-            
-            
-            
-            stdOut = ffrt.getStdOut();
-            //obtain the STDOUT piped data from the reader thread
-            
-            if(stdOut == null){
-                output.add(stdOut);
-                continue;
             }
             
-            
-            byte[] dataChunk = new byte[4];
-            
-            System.arraycopy(stdOut, stdOut.length - 8, dataChunk, 0, 4);
-            
-            if(dataChunk[0] == 'd' && dataChunk[1] == 'a' && dataChunk[2] == 't' && dataChunk[3] == 'a'){
-                System.out.println("Early termination of video file");
-                return output;
-            }
-            //if receiving blank wav files, then the video has malformed duration metadata, and either the video is bad, or we've finished reading all the
-            //actual video content
-                //output.add(null);
-            else
-                output.add(stdOut);
-            //add the wav data to the collection of datas.
-            p.destroy();
-            
-            count++;
         }
+        
+        
+        
         
         return output;
     
@@ -490,7 +405,7 @@ public class Ffmpeg {
         return Double.valueOf(temp);
         //convert it into an actual double value from the string value
     }
-    
+    @Deprecated
     public double getVolumeMean(byte[] in) throws IOException, InterruptedException{
         String nullLocation;
         if(os)
