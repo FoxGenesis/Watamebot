@@ -80,6 +80,7 @@ public class MediaConverter {
         
         
         double norm = 0;
+        double normAve = 0;
         /*norm is the estimated "room-tempature" volume
         this is used to predict what the average video volume is to produce a rough average estimate throughout the video.
         this is used to check if the next audio sample is suddently substantially louder than the current "room tempature",
@@ -112,10 +113,12 @@ public class MediaConverter {
             this is because a video could possibly silent for a while, then someone talks at a reasonable volume, this would technically match 
             the norm/2<value rule, however this isn't a screamer volume. This is to prevent false positives, as most screamers are louder than -8 dB.
             */
-            if(i>10 && i<segments.size()-1){
-                if(norm/2 < value && value>-5)
+            /*if(i>10 && i<segments.size()-1){
+                if(normAve/2 < value && value>-5){
                     triggered = 1;
-            }
+                    System.out.println("im gay "+value+" "+normAve);
+                }
+            }*/
             
             
             /****************
@@ -126,12 +129,14 @@ public class MediaConverter {
             if(value > -5.5)
                 strikes++;
             //*
-            if(strikes>=5)
+            if(strikes>=10)
                 triggered = 1;
             //*
             //********************************//
             
-            norm = norm + value / 2.0;
+            norm = norm + value /*/ 2.0*/;
+            normAve = norm /(i+1);
+            
             //recalculate the normal volume average
             
             if(triggered == 1)

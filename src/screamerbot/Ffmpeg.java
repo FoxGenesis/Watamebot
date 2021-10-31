@@ -203,10 +203,10 @@ public class Ffmpeg {
         
         for (String tmp : results) {
             if(tmp.startsWith("[Parsed_ebur128_0")){
-                int start = tmp.indexOf("I:" ,EBUR128)+2;
+                int start = tmp.indexOf("M:", EBUR128)+2;
                 if(start < 2)
                     continue;
-                int end = tmp.indexOf("LUFS", start);
+                int end = tmp.indexOf("S:", start);
                 
                 String loudStr = tmp.substring(start, end);
                 
