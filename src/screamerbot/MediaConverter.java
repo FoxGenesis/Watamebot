@@ -79,8 +79,9 @@ public class MediaConverter {
         }
         
         
-        double norm = 0;
-        double normAve = 0;
+        ArrayList<Double> norm = new ArrayList();
+        //double norm = 0;
+        //double normAve = 0;
         /*norm is the estimated "room-tempature" volume
         this is used to predict what the average video volume is to produce a rough average estimate throughout the video.
         this is used to check if the next audio sample is suddently substantially louder than the current "room tempature",
@@ -120,6 +121,28 @@ public class MediaConverter {
                 }
             }*/
             
+            /*if(i>10 && i < segments.size() - 1){
+                double normAve = 0;
+                for(int j = 0; j < norm.size(); j++)
+                    normAve+=norm.get(j);
+                normAve/=norm.size();
+                
+                norm.remove(0);
+                norm.add(value);
+                
+                if(normAve/2 < value && value > -5.5){
+                    triggered = 1;
+                    System.out.println("im gay "+value+" "+normAve);
+                }
+                
+                
+            }
+            else{
+                norm.add(value);
+            }*/
+            
+            ///do I even need this?
+            
             
             /****************
              * In general, if a volume louder than -5.5 is detected, it could possibly be an annoyingly loud video, but it could also possibly be a one time
@@ -128,19 +151,23 @@ public class MediaConverter {
              */
             if(value > -5.5)
                 strikes++;
+            else
+                strikes = 0;
             //*
             if(strikes>=10)
                 triggered = 1;
             //*
             //********************************//
             
-            norm = norm + value /*/ 2.0*/;
-            normAve = norm /(i+1);
+            //norm = norm + value /*/ 2.0*/;
+            //normAve = norm /(i+1);
             
             //recalculate the normal volume average
             
-            if(triggered == 1)
+            if(triggered == 1){
+                System.out.println("stikes: " + strikes);
                 break;
+            }
             
         }//end for loop
         
