@@ -63,86 +63,87 @@ public class MyThread extends Thread{
         String lastUser = null;
         
         System.out.println("Started thread "+this.getId());
-        while(isRunning){
-            //loop while the running flag is true
-            
-            try {Thread.sleep(1000);} catch (InterruptedException ex) {Logger.getLogger(MyThread.class.getName()).log(Level.SEVERE, null, ex);}
-            //sleep so I dont accedently trigger discord's anti-spam
-            
-            
-            List<Member> members = guild.retrieveMembersByPrefix("!", 100).get();
-            
-            /*members.removeIf(
-                    m -> (guild.getMemberById(guild.getJDA().getSelfUser().getIdLong()).getRoles().get(0).getPosition() <= m.getRoles().get(0).getPosition())
-            
-            
-                );*/
-            
-            //List<Member> members = guild.loadMembers().get();
-            
-            for(int i = 0; i<members.size(); i++){
-                //get the member list of the guild, and cycle through each memeber.
-                
-                //System.out.println("Member list size: " + members.size());
-                
-                if(members.get(i).getEffectiveName().startsWith("!") &&
-                    guild.getSelfMember().canInteract(members.get(i))){
-                    //if the member has a name with '!' at the beginning
-                    //try{
-                    
-                        if(dunceName == null){
-                            //if the dunce name is null, then append only a z
-                            String name = members.get(i).getEffectiveName();
-                            
-                            name = name.substring(1, name.length());
-                            name = "z"+name;
-                            guild.modifyNickname(members.get(i), name).queue();
-                            System.out.println("Set the nickname of "+ members.get(i).toString()+" to "+name);
-                            //change the nickname to replace '!' to 'z'
-                        }
-                        else {   //otherwise set the name to admin-specified
-                            guild.modifyNickname(members.get(i), dunceName).queue();
-                            System.out.println("Set the nickname of "+ members.get(i).toString()+" to "+dunceName);
-                        }
-                        
-                        try {Thread.sleep(1000);} catch (InterruptedException ex) {Logger.getLogger(MyThread.class.getName()).log(Level.SEVERE, null, ex);}
-                        //sleep so I dont accedently trigger discord's anti-spam
-                        
-                        /*****************DEBUGGING********************/
-                        if(lastUser != null){
-                            if(lastUser.equals(members.get(i).getId())){
-                                System.out.println("DEBUGGING INFINATE LOOP RENAMING\n" +
-                                        "Memberlist size: " + guild.getMembers().size() + "\n"
-                                        + "Total member size: " + guild.getMemberCount() + "\n"
-                                        + "Guild:" + guild + "\n"
-                                        + "Member: " + members.get(i)
-                                        );
-                            }
-                            else
-                                lastUser = members.get(i).getId();
-                        }
-                        
-                        /*********************************************/
-                            
-                        
-                    for(int j = 0; j<roles.size(); j++)
-                        //add each role to the dunce user
-                        guild.addRoleToMember(members.get(i), roles.get(j)).queue();
-                    
-                    /*}catch(net.dv8tion.jda.api.exceptions.HierarchyException 
-                            | net.dv8tion.jda.api.exceptions.InsufficientPermissionException ex)
-                        //if it's unable to rename the user due to permissions or heirarchy problems,
-                        //dont worry about it
-                    {Dont do anything, this is a soft error*///}
-                }//if(members.get(i).getEffectiveName().startsWith("!"))
-            }//for
-            
-            //System.out.println("sdsdasd");
-            this.guild = this.guild.getJDA().getGuildById(this.guild.getIdLong());
-            //update the guild
 
-        
-        }//end while
+            
+            List<Member> members;
+            ArrayList<Member> usable;
+            
+            do{
+                members = guild.retrieveMembersByPrefix("!", 100).get();
+                usable = new ArrayList();
+                
+                //System.out.println(members.size());
+                
+                for(int q = 0; q < members.size(); q++){
+                    
+                    
+                    String n = members.get(q).getEffectiveName();
+                    boolean inter = guild.getSelfMember().canInteract(members.get(q));
+                    
+                    if(inter && n.startsWith("!")){
+                        //remove members who either already have their name changed, or members we dont have permission to change
+                        usable.add(members.get(q));
+                        
+                    }
+                    
+                    
+                    
+                }
+                
+                for(int i = 0; i<usable.size(); i++){
+                    //get the member list of the guild, and cycle through each memeber.
+
+                   
+
+                    if(usable.get(i).getEffectiveName().startsWith("!")){
+                        //if the member has a name with '!' at the beginning
+                        //try{
+
+                            if(dunceName == null){
+                                //if the dunce name is null, then append only a z
+                                String name = usable.get(i).getEffectiveName();
+
+                                name = name.substring(1, name.length());
+                                name = "z"+name;
+                                guild.modifyNickname(usable.get(i), name).queue();
+                                System.out.println("Set the nickname of "+ usable.get(i).toString()+" to "+name);
+                                //change the nickname to replace '!' to 'z'
+                            }
+                            else {   //otherwise set the name to admin-specified
+                                guild.modifyNickname(usable.get(i), dunceName).queue();
+                                System.out.println("Set the nickname of "+ usable.get(i).toString()+" to "+dunceName);
+                            }
+
+                            try {Thread.sleep(1000);} catch (InterruptedException ex) {Logger.getLogger(MyThread.class.getName()).log(Level.SEVERE, null, ex);}
+                            //sleep so I dont accedently trigger discord's anti-spam
+
+                            /*****************DEBUGGING********************/
+                            if(lastUser != null){
+                                if(lastUser.equals(usable.get(i).getId())){
+                                    System.out.println("DEBUGGING INFINATE LOOP RENAMING\n" +
+                                            "Memberlist size: " + guild.getMembers().size() + "\n"
+                                            + "Total member size: " + guild.getMemberCount() + "\n"
+                                            + "Guild:" + guild + "\n"
+                                            + "Member: " + usable.get(i)
+                                            );
+                                }
+                                else
+                                    lastUser = usable.get(i).getId();
+                            }
+
+                            /*********************************************/
+
+
+                        for(int j = 0; j<roles.size(); j++)
+                            //add each role to the dunce user
+                            guild.addRoleToMember(usable.get(i), roles.get(j)).queue();
+
+
+                    }//if(members.get(i).getEffectiveName().startsWith("!"))
+                }//for
+                
+            }while(!usable.isEmpty());
+            
         System.out.println("Stopping thread "+this.getId());
         //notify the terminal that the thread has been terminated
     

@@ -89,8 +89,8 @@ public class ScreamerBot {
                 consts.getSQLConnection().close();
                 System.out.println("Closed connection to SQL Server...");
                 //close the SQL server
-                consts.terminateAllThreads();
-                System.out.println("Stopped all renaming threads");
+                //consts.terminateAllThreads();
+                //System.out.println("Stopped all renaming threads");
                 
                 consts.getJDA().shutdownNow();
                 System.out.println("Shut down bot instance...");
