@@ -214,7 +214,7 @@ public class Ffmpeg {
                     double val = Double.parseDouble(loudStr);
                     output.add(val);
                 }catch(NumberFormatException ex){
-                    System.out.println("Bad double value, skipping...");
+                    System.out.println("Bad double value "+loudStr+ " skipping...");
                 }
                 
             }
