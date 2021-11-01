@@ -52,7 +52,7 @@ public class Consts {
     final private Connection connectionHandler;
     final private JDA discord;
     private static  PrintWriter errorLogger;
-    private final ArrayList<MyThread> threads;
+    //private final ArrayList<MyThread> threads;
     
     //private final ArrayList<MalwareData> malwareDatabases = null;
     
@@ -61,7 +61,7 @@ public class Consts {
     Consts() throws InterruptedException, LoginException, IOException, SQLException{
     
     errorLogger = new PrintWriter(new FileWriter(Consts.getLogger(), true));
-    threads = new ArrayList();
+    //threads = new ArrayList();
     
         try (BufferedReader br = new BufferedReader(new FileReader("token.txt"))) {
             token = br.readLine();
@@ -218,10 +218,23 @@ public class Consts {
                 Guild g = discord.getGuildById(guild);
                 //obtain the guild object from the guild id
                 
-                MyThread thread = new MyThread(g, roles, dName);
+                
+                //open a background thread to fetch all the users in each guild
+                //since the API forbids doing it in the main thread. also, it can be resource
+                //and time consuming anyway if we have alot of guilds and names, so
+                //it's better if we do this in external threads anyway
+                
+                new MyThread(g, roles, dName).start();
+                
+                /*MyThread thread = new MyThread(g, roles, dName);
                 thread.start();
-                threads.add(thread);
+                threads.add(thread);*/
                 //create a naming thread using the guild, roles, and name
+                
+                
+                
+                
+                
             }//end if dActive = 1
         
         }//end while
@@ -324,7 +337,7 @@ public class Consts {
         //so they stand out on the member list to be annoying, so the bot produces
         //daemon threads to rename them in the background
         private final String GuildID;                       //ID of the guild
-        @Nullable private Role[] DunceRoles;                //roles to be given to the dunce
+        @Nullable private final Role[] DunceRoles;          //roles to be given to the dunce
         private final boolean DunceActive;                  //flag for if renaming dunces is active
         @Nullable private final String DunceName;           //the name to rename the dunce
         @Nullable private final Role TimeOut;               //role of the timeout role
@@ -664,7 +677,7 @@ public class Consts {
         }
     }
     
-    public void replaceRolesInThread(String guildID, List<Role> roles){
+    /*public void replaceRolesInThread(String guildID, List<Role> roles){
         //function that takes the inputted role aand replaces the current roles 
         //in a running htread by the parent guild's ID
         for(int i =0; i< threads.size(); i++){
@@ -676,9 +689,9 @@ public class Consts {
             }
         }
     
-    }
+    }*/
     
-    public void setDunceNameInThread(String guildID, String name){
+    /*public void setDunceNameInThread(String guildID, String name){
         //function that takes the inputted name string and sets it to the 
         //renaming thread's dunce name, per the guild ID
         for(int i = 0; i <  threads.size(); i++){
@@ -690,7 +703,7 @@ public class Consts {
                 //then breaks.
             }
         }
-    }
+    }*/
     
     public boolean setTimeOutChannel(String guildID, GuildChannel gc){
         try {
@@ -722,7 +735,7 @@ public class Consts {
     
     }
     
-    public void removeThread(String guildID){
+    /*public void removeThread(String guildID){
         //When the running renaming thread is no longer needed, it can be removed.
         for(int i = 0; i <  threads.size(); i++){
             if(threads.get(i).getGuild().getId().equals(guildID)){
@@ -734,9 +747,9 @@ public class Consts {
                 break;
             }
         }
-    }
+    }*/
     
-    public void addThread(String guildID){
+    /*public void addThread(String guildID){
         //creates a new thread and adds it to the renaming thread heap
         GuildInfo gi = getGuildInfo(guildID);
         //obtain the information of the guild,
@@ -752,15 +765,15 @@ public class Consts {
         //start the thread
         threads.add(mt);
         //add it to the heap of threads
-    }
+    }*/
     
-    public void terminateAllThreads(){
-        /*close all naming threads*/
+    /*public void terminateAllThreads(){
+        //close all naming threads
         while(!this.threads.isEmpty()){
             this.threads.get(0).stopRunning();
             this.threads.remove(0);
         
         }
     
-    }
+    }*/
 }

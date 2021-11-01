@@ -21,6 +21,7 @@ import java.sql.SQLException;
 import java.sql.ResultSet;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
@@ -37,6 +38,7 @@ import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleAddEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleRemoveEvent;
+import net.dv8tion.jda.api.events.guild.member.update.GuildMemberUpdateNicknameEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.HierarchyException;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
@@ -222,7 +224,7 @@ public class MessageProcess extends ListenerAdapter{
                             event.getChannel().sendMessage("Defaulting to add a z to the front of the name").queue();
                          
                          consts.setDunceName(event.getGuild().getId(), null);
-                         consts.setDunceNameInThread(event.getGuild().getId(), null);
+                         //consts.setDunceNameInThread(event.getGuild().getId(), null);
                          
                      }
                      else{
@@ -230,11 +232,11 @@ public class MessageProcess extends ListenerAdapter{
                          event.getChannel().sendMessage("Renaming bangs with \""+msg+"\"").queue();
                          //dunceNames.add(temp);
                          consts.setDunceName(event.getGuild().getId(), msg);
-                         consts.setDunceNameInThread(event.getGuild().getId(), msg);
+                         //consts.setDunceNameInThread(event.getGuild().getId(), msg);
                          
                      }
                      consts.setDunceRoles(event.getGuild().getId(), dunceTemp);
-                     consts.replaceRolesInThread(event.getGuild().getId(), dunceTemp);
+                     //consts.replaceRolesInThread(event.getGuild().getId(), dunceTemp);
                      
                 
          
@@ -248,12 +250,18 @@ public class MessageProcess extends ListenerAdapter{
             if(gi.getDunceStatus()){
                 event.getChannel().sendMessage("Switching off bang renaming").queue();
                 consts.toggleDunceActive(event.getGuild().getId());
-                consts.removeThread(event.getGuild().getId());
+                //consts.removeThread(event.getGuild().getId());
 
             }else{
                 event.getChannel().sendMessage("Switching on bang renaming").queue();
                 consts.toggleDunceActive(event.getGuild().getId());
-                consts.addThread(event.getGuild().getId());
+                //consts.addThread(event.getGuild().getId());
+                
+                Role[] r = consts.getGuildInfo(event.getGuild().getId()).getDunceRoles();
+                String n = consts.getGuildInfo(event.getGuild().getId()).getDunceName();
+                
+                new MyThread(event.getGuild(), Arrays.asList(r), n).start();
+                //rename all the current users
                 
             }
              
@@ -848,6 +856,59 @@ public class MessageProcess extends ListenerAdapter{
         
     
     } 
+    
+    @Override
+    public void onGuildMemberUpdateNickname(GuildMemberUpdateNicknameEvent event){
+        
+        String guild = event.getGuild().getId();
+        
+        if(!consts.getGuildInfo(guild).getDunceStatus())
+            return;
+        
+        
+        String newName = event.getNewNickname();
+        
+        if(newName == null)
+            return;
+        
+        
+        String rename = consts.getGuildInfo(guild).getDunceName();
+        
+        if(rename == null){
+            StringBuilder renameBuilder = new StringBuilder(newName);
+            renameBuilder.setCharAt(0, 'z');
+            rename = renameBuilder.toString();
+        }
+        
+        
+        
+        if(newName.startsWith("!") && event.getGuild().getSelfMember().canInteract(event.getMember())){
+            System.out.println("User " + event.getMember() + "just changed their nickname to "+newName
+            +", renaming to "+rename);
+            
+            event.getMember().modifyNickname(rename).queue();
+            
+            
+            if(!event.getGuild().getSelfMember().canInteract(event.getMember()))
+                return;
+            
+            Role[] roles = consts.getGuildInfo(guild).getDunceRoles();
+            
+            if(roles == null)
+                return;
+            
+            for (Role role : roles) {
+                event.getGuild().addRoleToMember(event.getMember(), role).queue();
+            }
+            
+            
+        }
+        
+        
+    
+    
+    }
+    
     
     private boolean isDunce(MessageReceivedEvent event){
         Role[] dunceRoles = consts.getGuildInfo(event.getGuild().getId()).getDunceRoles();
