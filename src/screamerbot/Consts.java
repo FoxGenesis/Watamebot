@@ -63,7 +63,7 @@ public class Consts {
     errorLogger = new PrintWriter(new FileWriter(Consts.getLogger(), true));
     //threads = new ArrayList();
     
-        try (BufferedReader br = new BufferedReader(new FileReader("token.txt"))) {
+        try (BufferedReader br = new BufferedReader(new FileReader("token-debug.txt"))) {
             token = br.readLine();
             //obtain the token
         }

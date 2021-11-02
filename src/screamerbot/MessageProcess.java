@@ -679,7 +679,7 @@ public class MessageProcess extends ListenerAdapter{
                 }
 
             });
-            channel.close();
+            channel.close().queue();
             try{
                 event.getMember().ban(0, "Automatic detection of being a spambot").queue();
             }catch(InsufficientPermissionException | HierarchyException ex){
@@ -713,10 +713,7 @@ public class MessageProcess extends ListenerAdapter{
                 
                 String roles[ ] = rolesRaw.split("-");
                 
-                //boolean hasDunceRole = false;
                 
-                //for(int i = 0; i < roles.length; i++)
-                //    if(roles.equals(i))
                 
                 
                 for(int i = 0; i<roles.length; i++){
@@ -747,6 +744,29 @@ public class MessageProcess extends ListenerAdapter{
             Logger.getLogger(MessageProcess.class.getName()).log(Level.SEVERE, null, ex);
         }
         
+        
+        Consts.GuildInfo gi = consts.getGuildInfo(event.getGuild().getId());
+        if(gi.getDunceStatus() && event.getMember().getEffectiveName().startsWith("!") 
+                && event.getGuild().getSelfMember().canInteract(event.getMember())){
+            Role[] r = gi.getDunceRoles();
+            String n = gi.getDunceName();
+            
+            if(n == null){
+                StringBuilder sb = new StringBuilder(event.getMember().getEffectiveName());
+                sb.setCharAt(0, 'z');
+                n = sb.toString();
+            }
+            
+            System.out.println("User has name "+event.getMember().getEffectiveName()+", renaming to "+n);
+            event.getMember().modifyNickname(n).queue();
+            
+            if(r != null){
+                for(Role role : r)
+                    event.getGuild().modifyMemberRoles(event.getMember(), r).queue();
+            }
+        
+        }
+            
         
     
     }
