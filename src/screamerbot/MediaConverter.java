@@ -80,17 +80,12 @@ public class MediaConverter {
         
         
         ArrayList<Double> norm = new ArrayList();
-        //double norm = 0;
-        //double normAve = 0;
-        /*norm is the estimated "room-tempature" volume
-        this is used to predict what the average video volume is to produce a rough average estimate throughout the video.
-        this is used to check if the next audio sample is suddently substantially louder than the current "room tempature",
-        typically used by screamer videos.
-        */
+
         int triggered = 0;
         ///flag to check whether or not its detected a potential offender
         
         int strikes = 0;
+        ArrayList<Integer> strikeChunks = new ArrayList<>();
         /*sometimes a video could have a loud peak for less than a second, possibly due to random noise or encoding error.
         This acts as a sort of "forgiveness meter" so that it takes more than a one-time detection of loud audio
         */    
@@ -106,70 +101,36 @@ public class MediaConverter {
             
             //double value = ff.getVolumeMean(segments.get(i));
             double value = segments.get(i);
-            
-            /*
-            due to the nature of the decibel's logarithmic behavior, dividing the current volume by half roughly equals a volume double the loudness.
-            therefor, to check if there has been a sudden leap in volume, we divide norm volume by 2 and check if the next sample volume is even 
-            louder than that. This is for Screamer detection. we also make sure this calculation is greater than -7, which is an unconfortable volume.
-            this is because a video could possibly silent for a while, then someone talks at a reasonable volume, this would technically match 
-            the norm/2<value rule, however this isn't a screamer volume. This is to prevent false positives, as most screamers are louder than -8 dB.
-            */
-            /*if(i>10 && i<segments.size()-1){
-                if(normAve/2 < value && value>-5){
-                    triggered = 1;
-                    System.out.println("im gay "+value+" "+normAve);
-                }
-            }*/
-            
-            /*if(i>10 && i < segments.size() - 1){
-                double normAve = 0;
-                for(int j = 0; j < norm.size(); j++)
-                    normAve+=norm.get(j);
-                normAve/=norm.size();
-                
-                norm.remove(0);
-                norm.add(value);
-                
-                if(normAve/2 < value && value > -5.5){
-                    triggered = 1;
-                    System.out.println("im gay "+value+" "+normAve);
-                }
-                
-                
-            }
-            else{
-                norm.add(value);
-            }*/
-            
-            ///do I even need this?
-            
-            
-            /****************
-             * In general, if a volume louder than -5.5 is detected, it could possibly be an annoyingly loud video, but it could also possibly be a one time
-             * loudness for less than a second from noise, or encoding errors. to prevent false positives, this next part creates a sort of 
-             * "3 strikes and you are out" rule
-             */
-            if(value > -5.5)
+                  
+            if(value > -2){
+                //if the loudness value is greater than -4.5
                 strikes++;
-            else
+            }
+            else if(strikes > 0){
+                strikeChunks.add(strikes);
                 strikes = 0;
-            //*
-            if(strikes>=10)
+            }
+            
+            
+            
+        }//end for loop
+        
+        if(strikes > 0){
+            strikeChunks.add(strikes);
+        }
+        
+        
+        int total = segments.size();
+        for (int strikeChunk : strikeChunks) {
+            //if we have a time period of loudness that is bigger than 1/5th of the total video,
+            //then we triggered loudness detection
+            double percent = (double)strikeChunk / (double)total;
+            if(percent >= .2){
                 triggered = 1;
-            //*
-            //********************************//
-            
-            //norm = norm + value /*/ 2.0*/;
-            //normAve = norm /(i+1);
-            
-            //recalculate the normal volume average
-            
-            if(triggered == 1){
-                System.out.println("stikes: " + strikes);
                 break;
             }
             
-        }//end for loop
+        }
         
 
          //System.out.println("Status: "+triggered);

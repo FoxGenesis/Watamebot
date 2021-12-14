@@ -107,48 +107,7 @@ public class Ffmpeg {
         
         
     }//end constructor
-    /*@Deprecated
-    public File encode(File is) throws IOException, InterruptedException{
-        
-        
-        as of now, this method is never used. It may be used in a later update. all it does in rip the audio out of the downloaded media file
-        and save it as a wav file.
-        
-        
-        
-        ProcessBuilder pb = new ProcessBuilder(ffmpeg.getPath(), "-y", "-i", is.getPath(), "-ac", "1", "-vn", "tmp"+fs+"audio.wav");
-        pb.redirectErrorStream(true);
-        Process p = pb.start();
-        ///run ffmpeg with the commands for overwrite, input file, merging audio into mono, and ignoring any video streams. this saves it to "tmp/audio.wav"
-        
-        BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-        //get the input stream reader so we can grab the piped output from ffmpeg
-        
-        String line = null;
-        do{line = reader.readLine();}while(line != null);
-        //simply take ffmpeg's piped output and discard it, we dont need it
-        
-        int response = 0;
-        boolean success = false;
-        while(!success){
-            //garuntees that it wont fail if interrupted
-            try{
-                response = p.waitFor();
-                success = true;
-            }catch(InterruptedException e){
-                System.out.println("Temporarily interrupted...");
-            }
-        
-        }
-        //wait until its done encoding
-        Thread.sleep(2000);
-        //sleep for 2 seconds. this garuntees that the file wont still be open when its time to delete it, which will hang the program
-        is.delete();
-        //delete the media file
-        
-       return new File("tmp"+fs+"audio.wav");
-       //return the newly extracted audio file
-    }*/
+
     
     
     public ArrayList<Double> grabSegments(byte[] buffer) throws IOException, InterruptedException{
@@ -215,6 +174,7 @@ public class Ffmpeg {
                     output.add(val);
                 }catch(NumberFormatException ex){
                     System.out.println("Bad double value "+loudStr+ " skipping...");
+                    break;
                 }
                 
             }
@@ -457,6 +417,7 @@ public class Ffmpeg {
             //spin while interrupted
         
         String[] result = new String(ffrt.getStdOut()).split("\n");
+        p.getInputStream().close();
         
         //String meanLine = null;
         String temp = "-100";
@@ -513,6 +474,7 @@ public class Ffmpeg {
             //spin while interrupted
         
         String[] numbers = new String(ffrt.getStdOut()).split("\n");
+        p.getInputStream().close();
         
         String[] resString = numbers[0].split(",");
         

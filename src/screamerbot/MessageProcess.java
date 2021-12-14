@@ -22,7 +22,9 @@ import java.sql.ResultSet;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -70,7 +72,7 @@ public class MessageProcess extends ListenerAdapter{
     "Generous", "Frank Mouse", "Adorable", "Bossy", "Angry Economics", "Regular Weakness", "Immaterial"};
     
     private final String[] commandStr = {"<help>", "<enable>", "<disable>", "<invite>", "<bang>", "<bangtoggle>", "<malware>", "<malwaretoggle>",
-                                        "<nametoggle>"};
+                                        "<nametoggle>", "<nitrospam>"};
     
     
     final private char fs = File.separatorChar;///windows uses '\', Unix uses '/'
@@ -122,21 +124,22 @@ public class MessageProcess extends ListenerAdapter{
         int parsedCommand = commands.parse(event.getMessage().getContentRaw());
         
          //<help>
-         if(parsedCommand == 0/*starts(event, "<help>") && !botFlag*/){
+         if(parsedCommand == 0){
              //if the message contains the help command, simply send a message containing the infomration on how the bot works
              event.getChannel().sendMessage("How to use: \n\n\t<help>: Prints this message.\n\t<enable>: enable loud/screamer videos detection."
-                     + "\n\t<disable>: disable loud/screamer videos detection\n\t<invite>: Direct Messages user the invite for the bot."
-                     + "\n\t<bang> \"name\": renames users with '!' in their name to \"name\"."
-                     + "\n\t<bang> \"name\" [role1, role2, role3...]: renames users with '!' in their name to \"name\", gives them the pinged roles."
-                     + "\n\t<bang> [role1, role2, role3...]: changes the ! to a z, gives them the pinged roles."
-                     + "\n\t<bang>: changes the ! to a z."
-                     + "\n\t<bangtoggle>: toggles this function on or off."
-                     + "\n\t<malware> [role] [ChannelID] Removes all roles from a user and gives them the timeout role, pings them in the timeout chat."
-                     + "\n\t<malwaretoggle> Enables or disables the act of automatically jailing users who upload malware.").queue();
+                    + "\n\t<disable>: disable loud/screamer videos detection\n\t<invite>: Direct Messages user the invite for the bot."
+                    + "\n\t<bang> \"name\": renames users with '!' in their name to \"name\"."
+                    + "\n\t<bang> \"name\" [role1, role2, role3...]: renames users with '!' in their name to \"name\", gives them the pinged roles."
+                    + "\n\t<bang> [role1, role2, role3...]: changes the ! to a z, gives them the pinged roles."
+                    + "\n\t<bang>: changes the ! to a z."
+                    + "\n\t<bangtoggle>: toggles this function on or off."
+                    + "\n\t<malware> [role] [ChannelID] Removes all roles from a user and gives them the timeout role, pings them in the timeout chat."
+                    + "\n\t<malwaretoggle> Enables or disables the act of automatically jailing users who upload malware."
+                    + "\n\t<nitrospam> Enables or disables the detection and banning of fake nitro spam links").queue();
          }
          //end help
          //<invite>
-         else if(parsedCommand == 3/*starts(event, "<invite>") && !botFlag*/)
+         else if(parsedCommand == 3)
              //if the message contains the invite command, send a private message to the user that contains the bot invite url
          {
              PrivateChannel channel = event.getAuthor().openPrivateChannel().complete();
@@ -153,14 +156,14 @@ public class MessageProcess extends ListenerAdapter{
                     event.getChannel().sendMessage("Message sent. Check your DMs.").queue();
                 //otherwise let the user know the invite was sent
             });
-            channel.close();
+            channel.close().queue();
             ///close the private channel
             System.out.println("User "+event.getAuthor()+" has requested a bot invite in "+event.getGuild());
             //inform the log terminal that a user requested an invite for the bot
              
          }//end invite
          //<enable>
-         else if(1 == parsedCommand/*starts(event, "<enable>") && !botFlag*/ && userAllowed(event))
+         else if(1 == parsedCommand && userAllowed(event))
              //if the message contains the enable command, the user is not a bot, and the user is an admin
          {
              if(isBlocking(event))
@@ -181,7 +184,7 @@ public class MessageProcess extends ListenerAdapter{
                          
          }//end enable
          //<disable>
-         else if(2 == parsedCommand/*starts(event, "<disable>") && !botFlag*/ && userAllowed(event))
+         else if(2 == parsedCommand && userAllowed(event))
              //if the message contains the disable command, the user is not a bot, and the user is an admin
          {
              if(!isBlocking(event))
@@ -200,7 +203,7 @@ public class MessageProcess extends ListenerAdapter{
                
          }
          //<bang>
-         else if(4 == parsedCommand/*starts(event,"<bang>") && !botFlag*/ && userAllowed(event)){
+         else if(4 == parsedCommand && userAllowed(event)){
              
              
              //if(!event.getMessage().getMentionedRoles().isEmpty()){
@@ -242,7 +245,7 @@ public class MessageProcess extends ListenerAdapter{
          
          }//end if starts with <bang>
          //<bangtoggle>
-         else if(/*event.getMessage().getContentDisplay().trim().equals("<bangtoggle>")*/5 == parsedCommand && userAllowed(event)/* && !botFlag*/){
+         else if(5 == parsedCommand && userAllowed(event)){
             //toggle the bang
         
             Consts.GuildInfo gi = consts.getGuildInfo(event.getGuild().getId());
@@ -268,7 +271,7 @@ public class MessageProcess extends ListenerAdapter{
          
          }
          //<malware>
-         else if(6 == parsedCommand/*starts(event,"<malware>") && !botFlag*/ && userAllowed(event)){
+         else if(6 == parsedCommand && userAllowed(event)){
              //<malware> [role] [ChannelID] 
              String msg = event.getMessage().getContentRaw();
              try{
@@ -298,7 +301,7 @@ public class MessageProcess extends ListenerAdapter{
          
          }
          //<malwaretoggle>
-         else if(7 == parsedCommand/*starts(event,"<malwaretoggle>") && !botFlag*/ && userAllowed(event)){
+         else if(7 == parsedCommand && userAllowed(event)){
              
              Consts.GuildInfo gi = consts.getGuildInfo(event.getGuild().getId());
              if(gi.getGuildChannel() != null){
@@ -325,7 +328,7 @@ public class MessageProcess extends ListenerAdapter{
          
          /*Temporary*/
          //<nametoggle>
-         else if(8 == parsedCommand/*starts(event, "<nametoggle>") && !botFlag*/ && userAllowed(event)){
+         else if(8 == parsedCommand && userAllowed(event)){
              boolean current = consts.getGuildInfo(event.getGuild().getId()).getRenamingStatus();
              
              if(current){
@@ -340,6 +343,22 @@ public class MessageProcess extends ListenerAdapter{
              consts.toggleRenamingStatus(event.getGuild().getId());
              
              //event.getMessage().delete().queue();
+         
+         }
+         else if(9 == parsedCommand){
+             boolean current = consts.getGuildInfo(event.getGuild().getId()).getNitroSpamStatus();
+             
+             if(current){
+                 System.out.println("Disabling detecting Nitro scam posts in "+event.getGuild());
+                 event.getChannel().sendMessage("Disabling detecting Nitro scam posts").queue();
+             }
+             else{
+                 System.out.println("Enabling detecting Nitro scam posts in "+event.getGuild());
+                 event.getChannel().sendMessage("Enabling detecting Nitro scam posts").queue();
+             }
+             
+             consts.toggleNitroSpamStatus(event.getGuild().getId());
+         
          
          }
          
@@ -620,6 +639,87 @@ public class MessageProcess extends ListenerAdapter{
                      && event.getGuild().getMemberById(consts.getJDA().getSelfUser().getId()).getPermissions(event.getTextChannel()).contains(Permission.MESSAGE_EMBED_LINKS))
              //bullies the user but ONLY IF the bot has the embed perms
                 event.getChannel().sendMessage(event.getAuthor().getAsMention() + " https://tenor.com/view/bobux-roblox-embed-no-embed-perms-0bobux-gif-18287307").queue();
+         
+         }
+         
+         /*Checking for fake Nitro spam*/
+        if(consts.getGuildInfo(event.getGuild().getId()).getNitroSpamStatus()){
+            ArrayList<String> links = pullURLs(event.getMessage().getContentDisplay());
+            
+            
+             
+            //int score = 0;
+            //score for suspicion that the link isnt a valid discord nitro link
+            
+            for(int i = 0; i < links.size(); i++){
+                
+                
+                
+                try {
+                    URL u = new URL(links.get(i));
+                    
+                    //String legit = "discord.gift";
+                    String protocol = u.getProtocol();
+                    String host = u.getHost();
+                    String filename = u.getFile();
+                    
+                    boolean skip = false;
+                    for(String tmp : consts.validDiscordDomains){
+                        if(host.equals(tmp)){
+                            skip = true;
+                            break;
+                        }
+                    }
+                    if(skip == true)
+                        continue;
+                    
+                    
+                    for(String tmp : consts.validDiscordDomains){
+                        
+                        /*if(host.equals(tmp))
+                            break;
+                        */
+                        Pair<String> difference = diff(tmp, host);
+                        String first = difference.first;
+                        String second = difference.second;
+                        int val  = first.length() + second.length();
+                        if(val <=3){
+                            PrivateChannel channel = event.getAuthor().openPrivateChannel().complete();
+                            //get the private message channel of the user who asked for the invite
+
+                           channel.sendMessage("You were banned for being suspected of a Nitro scam spam bot. This bot uses a series of checks to predict"
+                                   + " if an account is hijacked by a bot. If this was a mistake, please contact a member of the mod team.").submit().whenComplete((message, error) -> {
+                               //send the ban message to DMs
+                               if(error!=null)
+                                   System.out.println("Attempted to DM a ban message to "+event.getAuthor()+" but DMs were disabled");
+                               //if for whatever reason the bot could not send the dm
+                               //else{
+                                /*consts.getJDA().getTextChannelById(/*"398590278404931588""376246313760718851")*/
+                                    event.getChannel().sendMessage("Banned "+event.getAuthor()+" for being suspected of a Nitro spambot").queue();
+                                   //                                       ^^Theirs                ^^Mine
+                               //}
+
+                           });
+                           channel.close().queue();
+                           try{
+                               event.getMember().ban(1, "Automatic detection of being a Nitro spambot").queue();
+                           }catch(InsufficientPermissionException | HierarchyException ex){
+                               System.out.println("Attempted to ban "+event.getAuthor()+" for being a spambot, but permissions are not enabled");
+                           }
+            
+                            return;
+                            /*user got banned, we can stop*/
+                        }//if
+                    
+                    }
+                    
+                    
+                } catch (MalformedURLException ex) {
+                    Logger.getLogger(MessageProcess.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            
+            
          
          }
          
@@ -933,7 +1033,7 @@ public class MessageProcess extends ListenerAdapter{
     private boolean isDunce(MessageReceivedEvent event){
         Role[] dunceRoles = consts.getGuildInfo(event.getGuild().getId()).getDunceRoles();
         List<Role> roles = event.getMember().getRoles();
-        
+         
         for(int i = 0; i < roles.size(); i++)
             for(int j = 0; j < dunceRoles.length; j++)
                 if(roles.get(i).getId().equals(dunceRoles[j].getId()))
@@ -1024,114 +1124,112 @@ public class MessageProcess extends ListenerAdapter{
             String ext = containedUrls.get(i).substring(containedUrls.get(i).lastIndexOf('.'));
             //get the extension of the file
             
-            
+            URL url;
+            URLConnection openConnection = null;
+            InputStream in = null;
+            try{ 
             //checks if the file is a video, then download it and scan it
-            if(ext.toLowerCase().contains("mp4")||ext.toLowerCase().contains("webm") ||ext.toLowerCase().contains("mov")){
-                boolean isWebm = false;
-                if(ext.toLowerCase().endsWith("webm"))
-                    isWebm = true;
-                
-                URL url = new URL(containedUrls.get(i));
-                //apply the url string to the url objet
-                URLConnection openConnection = url.openConnection();
-                //open the url connection
-                openConnection.addRequestProperty("User-Agent", Requester.USER_AGENT);//"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11");
-                //declare the http user agent as the discord protcol
-                openConnection.connect();
-                
-                try{   
-                if(openConnection.getContentLength() < 100000000){
+                if(ext.toLowerCase().contains("mp4")||ext.toLowerCase().contains("webm") ||ext.toLowerCase().contains("mov")){
+                    boolean isWebm = false;
+                    if(ext.toLowerCase().endsWith("webm"))
+                        isWebm = true;
+
+
+                    url = new URL(containedUrls.get(i));
+                    //apply the url string to the url objet
+                    openConnection = url.openConnection();
+                    //open the url connection
+                    openConnection.addRequestProperty("User-Agent", Requester.USER_AGENT);
+                    //declare the http user agent as the discord protcol
+                    openConnection.connect();
+
+
+                    if(openConnection.getContentLength() < 100000000){
                     //if the file download is not an abysmally large file
-                    byte[] bytes;
-                    try (InputStream in = new BufferedInputStream(openConnection.getInputStream())) {
+                        byte[] bytes;
+                        in = new BufferedInputStream(openConnection.getInputStream());
                         bytes = in.readAllBytes();
-                    }
-                    try {
-                        byte[] cpy = bytes;
-                        triggered = converter.test(cpy, isWebm);
-                        //check whether the media converter detected a bad file
-                    } catch (Ffmpeg.BadVideoFile ex) {
-                        System.out.println("Defaulting to RAMFS file analysis");
-                        
-                        File testFile = new File("tmp"+fs+"temp."+ext);
-                        try (OutputStream os = new FileOutputStream(testFile)) {
-                            os.write(bytes);
-                            os.flush();
-                        }
-                        
-                        triggered = converter.test(testFile);
-                        
-                        
-                    }
-                    
-                    }
-                else
-                    System.out.println("Attempted to download a dangerously large file");
-                //let the logger be aware that the application almost downloaded a dangerously large file
-                
-                //triggered =  converter.test(outFile);
-                }catch(IOException ex){System.out.println("Error, received an error 403 from discord while "
-                        + "trying to download: \n\t"+containedUrls.get(i));}
-                //let logger know that for unknown reasons discord sent a 403 error
-               
-              
-            }//end if is a video
-            if(ext.toLowerCase().contains("png")||ext.toLowerCase().contains("jpg") ||ext.toLowerCase().contains("jpeg")
-                    || ext.toLowerCase().contains("mp4")){///TODO: remove the mp4 part? why am I checking twice for mp4s?
-                URL url = new URL(containedUrls.get(i));
-                //apply the url string to the url objet
-                URLConnection openConnection = url.openConnection();
-                //open the url connection
-                openConnection.addRequestProperty("User-Agent", Requester.USER_AGENT);//"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11");
-                //declare the http user agent as the discord protcol
-                openConnection.connect();
-                
-                try{   
-                if(openConnection.getContentLength() < 100000000){
-                    //if the file download is not an abysmally large file
-                    InputStream in = new BufferedInputStream(openConnection.getInputStream());
-                    //get the input stream of the url
-                    
-                    AntiMalware am = new AntiMalware(in);
-                    //create a new malware scanner object
-                    
-                    
-                    
-                    if(am.payloadDetected){
-                        //if it detected a bad file,
-                        try{
-                            event.getMessage().delete().queue();///delete the offending message
-                            }catch(InsufficientPermissionException ex){
-                                System.out.println("Error, bot attempted to delete an offending message in "+event.getGuild()+", but deleting messages is not enabled.");
+                            
+                        try {
+                            byte[] cpy = bytes;
+                            triggered = converter.test(cpy, isWebm);
+                            //check whether the media converter detected a bad file
+                        } catch (Ffmpeg.BadVideoFile ex) {
+                            System.out.println("Defaulting to RAMFS file analysis");
+
+                            File testFile = new File("tmp"+fs+"temp."+ext);
+                            try (OutputStream os = new FileOutputStream(testFile)) {
+                                os.write(bytes);
+                                os.flush();
                             }
-                          String reason = "Invalid Reason";
-                          if(am.possibleMalwareFound == 1)
-                              reason = "Non-Malicious Test File detected. No reason to be worried.";
-                          if(am.possibleMalwareFound == 2)
-                              reason = "Detected possble shell script embedded in file.";
-                          //calculate the reason why it it was removed
-                          
-                          event.getChannel().sendMessage(event.getAuthor().getAsMention()+ " POTENTIAL MALICIOUS PAYLOAD DETECTED! " + reason
-                                  /*+ " ```This feature is in beta, please notify the developer Spazmaster#8989 if a mistake was made.```"*/).queue();
-                          break;
-                          //inform the reason it was removed, and break; we dont need to scan the rest of the files
+
+                            triggered = converter.test(testFile);
+
+
+                        }
+
                     }
-                    
-                    
-                    }
-                else
-                    System.out.println("Attempted to download a dangerously large file");
-                //let the logger be aware that the application almost downloaded a dangerously large file
-                
-                //triggered =  converter.test(outFile);
-                }catch(IOException ex){System.out.println("Error, received an error 403 from discord while "
-                        + "trying to download: \n\t"+containedUrls.get(i));}
-                //let logger know that for unknown reasons discord sent a 403 error
-                
-                
-            
+                    else
+                        System.out.println("Attempted to download a dangerously large file");
+                        //let the logger be aware that the application almost downloaded a dangerously large file
+
+
+
+                }//end if is a video
+                if(ext.toLowerCase().contains("png")||ext.toLowerCase().contains("jpg") ||ext.toLowerCase().contains("jpeg")
+                        || ext.toLowerCase().contains("mp4")){///TODO: remove the mp4 part? why am I checking twice for mp4s?
+                    url = new URL(containedUrls.get(i));
+                    //apply the url string to the url objet
+                    openConnection = url.openConnection();
+                    //open the url connection
+                    openConnection.addRequestProperty("User-Agent", Requester.USER_AGENT);//"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11");
+                    //declare the http user agent as the discord protcol
+                    openConnection.connect();
+
+
+                    if(openConnection.getContentLength() < 100000000){
+                        //if the file download is not an abysmally large file
+                        in = new BufferedInputStream(openConnection.getInputStream());
+                        //get the input stream of the url
+
+                        AntiMalware am = new AntiMalware(in);
+                        //create a new malware scanner object
+
+
+
+                        if(am.payloadDetected){
+                            //if it detected a bad file,
+                            try{
+                                event.getMessage().delete().queue();///delete the offending message
+                                }catch(InsufficientPermissionException ex){
+                                    System.out.println("Error, bot attempted to delete an offending message in "+event.getGuild()+", but deleting messages is not enabled.");
+                                }
+                              String reason = "Invalid Reason";
+                              if(am.possibleMalwareFound == 1)
+                                  reason = "Non-Malicious Test File detected. No reason to be worried.";
+                              if(am.possibleMalwareFound == 2)
+                                  reason = "Detected possble shell script embedded in file.";
+                              //calculate the reason why it it was removed
+
+                              event.getChannel().sendMessage(event.getAuthor().getAsMention()+ " POTENTIAL MALICIOUS PAYLOAD DETECTED! " + reason).queue();
+                              break;
+                              //inform the reason it was removed, and break; we dont need to scan the rest of the files
+                        }
+
+
+                        }
+                    else
+                        System.out.println("Attempted to download a dangerously large file");
+                    //let the logger be aware that the application almost downloaded a dangerously large file
+
+
+                }
+            }catch(IOException ex){
+                System.out.println("Failed to download link "+containedUrls.get(i)+": " + ex.getMessage());
+            }finally{
+                if(in != null)
+                    in.close();
             }
-            
             
         }//for
 
@@ -1155,6 +1253,77 @@ public class MessageProcess extends ListenerAdapter{
         //if it detected it's a url, return true. if not, return false
         return triggered;
     }
+    
+    
+    private ArrayList<String> pullURLs(String in){
+        ArrayList<String> out = new ArrayList();
+        String reg = "\\b((https|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|])";
+        
+        Pattern pattern = Pattern.compile(reg, Pattern.CASE_INSENSITIVE);
+        Matcher m = pattern.matcher(in);
+        
+        while (m.find()){
+            String holder = in.substring(m.start(0), m.end(0));
+            out.add(holder);
+            
+        }
+        
+        
+        return out;
+    }
+    
+    
+    //Levenshtein Distance Algorithm. I completly stole this from stackoverflow lmao. I'm
+    //too dumb to figure out how to do this myself and I wanna play videogames, not do this
+    /**
+     * Returns a minimal set of characters that have to be removed from (or added to) the respective
+     * strings to make the strings equal.
+     */
+    public static Pair<String> diff(String a, String b) {
+        return diffHelper(a, b, new HashMap<>());
+    }
+
+    /**
+     * Recursively compute a minimal set of characters while remembering already computed substrings.
+     * Runs in O(n^2).
+     */
+    private static Pair<String> diffHelper(String a, String b, Map<Long, Pair<String>> lookup) {
+        long key = ((long) a.length()) << 32 | b.length();
+        if (!lookup.containsKey(key)) {
+            Pair<String> value;
+            if (a.isEmpty() || b.isEmpty()) {
+                value = new Pair<>(a, b);
+            } else if (a.charAt(0) == b.charAt(0)) {
+                value = diffHelper(a.substring(1), b.substring(1), lookup);
+            } else {
+                Pair<String> aa = diffHelper(a.substring(1), b, lookup);
+                Pair<String> bb = diffHelper(a, b.substring(1), lookup);
+                if (aa.first.length() + aa.second.length() < bb.first.length() + bb.second.length()) {
+                    value = new Pair<>(a.charAt(0) + aa.first, aa.second);
+                } else {
+                    value = new Pair<>(bb.first, b.charAt(0) + bb.second);
+                }
+            }
+            lookup.put(key, value);
+        }
+        return lookup.get(key);
+    }
+
+    public static class Pair<T> {
+        public Pair(T first, T second) {
+            this.first = first;
+            this.second = second;
+        }
+
+        public final T first, second;
+
+        @Override
+        public String toString() {
+            return "(" + first + "," + second + ")";
+        }
+    }
+    
+    
     
 }
 
