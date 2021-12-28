@@ -1247,9 +1247,20 @@ public class MessageProcess extends ListenerAdapter{
         Pattern pattern = Pattern.compile(urlRegex, Pattern.CASE_INSENSITIVE);
         Matcher urlMatcher = pattern.matcher(in);
         //compile regex, the pattern recognizer, and the matcher
-        if(urlMatcher.find()){
+        /*if(urlMatcher.find()){
             triggered = true;
+        }*/
+        while(urlMatcher.find()){
+            if(urlMatcher.start() > 0){
+                System.out.println(in);
+                if(in.charAt(urlMatcher.start()-1) != '<' && in.charAt(urlMatcher.end()-1) != '>'){
+                    triggered = true;
+                }
+            }
+            else
+                triggered = true;
         }
+        
         //if it detected it's a url, return true. if not, return false
         return triggered;
     }

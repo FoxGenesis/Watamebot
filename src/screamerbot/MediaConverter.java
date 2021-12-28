@@ -54,17 +54,17 @@ public class MediaConverter {
 
      public int test(byte[] inputBytes, boolean webm) throws IOException, InterruptedException, Ffmpeg.BadVideoFile{
         
-        byte[] original = inputBytes;
+        //byte[] original = inputBytes;
         //copy the original bytes in case we need to fall back on them
         
         if (webm == false) {
-            inputBytes = QtFastStart.fastStart(original);
+            inputBytes = QtFastStart.fastStart(inputBytes);
         }
         
-        if(inputBytes == null)
+        //if(inputBytes == null)
             //if failed to obtain a mutated quickstart version (ie an error occured,
             //or the original file is allready quickstart), fall back to the original bytes
-            inputBytes = original;
+        //   inputBytes = original;
 
         //attempt to check if the video is a crasher 
         if(ff.checkCrasher(inputBytes)){
