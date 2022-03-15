@@ -210,7 +210,7 @@ public class Consts {
         String getAll = "SELECT GuildID, DunceActive, Roles, DunceName FROM Guild";
         //Statement stmt = connectionHandler.createStatement();
         try(ResultSet rs = stmt.executeQuery(getAll)){
-        
+       
             while(rs.next()){
                 String guild = rs.getString("GuildID");
                 String dRoles = rs.getString("Roles");
@@ -366,7 +366,7 @@ public class Consts {
         private final boolean MalwareStatus;                //boolean flag if the guild is blocking malware uploads or not
         @Nullable private final GuildChannel guildChannel;  //guild channel of the timeout channel (to be used in the future to ping the offender)
         private final boolean ScreamerStatus;               //boolean flag if the guild is blocking screamer videos
-        private final boolean RenamingStatus;
+        private final boolean RenamingStatus;               //thats the hidden "i'm X" renaming meme
         private final boolean NitroSpamStatus;
         
         public String getGuildID(){return this.GuildID;}
@@ -686,6 +686,7 @@ public class Consts {
         return false;
     }
     
+
     
     public boolean toggleNitroSpamStatus(String guild){
         String select = "SELECT Nitro FROM Guild WHERE GuildID = ?";
@@ -733,6 +734,7 @@ public class Consts {
         
         return false;
     }
+
     
     public boolean setTimeOutChannel(String guildID, GuildChannel gc){
         
@@ -764,9 +766,6 @@ public class Consts {
         return false;
     
     }
-    
-    
-
     
 
 }

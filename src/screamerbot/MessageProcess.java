@@ -265,7 +265,7 @@ public class MessageProcess extends ListenerAdapter{
                 
                 new MyThread(event.getGuild(), Arrays.asList(r), n).start();
                 //rename all the current users
-                
+              
             }
              
          
@@ -1008,10 +1008,10 @@ public class MessageProcess extends ListenerAdapter{
             
             event.getMember().modifyNickname(rename).queue();
             
-            
+
             if(!event.getGuild().getSelfMember().canInteract(event.getMember()))
                 return;
-            
+
             Role[] roles = consts.getGuildInfo(guild).getDunceRoles();
             
             if(roles == null)
