@@ -793,48 +793,50 @@ public class MessageProcess extends ListenerAdapter{
         
         
         String send = "SELECT Roles FROM RoleList WHERE GuildID=? AND Member=?";
-        try {
-            PreparedStatement ps = consts.getSQLConnection().prepareStatement(send);
+        try(PreparedStatement ps = consts.getSQLConnection().prepareStatement(send)){
+            
             ps.setString(1, event.getGuild().getId());
             ps.setString(2, event.getMember().getUser().getId());
             
-            ResultSet rs = ps.executeQuery();
+            try(ResultSet rs = ps.executeQuery() ){
             
-            while(rs.next()){
-                System.out.println("Member has been in the server before");
-                String rolesRaw = rs.getString("Roles");
-                
-                if(rolesRaw == null){
-                    return;
-                    //if the roles string is null, then the roles do not exist
-                    //(possible if user had no roles to begin with) if so, don't
-                    //even bother adding roles
-                }
-                
-                String roles[ ] = rolesRaw.split("-");
-                
-                
-                
-                
-                for(int i = 0; i<roles.length; i++){
-                    Role role = discord.getRoleById(roles[i]);
-                    
-                    if(role == null){
-                        //if the role was invalid, just skip it
-                        //System.out.println("invalid role: "+role);
-                        continue;
+                while(rs.next()){
+                    System.out.println("Member has been in the server before");
+                    String rolesRaw = rs.getString("Roles");
+
+                    if(rolesRaw == null){
+                        return;
+                        //if the roles string is null, then the roles do not exist
+                        //(possible if user had no roles to begin with) if so, don't
+                        //even bother adding roles
                     }
-                    try{
-                    event.getGuild().addRoleToMember(event.getMember(), role).queue();
-                    
-                    }catch(net.dv8tion.jda.api.exceptions.HierarchyException 
-                            | net.dv8tion.jda.api.exceptions.InsufficientPermissionException ex)
-                        //if it's unable to rename the user due to permissions or heirarchy problems,
-                        //dont worry about it
-                    {
-                        System.out.println("Failed to give role to "+event.getMember());
+
+                    String roles[ ] = rolesRaw.split("-");
+
+
+
+
+                    for(int i = 0; i<roles.length; i++){
+                        Role role = discord.getRoleById(roles[i]);
+
+                        if(role == null){
+                            //if the role was invalid, just skip it
+                            //System.out.println("invalid role: "+role);
+                            continue;
+                        }
+                        try{
+                        event.getGuild().addRoleToMember(event.getMember(), role).queue();
+
+                        }catch(net.dv8tion.jda.api.exceptions.HierarchyException 
+                                | net.dv8tion.jda.api.exceptions.InsufficientPermissionException ex)
+                            //if it's unable to rename the user due to permissions or heirarchy problems,
+                            //dont worry about it
+                        {
+                            System.out.println("Failed to give role to "+event.getMember());
+                        }
+
                     }
-                    
+
                 }
             
             }
@@ -874,11 +876,10 @@ public class MessageProcess extends ListenerAdapter{
     
     @Override
     public void onGuildJoin(GuildJoinEvent event){
-        try {
+        String toSend = "INSERT OR IGNORE INTO Guild (GuildID, DunceActive, MalwareStat, ScreamerStat) VALUES (?,0,0,0)";
+        
+        try (PreparedStatement ps = consts.getSQLConnection().prepareStatement(toSend)){
             //detects when the bot has just joined a new guild
-            
-            String toSend = "INSERT OR IGNORE INTO Guild (GuildID, DunceActive, MalwareStat, ScreamerStat) VALUES (?,0,0,0)";
-            PreparedStatement ps = consts.getSQLConnection().prepareStatement(toSend);
             
             ps.setString(1, event.getGuild().getId());
             ps.executeUpdate();
@@ -917,8 +918,8 @@ public class MessageProcess extends ListenerAdapter{
                 roleString += "-" + totalRoles.get(i).getId();
         }
         
-        try {
-            PreparedStatement ps = consts.getSQLConnection().prepareStatement(toSend);
+        try (PreparedStatement ps = consts.getSQLConnection().prepareStatement(toSend)){
+            
             ps.setString(1, roleString);
             ps.setString(2, event.getGuild().getId());
             ps.setString(3, event.getUser().getId());
@@ -959,8 +960,7 @@ public class MessageProcess extends ListenerAdapter{
                 roleString += "-" + totalRoles.get(i).getId();
         }
         
-        try {
-            PreparedStatement ps = consts.getSQLConnection().prepareStatement(toSend);
+        try (PreparedStatement ps = consts.getSQLConnection().prepareStatement(toSend)){
             ps.setString(1, roleString);
             ps.setString(2, event.getGuild().getId());
             ps.setString(3, event.getUser().getId());
@@ -1252,7 +1252,6 @@ public class MessageProcess extends ListenerAdapter{
         }*/
         while(urlMatcher.find()){
             if(urlMatcher.start() > 0){
-                System.out.println(in);
                 if(in.charAt(urlMatcher.start()-1) != '<' && in.charAt(urlMatcher.end()-1) != '>'){
                     triggered = true;
                 }

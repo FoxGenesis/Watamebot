@@ -62,7 +62,6 @@ public class Consts {
     
     Consts() throws InterruptedException, LoginException, IOException, SQLException{
         
-        
     
     errorLogger = new PrintWriter(new FileWriter(Consts.getLogger(), true));
     //threads = new ArrayList();
@@ -90,7 +89,9 @@ public class Consts {
                       );""";
     java.sql.Statement stmt = connectionHandler.createStatement();
     stmt.execute(newTable);
+    stmt.close();
     stmt.execute("CREATE UNIQUE INDEX IF NOT EXISTS GuildString on Guild (GuildID);");
+    stmt.close();
     /**Create a Guild table if it doesn't exist**/
     
     newTable = """
@@ -101,17 +102,31 @@ public class Consts {
                );""";
     
     stmt.execute(newTable);
+    stmt.close();
     stmt.execute("CREATE UNIQUE INDEX IF NOT EXISTS MemberString on RoleList (Member);");
+    stmt.close();
     /**Create a Role table if it doesn't exist**/
     
-        
-        discord = JDABuilder.createDefault(getToken(), 
-                GatewayIntent.GUILD_MEMBERS,
-                GatewayIntent.GUILD_MESSAGES,
-                GatewayIntent.GUILD_MESSAGE_REACTIONS,
-                GatewayIntent.DIRECT_MESSAGES
-                ).setMemberCachePolicy(MemberCachePolicy.ALL).build();
-        //connect the JDA to the bot account through the token passed from the Consts object
+        //attempt to connect to discord. if failed because no internet, wait 10 sec and retry
+        boolean badConnection = false;
+        JDA discordTmp = null;
+        while(!badConnection){
+            try{
+                discordTmp = JDABuilder.createDefault(getToken(), 
+                        GatewayIntent.GUILD_MEMBERS,
+                        GatewayIntent.GUILD_MESSAGES,
+                        GatewayIntent.GUILD_MESSAGE_REACTIONS,
+                        GatewayIntent.DIRECT_MESSAGES
+                        ).setMemberCachePolicy(MemberCachePolicy.ALL).build();
+                badConnection = true;
+                
+            }catch(net.dv8tion.jda.api.exceptions.ErrorResponseException ex){
+                System.out.println("Failed to connect: "+ ex.getLocalizedMessage() + " retrying...");
+                Thread.sleep(10000);
+            }
+        }
+        discord = discordTmp;
+//connect the JDA to the bot account through the token passed from the Consts object
         discord.setAutoReconnect(true);
         //enable autoreconnecting so in case it gets disconnected it can reconnect to the internet socket
         discord.getPresence().setPresence(OnlineStatus.ONLINE, Activity.playing("Initializing..."));
@@ -123,10 +138,10 @@ public class Consts {
         for(int i = 0; i < guilds.size(); i++){
             //If the guilds arent already added to the database, then add them
             String toSend = "INSERT OR IGNORE INTO Guild (GuildID, DunceActive, MalwareStat, ScreamerStat, Renaming, Nitro) VALUES (?,0,0,0,0,0)";
-            PreparedStatement ps = connectionHandler.prepareStatement(toSend);
-            
-            ps.setString(1, guilds.get(i).getId());
-            ps.executeUpdate();
+            try (PreparedStatement ps = connectionHandler.prepareStatement(toSend)) {
+                ps.setString(1, guilds.get(i).getId());
+                ps.executeUpdate();
+            }
             
         }
         
@@ -175,12 +190,13 @@ public class Consts {
                 
                 String toSend = "INSERT OR IGNORE INTO RoleList (GuildID, Member, Roles) VALUES(?,?,?)";
                 
-                PreparedStatement ps = connectionHandler.prepareStatement(toSend);
-                ps.setString(1, guildID);
-                ps.setString(2, userID);
-                ps.setString(3, roles);
-                
-                ps.executeUpdate();
+                try (PreparedStatement ps = connectionHandler.prepareStatement(toSend)) {
+                    ps.setString(1, guildID);
+                    ps.setString(2, userID);
+                    ps.setString(3, roles);
+                    
+                    ps.executeUpdate();
+                }
                 
             }
             System.out.println();
@@ -193,56 +209,54 @@ public class Consts {
         
         String getAll = "SELECT GuildID, DunceActive, Roles, DunceName FROM Guild";
         //Statement stmt = connectionHandler.createStatement();
-        ResultSet rs = stmt.executeQuery(getAll);
+        try(ResultSet rs = stmt.executeQuery(getAll)){
         
-        while(rs.next()){
-            String guild = rs.getString("GuildID");
-            String dRoles = rs.getString("Roles");
-            int dActive = rs.getInt("DunceActive");
-            String dName = rs.getString("DunceName");
-            /*obtain all the dunce variables. The dunce variables are used to determine
-            the users who have '!' at the front of their names, henceforth will be given
-            a "bully" role and renamed to something specified by an admin*/
-            
-            if(dActive == 1){
-                //if the renaming feature is active, then get the bully roles 
-                //split them up by the '-' char, obtain the role object,
-                //and put them in a list
-                String[] lRoles = null;
-                ArrayList<Role> roles = null;
-                if(dRoles != null){
-                    lRoles = dRoles.split("-");
-                    roles = new ArrayList();
-                    for(int i = 0; i < lRoles.length; i++){
-                        Role r = discord.getRoleById(lRoles[i]);
-                        if(r != null)
-                            roles.add(r);      
+            while(rs.next()){
+                String guild = rs.getString("GuildID");
+                String dRoles = rs.getString("Roles");
+                int dActive = rs.getInt("DunceActive");
+                String dName = rs.getString("DunceName");
+                /*obtain all the dunce variables. The dunce variables are used to determine
+                the users who have '!' at the front of their names, henceforth will be given
+                a "bully" role and renamed to something specified by an admin*/
+
+                if(dActive == 1){
+                    //if the renaming feature is active, then get the bully roles 
+                    //split them up by the '-' char, obtain the role object,
+                    //and put them in a list
+                    String[] lRoles = null;
+                    ArrayList<Role> roles = null;
+                    if(dRoles != null){
+                        lRoles = dRoles.split("-");
+                        roles = new ArrayList();
+                        for(int i = 0; i < lRoles.length; i++){
+                            Role r = discord.getRoleById(lRoles[i]);
+                            if(r != null)
+                                roles.add(r);      
+                        }
                     }
-                }
-                
-                Guild g = discord.getGuildById(guild);
-                //obtain the guild object from the guild id
-                
-                
-                //open a background thread to fetch all the users in each guild
-                //since the API forbids doing it in the main thread. also, it can be resource
-                //and time consuming anyway if we have alot of guilds and names, so
-                //it's better if we do this in external threads anyway
-                
-                new MyThread(g, roles, dName).start();
-                
-                /*MyThread thread = new MyThread(g, roles, dName);
-                thread.start();
-                threads.add(thread);*/
-                //create a naming thread using the guild, roles, and name
-                
-                
-                
-                
-                
-            }//end if dActive = 1
-        
-        }//end while
+
+                    Guild g = discord.getGuildById(guild);
+                    //obtain the guild object from the guild id
+
+
+                    //open a background thread to fetch all the users in each guild
+                    //since the API forbids doing it in the main thread. also, it can be resource
+                    //and time consuming anyway if we have alot of guilds and names, so
+                    //it's better if we do this in external threads anyway
+
+                    new MyThread(g, roles, dName).start();
+
+                    /*MyThread thread = new MyThread(g, roles, dName);
+                    thread.start();
+                    threads.add(thread);*/
+                    //create a naming thread using the guild, roles, and name
+
+
+                }//end if dActive = 1
+
+            }//end while
+        }
         
         if(! new File("tmp").exists()){
             new File("tmp").mkdirs();
@@ -272,68 +286,68 @@ public class Consts {
     static public File getLogger(){return new File("logger.log");}
     //get the logger
     
+    
+    
     public GuildInfo getGuildInfo(String in){
         //returns a GuildInfo onject that contains the entire guild information 
         //stored in the Guild table in the database, for the specified guild ID
         String query = "SELECT Roles, DunceActive, DunceName, MalwareRole, MalwareStat, MalwareChannel, ScreamerStat, Renaming, Nitro FROM Guild WHERE GuildID = ?";
         GuildInfo gInfo = null;
-        try {
-            PreparedStatement stmt = connectionHandler.prepareStatement(query);
-            //ResultSet rs = stmt.executeQuery(query);
-            stmt.setString(1, in);
-            ResultSet rs = stmt.executeQuery();
-            //prepare the statement, get the returned response
 
-            while(rs.next()){
-                
-                String tmp = rs.getString("Roles");
-                //obtain the Roles string
-                
-                
-                List<String> roleIDs = null;
-                if(tmp==null){
-                    roleIDs = Collections.emptyList();
-                    //if the roles string is null, then the roles list should be empty
-                }
-                else{
-                    roleIDs = Arrays.asList(tmp.split("-"));
-                    //if the roles's string is not empty, then split it
-                    //up by the '-' char
-                }
-                
-                int dActive = rs.getInt("DunceActive");
-                String dName = rs.getString("DunceName");
-                String mRole = rs.getString("MalwareRole");
-                int mStat = rs.getInt("MalwareStat");
-                String gChan = rs.getString("MalwareChannel");
-                int sStat = rs.getInt("ScreamerStat");
-                int rStat = rs.getInt("Renaming");
-                int nStat = rs.getInt("Nitro");
-                boolean dA = false, mS = false, sS = false, rS = false, nS = false;
-                //obtain all the guild's variables in the Guild table
-                if(dActive == 1)
-                    dA = true;
-                if(mStat ==1)
-                    mS = true;
-                if(sStat == 1)
-                    sS = true;
-                if(rStat == 1)
-                    rS = true;
-                if(nStat == 1)
-                    nS = true;
-                
-                Guild g = discord.getGuildById(in);
-                //obtain all data from the Guild table, for the inputted guild ID
-                gInfo = new GuildInfo(in, roleIDs, dA, dName, mRole, mS, gChan, sS, rS, nS);
-                //create new GuildInfo object
-                
-                
+        try(PreparedStatement stmt = connectionHandler.prepareStatement(query)){
             
+            stmt.setString(1, in);
+            
+            try(ResultSet rs = stmt.executeQuery()){
+
+                while(rs.next()){ 
+                    String tmp = rs.getString("Roles");
+                    //obtain the Roles string      
+                    List<String> roleIDs = null;
+                    if(tmp==null){
+                        roleIDs = Collections.emptyList();
+                        //if the roles string is null, then the roles list should be empty
+                    }
+                    else{
+                        roleIDs = Arrays.asList(tmp.split("-"));
+                        //if the roles's string is not empty, then split it
+                        //up by the '-' char
+                    }
+
+                    int dActive = rs.getInt("DunceActive");
+                    String dName = rs.getString("DunceName");
+                    String mRole = rs.getString("MalwareRole");
+                    int mStat = rs.getInt("MalwareStat");
+                    String gChan = rs.getString("MalwareChannel");
+                    int sStat = rs.getInt("ScreamerStat");
+                    int rStat = rs.getInt("Renaming");
+                    int nStat = rs.getInt("Nitro");
+                    boolean dA = false, mS = false, sS = false, rS = false, nS = false;
+                    //obtain all the guild's variables in the Guild table
+                    if(dActive == 1)
+                        dA = true;
+                    if(mStat ==1)
+                        mS = true;
+                    if(sStat == 1)
+                        sS = true;
+                    if(rStat == 1)
+                        rS = true;
+                    if(nStat == 1)
+                        nS = true;
+
+                    Guild g = discord.getGuildById(in);
+                    //obtain all data from the Guild table, for the inputted guild ID
+                    gInfo = new GuildInfo(in, roleIDs, dA, dName, mRole, mS, gChan, sS, rS, nS);
+                    //create new GuildInfo object
+                }
             }
-        } catch (SQLException ex) {
-            //if there is an error with reading the database, then throw error and return
+        
+        }catch(SQLException ex){
             Logger.getLogger(Consts.class.getName()).log(Level.SEVERE, null, ex);
+
         }
+        
+            
     return gInfo;
     //return the GuildInfo object
     }
@@ -422,336 +436,318 @@ public class Consts {
     
     public boolean setDunceName(String guild, String in){
         //function that updates the Dunce name for a guild, by it's ID and inputted string
-        try {
-
-            if(in != null){
-                //if the string is null, then it's invalid
-                if(in.length() > 32)
-                    return false;
+        if(in != null){
+            //if the string is null, then it's invalid
+            if(in.length() > 32)
+                return false;
                 
-            }
+        }
 
-            
-            String update = "UPDATE Guild \n"
-                    + "SET DunceName = ?\n"
-                    +"WHERE \n GuildID = ?";
-            PreparedStatement stmt = connectionHandler.prepareStatement(update);
+        String update = "UPDATE Guild SET DunceName = ? WHERE GuildID = ?";
+        try (PreparedStatement stmt = connectionHandler.prepareStatement(update)) {
             stmt.setString(1, in);
             stmt.setString(2, guild);
             stmt.executeUpdate();
-            //prepare the statement, and set the duncename and guild ID for the database querry 
-            
-            return true;
-        } catch (SQLException ex) {
+            //prepare the statement, and set the duncename and guild ID for the database querry
+        }
+        catch(SQLException ex){
             Logger.getLogger(Consts.class.getName()).log(Level.SEVERE, null, ex);
             return false;
         }
+            
+        return true;
+        
     }
     public boolean setDunceRoles(String guild, List<Role> roles){
-        try {
-            if(roles == null)
-                return false;
-            //if the roles are null, then it's invalid
+        
+        if(roles == null)
+            return false;
+        //if the roles are null, then it's invalid
             
-            String toSend;
-            if(!roles.isEmpty()){
-                //if the list is not empty 
-                if(roles.get(0) == null)
-                    //if first index is null, it is invalid
-                    return false;
+        String toSend;
+        if(!roles.isEmpty()){
+            //if the list is not empty 
+            if(roles.get(0) == null)
+                //if first index is null, it is invalid
+                return false;
                 
-                //***************************************************
-                toSend = roles.get(0).getId();
+        //***************************************************
+            toSend = roles.get(0).getId();
 
-                for(int i = 1; i< roles.size(); i++){
-                    if(roles.get(i) == null)
-                        return false;
+            for(int i = 1; i< roles.size(); i++){
+                if(roles.get(i) == null)
+                    return false;
 
-                    toSend = toSend+ "-" + roles.get(i).getId();
-                }
+                toSend = toSend+ "-" + roles.get(i).getId();
+            }
                 //combine each role ID into one string separated by '-' chars
                 //***************************************************
-            }
-            //if the list is empty, set the string to null
-            else
-                toSend = null;
+        }
+        //if the list is empty, set the string to null
+        else
+            toSend = null;
             
-            String update = "UPDATE Guild \n"
-                    + "SET Roles = ?\n"
-                    +"WHERE \n GuildID = ?";
-            PreparedStatement stmt = connectionHandler.prepareStatement(update);
+        String update = "UPDATE Guild SET Roles = ? WHERE GuildID = ?";
+        try(PreparedStatement stmt = connectionHandler.prepareStatement(update)){
             stmt.setString(1, toSend);
             stmt.setString(2, guild);
             stmt.executeUpdate();
             //prepare the statement, send the role string and guild id
-            
-            
-            return true;
-        } catch (SQLException ex) {
-            //should there be an error, throw a log and return false
+        }catch(SQLException ex){
             Logger.getLogger(Consts.class.getName()).log(Level.SEVERE, null, ex);
             return false;
         }
+            
+        return true;
         
     }
     public boolean toggleDunceActive(String guild){
         //function that toggles the dunce active bool flag of the inputted guild, by it's ID
-        try {
-            String select = "SELECT DunceActive FROM Guild WHERE GuildID = ? ";//'"+guild+"';";
-            PreparedStatement stmt = connectionHandler.prepareStatement(select);
+
+        String select = "SELECT DunceActive FROM Guild WHERE GuildID = ? ";
+        String update = "UPDATE Guild SET DunceActive = ? WHERE GuildID = ?";
+        
+        boolean retVal = false;
+        
+        try(PreparedStatement stmt = connectionHandler.prepareStatement(select);
+            PreparedStatement stmt2 = connectionHandler.prepareStatement(update)){
             stmt.setString(1, guild);
             //prepare the statement, and sed a request for the DunceActive variable,
             //by searching for the guild with the inputted ID
-            
-            ResultSet rs = stmt.executeQuery();
-            //obtain response from the query
-            if(rs.next()){
-                //if there was a response, process the response
-                int val = rs.getInt("DunceActive");
-                int toOut = 0;
-                if(val == 0){
-                    toOut = 1;
+
+            try(ResultSet rs = stmt.executeQuery()){
+                //obtain response from the query
+                if(rs.next()){
+                    //if there was a response, process the response
+                    int val = rs.getInt("DunceActive");
+                    int toOut = 0;
+                    if(val == 0){
+                        toOut = 1;
+                    }
+                    //invert the response integer
+
+                    //Statement stmt = connectionHandler.createStatement();
+
+                    //re-prepare the statement 
+                    stmt2.setInt(1, toOut);
+                    stmt2.setString(2, guild);
+                    stmt2.executeUpdate();
+                    //submit the new DunceActive boolean flag and guild ID,
+                    //execute the query
+                    //stmt.close();
+                    //rs.close();
+                    retVal = true;
                 }
-                //invert the response integer
-                String update = "UPDATE Guild \n"
-                        + "SET DunceActive = ? "//'"+toOut+"'\n"
-                        +"WHERE \n GuildID = ?";//'"+guild+"'";
-                //Statement stmt = connectionHandler.createStatement();
-                stmt = connectionHandler.prepareStatement(update);
-                //re-prepare the statement 
-                stmt.setInt(1, toOut);
-                stmt.setString(2, guild);
-                stmt.executeUpdate();
-                //submit the new DunceActive boolean flag and guild ID,
-                //execute the query
                 
-                return true;
             }
-            else
-                return false;
-            //if no response was captured, something went wrong, return false;
-            
-        } catch (SQLException ex) {
-            Logger.getLogger(Consts.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
-        }
         
+        }catch(SQLException ex){
+            Logger.getLogger(Consts.class.getName()).log(Level.SEVERE, null, ex);
+            retVal =  false;
+        }
+        //if no response was captured, something went wrong, return false;
+        return retVal;
+
     }
     public boolean setTimeOutRole(String guild, String roleID){
         //sets the timeout role of the offender, per the guid ID and the role ID
-        try {
-            Role r = discord.getRoleById(roleID);
-            if(r == null)
-                return false;
-            //if the role object is null, then it is invalid
-            
-            String update = "UPDATE Guild \n"
-                    + "SET MalwareRole = ?\n"
-                    +"WHERE \n GuildID = ?";
-            PreparedStatement stmt = connectionHandler.prepareStatement(update);
+       
+        Role r = discord.getRoleById(roleID);
+        if(r == null)
+            return false;
+        //if the role object is null, then it is invalid
+        boolean retVal = false;    
+        String update = "UPDATE Guild SET MalwareRole = ? WHERE GuildID = ?";
+        try(PreparedStatement stmt = connectionHandler.prepareStatement(update)){
             stmt.setString(1, roleID);
             stmt.setString(2, guild);
             stmt.executeUpdate();
-            //prepare the statement, apply the role ID and the Guild ID, and submit the statement
-            return true;
+                //prepare the statement, apply the role ID and the Guild ID, and submit the statement
+
+            retVal = true;
             //return true on success
-        } catch (SQLException ex) {
+        
+        }catch(SQLException ex){
             Logger.getLogger(Consts.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
-            //if there was an error, log it and return false
-        }
+        }    
+            return retVal;
     }
     public boolean toggleMalwareActive(String guild){
-        try {
-            String select = "SELECT MalwareStat FROM Guild WHERE GuildID = ?";//'"+guild+"';";
-            PreparedStatement stmt = connectionHandler.prepareStatement(select);
-            //assuming that the guild ID returned from discord itself is legit,
+
+        String select = "SELECT MalwareStat FROM Guild WHERE GuildID = ?";
+        String update = "UPDATE Guild SET MalwareStat = ? WHERE GuildID = ?";
+        try(PreparedStatement stmt = connectionHandler.prepareStatement(select); 
+            PreparedStatement stmt2 = connectionHandler.prepareStatement(update) ){
+        //assuming that the guild ID returned from discord itself is legit,
             stmt.setString(1, guild);
-            ResultSet rs = stmt.executeQuery();
+            try(ResultSet rs = stmt.executeQuery() ){
             //prepare the statement, apply the guild ID, and rexecute it.
-            if(rs.next()){
-                int val = rs.getInt("MalwareStat");
-                int toOut = 0;
-                if(val == 0){
-                    toOut = 1;
+                if(rs.next()){
+                    int val = rs.getInt("MalwareStat");
+                    int toOut = 0;
+                    if(val == 0){
+                        toOut = 1;
+                    }
+                    //invert the MalwareStat flag
+
+                    stmt2.setInt(1, toOut);
+                    stmt2.setString(2, guild);
+                    stmt2.executeUpdate();
+                    //re-prepare the statement and set the MalwareStat flag per the guild
+                    //ID, and push the update.
+                    stmt.close();
+                    rs.close();
+                    return true;
                 }
-                //invert the MalwareStat flag
-                
-                String update = "UPDATE Guild \n"
-                        + "SET MalwareStat = ? "//+toOut+"\n"
-                        +"WHERE \n GuildID = ? ";//'"+guild+"'";
-                //Statement stmt = connectionHandler.createStatement();
-                stmt = connectionHandler.prepareStatement(update);
-                stmt.setInt(1, toOut);
-                stmt.setString(2, guild);
-                stmt.executeUpdate();
-                //re-prepare the statement and set the MalwareStat flag per the guild
-                //ID, and push the update.
-                
-                return true;
             }
-            else
-                //if there was no response, then there was an error
-                return false;
-            
-        } catch (SQLException ex) {
-            //should there be an exception, log it and return false;
+        
+        }catch(SQLException ex){
             Logger.getLogger(Consts.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
         }
-       
-    
+
+        return false;
     }
     public boolean toggleScreamerStatus(String guild){
         //function that toggles the screamer video blocking flag, per the inputted guild ID
-        try {
-            String select = "SELECT ScreamerStat FROM Guild WHERE GuildID = ?";//'"+guild+"';";
-            PreparedStatement stmt = connectionHandler.prepareStatement(select);
-            //assuming that the guild ID returned from discord itself is legit,
-            stmt.setString(1, guild);
-            ResultSet rs = stmt.executeQuery();
-            //prepare the statement, pass the guild ID and obtain the results
-            if(rs.next()){
-                int val = rs.getInt("ScreamerStat");
-                int toOut = 0;
-                if(val == 0){
-                    toOut = 1;
-                }
-                //obtain the ScreamerStat flag and invert it
-                String update = "UPDATE Guild \n"
-                        + "SET ScreamerStat = ? "//'"+toOut+"'\n"
-                        +"WHERE \n GuildID = ?";//'"+guild+"'";
-                //Statement stmt = connectionHandler.createStatement();
-                stmt = connectionHandler.prepareStatement(update);
-                stmt.setInt(1, toOut);
-                stmt.setString(2, guild);
-                //re-prepare the statement, give the guild the new status flag,
-                //using it's guild ID
-                
-                stmt.executeUpdate();//(update);
-                return true;
-                //push the update and return true
-            }
-            else
-                //if there is no response, then its invalid, return false.
-                return false;
-            
-        } catch (SQLException ex) {
-            Logger.getLogger(Consts.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
-            //if an error were to happen, log it and return false.
-        }
         
-    
+        
+        String select = "SELECT ScreamerStat FROM Guild WHERE GuildID = ?";
+        String update = "UPDATE Guild SET ScreamerStat = ? WHERE GuildID = ?";
+        try(PreparedStatement stmt = connectionHandler.prepareStatement(select);
+            PreparedStatement stmt2 = connectionHandler.prepareStatement(update)){
+        //assuming that the guild ID returned from discord itself is legit,
+            stmt.setString(1, guild);
+            try(ResultSet rs = stmt.executeQuery() ){
+                //prepare the statement, pass the guild ID and obtain the results
+                if(rs.next()){
+                    int val = rs.getInt("ScreamerStat");
+                    int toOut = 0;
+                    if(val == 0){
+                        toOut = 1;
+                    }
+                    //obtain the ScreamerStat flag and invert it
+                    stmt2.setInt(1, toOut);
+                    stmt2.setString(2, guild);
+                    //re-prepare the statement, give the guild the new status flag,
+                    //using it's guild ID
+
+                    stmt2.executeUpdate();//(update);
+                    return true;
+                        //push the update and return true
+                }
+            }
+        
+        }catch(SQLException ex){
+            Logger.getLogger(Consts.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return false;
     }
     public boolean toggleRenamingStatus(String guild){
         //function for renaming users who type "i'm"
+        String select = "SELECT Renaming FROM Guild WHERE GuildID = ? ";
+        String update = "UPDATE Guild SET Renaming = ? WHERE GuildID = ?";
         
-        try {
-            String select = "SELECT Renaming FROM Guild WHERE GuildID = ? ";//'"+guild+"';";
-            PreparedStatement stmt = connectionHandler.prepareStatement(select);
+        try (PreparedStatement stmt = connectionHandler.prepareStatement(select);
+             PreparedStatement stmt2 = connectionHandler.prepareStatement(update) ){
+            
+            
             stmt.setString(1, guild);
             //prepare the statement, and sed a request for the DunceActive variable,
             //by searching for the guild with the inputted ID
             
-            ResultSet rs = stmt.executeQuery();
+            try(ResultSet rs = stmt.executeQuery() ){
             //obtain response from the query
-            if(rs.next()){
-                //if there was a response, process the response
-                int val = rs.getInt("Renaming");
-                int toOut = 0;
-                if(val == 0){
-                    toOut = 1;
+                if(rs.next()){
+                    //if there was a response, process the response
+                    int val = rs.getInt("Renaming");
+                    int toOut = 0;
+                    if(val == 0){
+                        toOut = 1;
+                    }
+                    //invert the response integer
+
+                    //Statement stmt = connectionHandler.createStatement();
+
+                    //re-prepare the statement 
+                    stmt2.setInt(1, toOut);
+                    stmt2.setString(2, guild);
+                    stmt2.executeUpdate();
+                    //submit the new DunceActive boolean flag and guild ID,
+                    //execute the query
+
+                    return true;
                 }
-                //invert the response integer
-                String update = """
-                                UPDATE Guild 
-                                SET Renaming = ? WHERE 
-                                 GuildID = ?
-                                """
-                ;
-                //Statement stmt = connectionHandler.createStatement();
-                stmt = connectionHandler.prepareStatement(update);
-                //re-prepare the statement 
-                stmt.setInt(1, toOut);
-                stmt.setString(2, guild);
-                stmt.executeUpdate();
-                //submit the new DunceActive boolean flag and guild ID,
-                //execute the query
-                
-                return true;
             }
-            else
-                return false;
-            //if no response was captured, something went wrong, return false;
             
         } catch (SQLException ex) {
             Logger.getLogger(Consts.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
         }
+        return false;
     }
     
     
     public boolean toggleNitroSpamStatus(String guild){
-        try{
-            String select = "SELECT Nitro FROM Guild WHERE GuildID = ?";
-            PreparedStatement stmt = connectionHandler.prepareStatement(select);
-            stmt.setString(1, guild);
-            //prepare the statement, and sed a request for the DunceActive variable,
-            //by searching for the guild with the inputted ID
-            
-            ResultSet rs = stmt.executeQuery();
-            //obtain response from the query
-            if(rs.next()){
-                //if there was a response, process the response
-                int val = rs.getInt("Nitro");
-                int toOut = 0;
-                if(val == 0){
-                    toOut = 1;
-                }
-                //invert the response integer
-                String update = """
+        String select = "SELECT Nitro FROM Guild WHERE GuildID = ?";
+        String update = """
                                 UPDATE Guild 
                                 SET Nitro = ? WHERE 
                                  GuildID = ?
                                 """
                 ;
-                //Statement stmt = connectionHandler.createStatement();
-                stmt = connectionHandler.prepareStatement(update);
-                //re-prepare the statement 
-                stmt.setInt(1, toOut);
-                stmt.setString(2, guild);
-                stmt.executeUpdate();
-                //submit the new DunceActive boolean flag and guild ID,
-                //execute the query
-                
-                return true;
+        try(PreparedStatement stmt = connectionHandler.prepareStatement(select);
+            PreparedStatement stmt2 = connectionHandler.prepareStatement(update)){
+            
+            
+            stmt.setString(1, guild);
+            //prepare the statement, and sed a request for the DunceActive variable,
+            //by searching for the guild with the inputted ID
+            
+            try(ResultSet rs = stmt.executeQuery()){
+                //obtain response from the query
+                if(rs.next()){
+                    //if there was a response, process the response
+                    int val = rs.getInt("Nitro");
+                    int toOut = 0;
+                    if(val == 0){
+                        toOut = 1;
+                    }
+                    //invert the response integer
+
+                    //Statement stmt = connectionHandler.createStatement();
+
+                    //re-prepare the statement 
+                    stmt2.setInt(1, toOut);
+                    stmt2.setString(2, guild);
+                    stmt2.executeUpdate();
+                    //submit the new DunceActive boolean flag and guild ID,
+                    //execute the query
+
+                    return true;
+                }
             }
-            else
-                return false;
-            //if no response was captured, something went wrong, return false;
-            
-            
-            
+              
         }catch (SQLException ex){
             Logger.getLogger(Consts.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
         }
+        
+        return false;
     }
     
     public boolean setTimeOutChannel(String guildID, GuildChannel gc){
-        try {
-            //Role r = discord.getRoleById(roleID);
+        
+            String update = """
+                            UPDATE Guild 
+                            SET MalwareChannel = ? WHERE 
+                             GuildID = ?""";
             if(gc == null)
                 return false;
             if(guildID == null)
                 return false;
             //if either the guild ID or the Guild channel are null, the inputs are invalid
+        try(PreparedStatement stmt = connectionHandler.prepareStatement(update)) {    
             
-            String update = "UPDATE Guild \n"
-                    + "SET MalwareChannel = ? "//'"+gc.getId()+"'\n"
-                    +"WHERE \n GuildID = ?";//'"+guildID+"'";
-            PreparedStatement stmt = connectionHandler.prepareStatement(update);
+            
             //assuming that the guild ID returned from discord itself is legit,
             stmt.setString(1, gc.getId());
             stmt.setString(2, guildID);
@@ -760,14 +756,17 @@ public class Consts {
             //to ping the offender member) by getting it's ID, and get the guild ID of the
             //guild channel by it's string.
             //push the update
-            return true;
+            return true; 
         } catch (SQLException ex) {
             //should an error occure, log it and return false
             Logger.getLogger(Consts.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
         }
+        return false;
     
     }
+    
+    
+
     
 
 }
