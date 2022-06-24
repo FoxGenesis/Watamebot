@@ -345,7 +345,7 @@ public class MessageProcess extends ListenerAdapter{
              //event.getMessage().delete().queue();
          
          }
-         else if(9 == parsedCommand){
+         else if(9 == parsedCommand && userAllowed(event)){
              boolean current = consts.getGuildInfo(event.getGuild().getId()).getNitroSpamStatus();
              
              if(current){
