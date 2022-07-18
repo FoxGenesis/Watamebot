@@ -816,17 +816,16 @@ public class MessageProcess extends ListenerAdapter{
 
 
 
-                    for(int i = 0; i<roles.length; i++){
-                        Role role = discord.getRoleById(roles[i]);
-
+                    for (String role1 : roles) {
+                        Role role = discord.getRoleById(role1);
                         if(role == null){
                             //if the role was invalid, just skip it
                             //System.out.println("invalid role: "+role);
                             continue;
                         }
                         try{
-                        event.getGuild().addRoleToMember(event.getMember(), role).queue();
-
+                            event.getGuild().addRoleToMember(event.getMember(), role).queue();
+                            
                         }catch(net.dv8tion.jda.api.exceptions.HierarchyException 
                                 | net.dv8tion.jda.api.exceptions.InsufficientPermissionException ex)
                             //if it's unable to rename the user due to permissions or heirarchy problems,
@@ -834,7 +833,6 @@ public class MessageProcess extends ListenerAdapter{
                         {
                             System.out.println("Failed to give role to "+event.getMember());
                         }
-
                     }
 
                 }
@@ -863,8 +861,8 @@ public class MessageProcess extends ListenerAdapter{
             event.getMember().modifyNickname(n).queue();
             
             if(r != null){
-                for(Role role : r)
-                    event.getGuild().modifyMemberRoles(event.getMember(), r).queue();
+                //for(Role role : r)
+                event.getGuild().modifyMemberRoles(event.getMember(), r).queue();
             }
         
         }
@@ -982,9 +980,9 @@ public class MessageProcess extends ListenerAdapter{
         
         String guild = event.getGuild().getId();
         
-        if(!consts.getGuildInfo(guild).getDunceStatus())
+        if(!consts.getGuildInfo(guild).getDunceStatus()){
             return;
-        
+        }
         
         String newName = event.getNewNickname();
         

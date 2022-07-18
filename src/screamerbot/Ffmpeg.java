@@ -439,7 +439,7 @@ public class Ffmpeg {
         
         byte[] mutated = in;
         
-        ProcessBuilder pb = new ProcessBuilder(ffprobe.getPath(), "-v", "error", "-show_entries", "frame=width,height", "-select_streams", 
+        ProcessBuilder pb = new ProcessBuilder(ffprobe.getPath(), "-v", "error", "-show_entries", "frame=pkt_pts_time,width,height", "-select_streams", 
                                                 "v", "-of", "csv=p=0", "-i", "-");
         pb.redirectErrorStream(true);
         
@@ -477,8 +477,14 @@ public class Ffmpeg {
         p.getInputStream().close();
         
         String[] resString = numbers[0].split(",");
-        
-        if(resString.length != 2){
+        for(int i = 1; i < numbers.length; i++){
+            //while the frame picked up has an invalid timestamp, keep trying to 
+            //get the resolution
+            if(!resString[0].equals("N/A"))
+                break;
+            resString = numbers[i].split(",");
+        }
+        if(resString.length != 3){
             System.out.println("Unable to get initial resolution from piped input");
             throw new BadVideoFile("Piped Resolution");
         }
@@ -486,8 +492,8 @@ public class Ffmpeg {
         int h, w;
         
         try{
-            w = Integer.parseInt(resString[0]);
-            h = Integer.parseInt(resString[1]);
+            w = Integer.parseInt(resString[1]);
+            h = Integer.parseInt(resString[2]);
         }catch(NumberFormatException ex){
             System.out.println("Unable to get initial resolution from piped input");
             throw new BadVideoFile("Piped Resolution");
@@ -503,7 +509,7 @@ public class Ffmpeg {
             
             String[] clump = numbers[i].split(",");
             
-            if(clump.length != 2){
+            if(clump.length != 3){
                 System.out.println("Failed to obtain testing frame resolution");
                 throw new BadVideoFile("Could not obtain resolution: " + numbers[i]);
             }
@@ -511,12 +517,12 @@ public class Ffmpeg {
             int tmpH, tmpW;
             
             try{
-                tmpW = Integer.parseInt(clump[0]);
-                tmpH = Integer.parseInt(clump[1]);
+                tmpW = Integer.parseInt(clump[1]);
+                tmpH = Integer.parseInt(clump[2]);
             
             }catch(NumberFormatException ex){
                 System.out.println("Failed to obtain testing frame resolution");
-                throw new BadVideoFile("Resolution values: '"+clump[0]+"' by '"+clump[1]+"'");
+                throw new BadVideoFile("Resolution values: '"+clump[1]+"' by '"+clump[2]+"'");
             }
             
             if(h != tmpH || w != tmpW){
@@ -547,7 +553,7 @@ public class Ffmpeg {
         detecting if the resolution has changed
         */
         
-        ProcessBuilder pb = new ProcessBuilder(ffprobe.getPath(), "-v", "error", "-show_entries", "frame=width,height", "-select_streams", 
+        ProcessBuilder pb = new ProcessBuilder(ffprobe.getPath(), "-v", "error", "-show_entries", "frame=pkt_pts_time,width,height", "-select_streams", 
                                                 "v", "-of", "csv=p=0", "-i", in.getPath());
         pb.redirectErrorStream(true);
         Process p = pb.start();
@@ -568,9 +574,16 @@ public class Ffmpeg {
         }
         
         //String res = line.substring(line.indexOf(",")+1);
-        String[] resolution = line.split(",");
+        String[] resolution;// = line.split(",");
+        do{
+            //while the frame picked up has an invalid timestamp, keep trying to 
+            //get the resolution
+            resolution = line.split(",");
+            if(!resolution[0].equals("N/A"))
+                break;
+        }while((line = reader.readLine())!=null);
         
-        if(resolution.length != 2){
+        if(resolution.length != 3){
             System.out.println("Failed to obtain the initial resolution");
             p.destroy();
             //in.delete();
@@ -581,8 +594,8 @@ public class Ffmpeg {
         int w, h;
         
         try{
-            w = Integer.parseInt(resolution[0]);
-            h = Integer.parseInt(resolution[1]);
+            w = Integer.parseInt(resolution[1]);
+            h = Integer.parseInt(resolution[2]);
         
         }catch(NumberFormatException ex){
             System.out.println("Resolutions are not integers");
@@ -601,7 +614,7 @@ public class Ffmpeg {
             
             
             String[] clump = line.split(",");
-            if(clump.length != 2){
+            if(clump.length != 3){
                 System.out.println("Failed to obtain testing resolution");
                 p.destroy();
                 //in.delete();
@@ -611,8 +624,8 @@ public class Ffmpeg {
             int tmpH, tmpW;
             
             try{
-                tmpW = Integer.parseInt(clump[0]);
-                tmpH = Integer.parseInt(clump[1]);
+                tmpW = Integer.parseInt(clump[1]);
+                tmpH = Integer.parseInt(clump[2]);
             
             }catch(NumberFormatException ex){
                 System.out.println("Tested resolutions are not integers");
