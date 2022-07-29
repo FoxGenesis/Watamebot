@@ -67,9 +67,10 @@ public class MediaConverter {
         //   inputBytes = original;
 
         //attempt to check if the video is a crasher 
-        if(ff.checkCrasher(inputBytes)){
-            return 2;
-        }
+        //if(ff.checkCrasher(inputBytes)){
+        //    return 2;
+        //}
+        //as of modern versions of discord, video files no longer crash discord
 
         ArrayList<Double> segments = ff.grabSegments(inputBytes);
         
