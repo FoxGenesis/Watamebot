@@ -513,7 +513,7 @@ public class MessageProcess extends ListenerAdapter{
                         + "loud in the message. If you are going to post a loud video, describe in the same message that it is loud."/*\n```Note: this bot is still "
                         + "in development, mistakes can happen, please let the developer Spazmaster#8989 know of a bug or mistake```"*/).queue();
                      else if(status == 2)
-                        event.getChannel().sendMessage(event.getAuthor().getAsMention() + "Please do not upload videos that change resolution. Rues of the server do "
+                        event.getChannel().sendMessage(event.getAuthor().getAsMention() + "Please do not upload videos that change resolution. Rules of the server do "
                                 + "not allow these types of videos.").queue();
                         //deleted the offender's message, post a warning
                      
@@ -618,7 +618,7 @@ public class MessageProcess extends ListenerAdapter{
                         + "loud in the message. If you are going to post a loud video, describe in the same message that it is loud."/*\n```Note: this bot is still "
                         + "in development, mistakes can happen, please let the developer Spazmaster#8989 know of a bug or mistake```"*/).queue();
                 else if(status == 2)
-                        event.getChannel().sendMessage(event.getAuthor().getAsMention() + "Please do not upload videos that change resolution. Rues of the server do "
+                        event.getChannel().sendMessage(event.getAuthor().getAsMention() + "Please do not upload videos that change resolution. Rules of the server do "
                                 + "not allow these types of videos.").queue();
                 //deleted the offender's message, post a warning
                 System.out.println("Deleted an offending Attachment in "+event.getGuild());
