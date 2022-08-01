@@ -513,9 +513,8 @@ public class MessageProcess extends ListenerAdapter{
                         + "loud in the message. If you are going to post a loud video, describe in the same message that it is loud."/*\n```Note: this bot is still "
                         + "in development, mistakes can happen, please let the developer Spazmaster#8989 know of a bug or mistake```"*/).queue();
                      else if(status == 2)
-                        event.getChannel().sendMessage(event.getAuthor().getAsMention() + "DETECTED CRASHER FILE!!! Uploading files designed to crash discord will"
-                        +" get you banned or timed out. Do not upload them.\n```Note: this feature is still in development, mistakes can happen, please let "
-                        +"the developer Spazmaster#8989 know of a bug or mistake```").queue();
+                        event.getChannel().sendMessage(event.getAuthor().getAsMention() + "Please do not upload videos that change resolution. Rues of the server do "
+                                + "not allow these types of videos.").queue();
                         //deleted the offender's message, post a warning
                      
                      break;
@@ -619,9 +618,8 @@ public class MessageProcess extends ListenerAdapter{
                         + "loud in the message. If you are going to post a loud video, describe in the same message that it is loud."/*\n```Note: this bot is still "
                         + "in development, mistakes can happen, please let the developer Spazmaster#8989 know of a bug or mistake```"*/).queue();
                 else if(status == 2)
-                        event.getChannel().sendMessage(event.getAuthor().getAsMention() + "DETECTED CRASHER FILE!!! Uploading files designed to crash discord will"
-                        +" get you banned or timed out. Do not upload them.\n```Note: this feature is still in development, mistakes can happen, please let "
-                            +"the developer Spazmaster#8989 know of a bug or mistake```").queue();
+                        event.getChannel().sendMessage(event.getAuthor().getAsMention() + "Please do not upload videos that change resolution. Rues of the server do "
+                                + "not allow these types of videos.").queue();
                 //deleted the offender's message, post a warning
                 System.out.println("Deleted an offending Attachment in "+event.getGuild());
                 }
