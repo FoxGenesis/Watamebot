@@ -8,8 +8,9 @@ import java.util.logging.Logger;
  * @author Ashley
  */
 public enum ExitCode {
-	NO_TOKEN(1),
-	INVALID_TOKEN(2);
+	INSTANCE_ALREADY_RUNNING(1),
+	NO_TOKEN(2),
+	INVALID_TOKEN(3);
 	
 	
 	/**
