@@ -47,8 +47,8 @@ public enum ExitCode {
 	 * @param thrown - Throwable to log
 	 */
 	public void programExit(String exitMessage, Throwable thrown) {
-		if(exitMessage != null || thrown != null)
-			Logger.getLogger(WatameBot.class.getName()).log(Level.SEVERE, exitMessage, thrown);
+		//if(exitMessage != null || thrown != null)
+		Logger.getGlobal().logp(Level.SEVERE, "WatameBot", null, exitMessage == null? this.name() : exitMessage, thrown);
 		programExit();
 	}
 	
