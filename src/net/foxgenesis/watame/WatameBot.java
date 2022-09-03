@@ -44,7 +44,9 @@ public class WatameBot {
 	 * NEED_JAVADOC
 	 */
 	protected void preInit() {
-
+		// Display our game as starting up
+		logger.debug("Setting presence to initalizing");
+		discord.getPresence().setPresence(OnlineStatus.DO_NOT_DISTURB, Activity.playing("Initializing..."));
 	}
 
 	/**
@@ -58,6 +60,8 @@ public class WatameBot {
 	 * NEED_JAVADOC
 	 */
 	protected void postInit() {
+		// Display our game as ready
+		logger.debug("Setting presence to ready");
 		discord.getPresence().setPresence(OnlineStatus.ONLINE, Activity.playing("type <help>"));
 	}
 
@@ -112,10 +116,6 @@ public class WatameBot {
 			discordTmp.awaitReady();
 		} catch (InterruptedException e) {
 		}
-
-		// Display our game as starting up
-		logger.debug("Setting presence to initalizing");
-		discordTmp.getPresence().setPresence(OnlineStatus.ONLINE, Activity.playing("Initializing..."));
 
 		return discordTmp;
 	}
