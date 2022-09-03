@@ -117,7 +117,7 @@ public class WatameBot {
 		logger.debug("Setting presence to initalizing");
 		discordTmp.getPresence().setPresence(OnlineStatus.ONLINE, Activity.playing("Initializing..."));
 
-		return discord;
+		return discordTmp;
 	}
 
 	/**
