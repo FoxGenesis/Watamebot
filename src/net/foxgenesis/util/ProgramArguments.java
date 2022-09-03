@@ -62,20 +62,37 @@ public class ProgramArguments {
 			case '-':
 				if (args[i].length() < 2)
 					throw new IllegalArgumentException("Not a valid argument: " + args[i]);
-
-				if (args[i].charAt(1) == '-') {
-					if (args[i].length() < 3)
-						throw new IllegalArgumentException("Not a valid argument: " + args[i]);
-					// --opt
-					flagList.add(args[i].substring(2));
-				} else {
-					if (args.length - 1 == i)
-						throw new IllegalArgumentException("Expected arg after: " + args[i]);
-					// -opt
-					parameterList.put(args[i].substring(1), args[i + 1]);
-					i++;
+				
+				switch(args[i].charAt(1)) {
+					case '-':
+						if (args[i].length() < 3)
+							throw new IllegalArgumentException("Not a valid argument: " + args[i]);
+						// --opt
+						flagList.add(args[i].substring(2));
+						break;
+					case 'D':
+						// System property
+						continue;
+					default:
+						if (args.length - 1 == i)
+							throw new IllegalArgumentException("Expected arg after: " + args[i]);
+						// -opt
+						parameterList.put(args[i].substring(1), args[i + 1]);
+						i++;
 				}
 				break;
+//				if (args[i].charAt(1) == '-') {
+//					if (args[i].length() < 3)
+//						throw new IllegalArgumentException("Not a valid argument: " + args[i]);
+//					// --opt
+//					flagList.add(args[i].substring(2));
+//				} else {
+//					if (args.length - 1 == i)
+//						throw new IllegalArgumentException("Expected arg after: " + args[i]);
+//					// -opt
+//					parameterList.put(args[i].substring(1), args[i + 1]);
+//					i++;
+//				}
 
 			default:
 				// arg
