@@ -1,6 +1,7 @@
 package net.foxgenesis.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -71,7 +72,7 @@ public class ProgramArguments {
 					if (args.length - 1 == i)
 						throw new IllegalArgumentException("Expected arg after: " + args[i]);
 					// -opt
-					parameterList.put(args[i], args[i + 1]);
+					parameterList.put(args[i].substring(1), args[i + 1]);
 					i++;
 				}
 				break;
@@ -180,13 +181,13 @@ public class ProgramArguments {
 		// ProgramArguments{flagList=[...], parameterList={...}, argsList=[...]}
 		StringBuilder builder = new StringBuilder("ProgramArguments{flagList=");
 		
-		builder.append(flagList.toArray(new String[] {}));
+		builder.append(Arrays.toString(flagList.toArray(new String[] {})));
 		builder.append(", parameterList=");
 		
 		builder.append(parameterList);
 		builder.append(", argsList=");
 		
-		builder.append(argsList.toArray(new String[] {}));
+		builder.append(Arrays.toString(argsList.toArray(new String[] {})));
 		builder.append('}');
 		
 		return builder.toString();
