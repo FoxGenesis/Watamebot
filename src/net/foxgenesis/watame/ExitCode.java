@@ -1,7 +1,8 @@
 package net.foxgenesis.watame;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.slf4j.LoggerFactory;
 
 /**
  * Enum of program exit codes
@@ -49,7 +50,7 @@ public enum ExitCode {
 	 */
 	public void programExit(String exitMessage, Throwable thrown) {
 		//if(exitMessage != null || thrown != null)
-		Logger.getGlobal().logp(Level.SEVERE, "WatameBot", null, exitMessage == null? this.name() : exitMessage, thrown);
+		LoggerFactory.getLogger(Logger.GLOBAL_LOGGER_NAME).error(exitMessage == null? this.name() : exitMessage, thrown);
 		programExit();
 	}
 	
