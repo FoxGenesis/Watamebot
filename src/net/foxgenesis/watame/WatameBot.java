@@ -1,5 +1,7 @@
 package net.foxgenesis.watame;
 
+import java.sql.SQLException;
+
 import javax.security.auth.login.LoginException;
 
 import org.slf4j.Logger;
@@ -12,6 +14,7 @@ import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import net.foxgenesis.watame.sql.WatameDatabase;
 
 /**
  * Class containing WatameBot implementation
@@ -28,16 +31,22 @@ public class WatameBot {
 	 * the JDA object
 	 */
 	private final JDA discord;
+	
+	private final WatameDatabase database;
 
 	/**
 	 * Create a new instance with a specified login {@code token}.
 	 * 
 	 * @param token - Token used to connect to discord
+	 * @throws SQLException - When failing to connect to the
+	 * database file
 	 */
-	public WatameBot(String token) {
-		// connect the JDA to the bot account through the token passed from the Consts
-		// object
+	public WatameBot(String token) throws SQLException {
+		// Create connection to discord through our token
 		discord = createJDA(token);
+		
+		// Connect to our database file
+		database = new WatameDatabase();
 	}
 
 	/**
@@ -129,12 +138,17 @@ public class WatameBot {
 	void shutdown() {
 		logger.debug("Shutting down...");
 
-		// TODO close SQLLite connection
-
 		// Disconnect from discord
 		if (discord != null) {
 			logger.debug("Shutting down JDA...");
 			discord.shutdown();
+		}
+		
+		try {
+			logger.debug("Closing database connection");
+			database.shutdown();
+		} catch (SQLException e) {
+			logger.error("Error while closing database connection!", e);
 		}
 
 		logger.info("Exiting...");
