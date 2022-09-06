@@ -3,6 +3,7 @@ package net.foxgenesis.watame;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.sql.SQLException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,8 +24,9 @@ public class Main {
 	/**
 	 * Program entry point
 	 * @param args - program arguments
+	 * @throws SQLException 
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws SQLException {
 		logger.info("Starting...");
 		
 		if(logger.isDebugEnabled())
