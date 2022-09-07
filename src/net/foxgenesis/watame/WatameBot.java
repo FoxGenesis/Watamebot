@@ -1,5 +1,6 @@
 package net.foxgenesis.watame;
 
+import java.io.IOException;
 import java.sql.SQLException;
 
 import javax.security.auth.login.LoginException;
@@ -14,6 +15,7 @@ import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import net.foxgenesis.watame.sql.DatabaseHandler;
 import net.foxgenesis.watame.sql.WatameDatabase;
 
 /**
@@ -56,6 +58,18 @@ public class WatameBot {
 		// Display our game as starting up
 		logger.debug("Setting presence to initalizing");
 		discord.getPresence().setPresence(OnlineStatus.DO_NOT_DISTURB, Activity.playing("Initializing..."));
+		
+		// Setup database with a specific resource
+		logger.debug("Setting up database...");
+		try {
+			database.setupDatabase(Constants.DATABASE_SETUP_FILE);
+		} catch (IOException e) {
+			// Some error occurred while setting up database
+			ExitCode.DATABASE_SETUP_ERROR.programExit(e);
+		} catch(IllegalArgumentException e) {
+			// Resource was null
+			ExitCode.DATABASE_INVALID_SETUP_FILE.programExit(e);
+		}
 	}
 
 	/**
@@ -165,12 +179,16 @@ public class WatameBot {
 	}
 
 	/**
-	 * NEED_JAVADOC WatameBot.isConnectedToDatabase()
-	 * 
-	 * @return
+	 * Checks if the connection to the database is valid
+	 * @return Returns {@code true} if connected to the
+	 * database
+	 * @see WatameDatabase#isValid()
 	 */
 	public boolean isConnectedToDatabase() {
-		// IMPLEMENT get method to check if JDBC is connected to the database
-		return false;
+		return database.isValid();
+	}
+	
+	public DatabaseHandler getDatabase() {
+		return database;
 	}
 }
