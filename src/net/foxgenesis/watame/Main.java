@@ -61,7 +61,7 @@ public class Main {
 		Runtime.getRuntime().addShutdownHook(new Thread(watame::shutdown, "WatameBot Shutdown Thread"));
 		
 		// Load needed resources for initialization
-		logger.debug("Initializing needed resources");
+		logger.debug("Pre-Initialization...");
 		watame.preInit();
 		
 		// Initialization
@@ -69,7 +69,7 @@ public class Main {
 		watame.init();
 		
 		// Post initialization
-		logger.debug("Freeing up post initialization resources");
+		logger.debug("Post-Initialization...");
 		watame.postInit();
 		
 		logger.info("Startup Complete!");
