@@ -1,11 +1,15 @@
 package net.foxgenesis.watame.sql;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.HashMap;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,8 +44,10 @@ public class WatameDatabase implements DatabaseHandler {
 	 */
 	public WatameDatabase() throws SQLException {
 		
+		// Ensure we have a repository folder
 		File f = new File("repo");
 		if (!f.exists()) {
+			// Repository folder doesn't exist. Make new one
 			logger.info("Repo folder does not exist! Creating...");
 			f.mkdirs();
 		}
@@ -89,6 +95,57 @@ public class WatameDatabase implements DatabaseHandler {
 	public boolean hasStatement(String id) {
 		// Check if the statement has already been made
 		return registeredStatements.containsKey(id);
+	}
+	
+	/**
+	 * Setup database with SQL code from
+	 * a {@link File}.
+	 * @param f - {@link File} containing SQL
+	 * code to run
+	 * @throws IOException Thrown if IO error occurs
+	 * during file processing
+	 * @throws UnsupportedOperationException Thrown if not
+	 * connected to database
+	 */
+	public void setupDatabase(File f) throws IOException {
+		// Check if we are connected to database
+		if(!isValid())
+			throw new UnsupportedOperationException("Not connected to database!");
+		
+		// Check if the file is valid
+		if(!isValidSQLFile(f))
+			throw new IllegalArgumentException(f + " is not a valid SQL file!");
+		
+		logger.debug("Setting up database...");
+		
+		// Read all lines in the file
+		logger.trace("Reading lines from SQL file");
+		List<String> lines = Files.readAllLines(f.toPath());
+		
+		// Iterate on each line
+		for(String line : lines) {
+			
+			// Create new SQL statement
+			logger.trace("Creating new SQL statement");
+			try(Statement statement = connectionHandler.createStatement())  {
+				
+				// Execute the current line
+				logger.debug("Executing SQL statement: " + line);
+				statement.execute(line);
+			} catch (SQLException e) {
+				logger.error("Error while executing SQL file!", e);
+			}
+		}
+	}
+	
+	/**
+	 * Check if a {@link File}is a valid SQL file.
+	 * @param f - {@link File} to check
+	 * @return Returns {@code true} if {@code f}: 
+	 * exists, is a file and is readable
+	 */
+	private boolean isValidSQLFile(File f) {
+		return f.exists() && f.isFile() && f.canRead();
 	}
 	
 	/**
