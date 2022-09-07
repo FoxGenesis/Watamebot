@@ -1,18 +1,23 @@
 package net.foxgenesis.watame.sql;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import net.foxgenesis.watame.ExitCode;
 
 /**
  * Class that handles the SQL connection and registers
@@ -100,27 +105,25 @@ public class WatameDatabase implements DatabaseHandler {
 	/**
 	 * Setup database with SQL code from
 	 * a {@link File}.
-	 * @param f - {@link File} containing SQL
+	 * @param url - {@link File} containing SQL
 	 * code to run
 	 * @throws IOException Thrown if IO error occurs
 	 * during file processing
 	 * @throws UnsupportedOperationException Thrown if not
 	 * connected to database
 	 */
-	public void setupDatabase(File f) throws IOException {
+	public void setupDatabase(URL url) throws IOException, IllegalArgumentException, UnsupportedOperationException {
 		// Check if we are connected to database
 		if(!isValid())
 			throw new UnsupportedOperationException("Not connected to database!");
 		
 		// Check if the file is valid
-		if(!isValidSQLFile(f))
-			throw new IllegalArgumentException(f + " is not a valid SQL file!");
-		
-		logger.debug("Setting up database...");
+		if(!isValidSQLFile(url))
+			throw new IllegalArgumentException(url + " is not a valid SQL file!");
 		
 		// Read all lines in the file
 		logger.trace("Reading lines from SQL file");
-		List<String> lines = Files.readAllLines(f.toPath());
+		List<String> lines = linesFromResource(url);
 		
 		// Iterate on each line
 		for(String line : lines) {
@@ -133,8 +136,37 @@ public class WatameDatabase implements DatabaseHandler {
 				logger.debug("Executing SQL statement: " + line);
 				statement.execute(line);
 			} catch (SQLException e) {
-				logger.error("Error while executing SQL file!", e);
+				ExitCode.DATABASE_SETUP_ERROR.programExit(e);
 			}
+		}
+	}
+	
+	/**
+	 * Read all lines from a resource
+	 * @param path - {@link URL} path to the resource
+	 * @return Returns all lines as a {@link List<String>}
+	 * @throws IOException Thrown if an error occurs while
+	 * reading the {@link InputStream} of the resource
+	 */
+	private List<String> linesFromResource(URL path) throws IOException {
+		logger.trace("Attempting to read resource: " + path);
+		
+		// New list to hold lines
+		ArrayList<String> list = new ArrayList<>();
+		
+		// Open bufferedReader from resource input stream
+		try(InputStreamReader isr = new InputStreamReader(path.openStream());
+				BufferedReader reader = new BufferedReader(isr)) {
+			
+			// Temp line
+			String line = null;
+			
+			// Read line until EOF
+			while((line = reader.readLine()) != null)
+				list.add(line);
+			
+			// Return list
+			return list;
 		}
 	}
 	
@@ -144,8 +176,8 @@ public class WatameDatabase implements DatabaseHandler {
 	 * @return Returns {@code true} if {@code f}: 
 	 * exists, is a file and is readable
 	 */
-	private boolean isValidSQLFile(File f) {
-		return f.exists() && f.isFile() && f.canRead();
+	private boolean isValidSQLFile(URL url) {
+		return url != null;
 	}
 	
 	/**
