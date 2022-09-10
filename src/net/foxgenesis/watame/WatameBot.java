@@ -195,4 +195,12 @@ public class WatameBot {
 	public DatabaseHandler getDatabase() {
 		return database;
 	}
+	
+	/**
+	 * NEED_JAVADOC
+	 * @return
+	 */
+	public JDA getJDA() {
+		return discord;
+	}
 }
