@@ -188,6 +188,10 @@ public class WatameBot {
 		return database.isValid();
 	}
 	
+	/**
+	 * NEED_JAVADOC
+	 * @return
+	 */
 	public DatabaseHandler getDatabase() {
 		return database;
 	}
