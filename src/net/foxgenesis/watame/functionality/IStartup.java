@@ -33,15 +33,11 @@ public interface IStartup {
 	
 	/**
 	 * NEED_JAVADOC
-	 * @param watame - the {@link WatameBot} instance
-	 * to work with
 	 */
-	public void init(WatameBot watame);
+	public void init();
 	
 	/**
 	 * NEED_JAVADOC
-	 * @param watame - the {@link WatameBot} instance
-	 * to work with
 	 */
-	public default void postInit(WatameBot watame) {}
+	public default void postInit() {}
 }
