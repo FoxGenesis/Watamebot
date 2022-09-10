@@ -2,6 +2,8 @@ package net.foxgenesis.watame;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.security.auth.login.LoginException;
 
@@ -15,6 +17,7 @@ import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import net.foxgenesis.watame.functionality.ABotFunctionality;
 import net.foxgenesis.watame.sql.DatabaseHandler;
 import net.foxgenesis.watame.sql.WatameDatabase;
 
@@ -34,7 +37,15 @@ public class WatameBot {
 	 */
 	private final JDA discord;
 	
+	/**
+	 * Database connection handler
+	 */
 	private final WatameDatabase database;
+	
+	/**
+	 * Current state of the bot
+	 */
+	private State state = State.CONSTRUCTING;
 
 	/**
 	 * Create a new instance with a specified login {@code token}.
@@ -55,6 +66,9 @@ public class WatameBot {
 	 * NEED_JAVADOC
 	 */
 	protected void preInit() {
+		// Set our state to pre-init
+		state = State.PRE_INIT;
+		
 		// Display our game as starting up
 		logger.debug("Setting presence to initalizing");
 		discord.getPresence().setPresence(OnlineStatus.DO_NOT_DISTURB, Activity.playing("Initializing..."));
@@ -76,16 +90,23 @@ public class WatameBot {
 	 * NEED_JAVADOC
 	 */
 	protected void init() {
-
+		// Set our state to init
+		state = State.INIT;
 	}
 
 	/**
 	 * NEED_JAVADOC
 	 */
 	protected void postInit() {
+		// Set our state to post-init
+		state = State.POST_INIT;
+		
 		// Display our game as ready
 		logger.debug("Setting presence to ready");
 		discord.getPresence().setPresence(OnlineStatus.ONLINE, Activity.playing("type <help>"));
+		
+		// Set our state to running
+		state = State.RUNNING;
 	}
 
 	/**
@@ -202,5 +223,28 @@ public class WatameBot {
 	 */
 	public JDA getJDA() {
 		return discord;
+	}
+	
+	/**
+	 * Get the current state of the bot.
+	 * @return Returns the {@link State} of the bot
+	 * @see State
+	 */
+	public State getState() {
+		return state;
+	}
+	
+	/**
+	 * States {@link WatameBot} goes through
+	 * on startup.
+	 * @author Ashley
+	 */
+	public enum State {
+		//NEED_JAVADOC javadoc needed for enum
+		CONSTRUCTING,
+		PRE_INIT,
+		INIT,
+		POST_INIT,
+		RUNNING
 	}
 }
