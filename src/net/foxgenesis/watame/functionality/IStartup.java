@@ -1,4 +1,4 @@
-package net.foxgenesis.watame.function;
+package net.foxgenesis.watame.functionality;
 
 import net.foxgenesis.watame.WatameBot;
 
