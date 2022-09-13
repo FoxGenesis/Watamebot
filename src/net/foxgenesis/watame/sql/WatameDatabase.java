@@ -17,6 +17,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.dv8tion.jda.api.entities.Guild;
+import net.foxgenesis.config.JSONObjectAdv;
 import net.foxgenesis.watame.ExitCode;
 
 /**
@@ -83,6 +85,12 @@ public class WatameDatabase implements DatabaseHandler {
 		
 		// Return out statement
 		return preStatement;
+	}
+	
+	@Override
+	public JSONObjectAdv getDataForGuild(Guild g) {
+		//IMPLEMENT Spaz this is for you
+		return null;
 	}
 
 	@Override
