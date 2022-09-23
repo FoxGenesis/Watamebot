@@ -3,6 +3,9 @@ package net.foxgenesis.watame.sql;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import net.dv8tion.jda.api.entities.Guild;
+import net.foxgenesis.config.JSONObjectAdv;
+
 public interface DatabaseHandler {
 
 	/**
@@ -38,4 +41,11 @@ public interface DatabaseHandler {
 	 * @see #isValid()
 	 */
 	public boolean hasStatement(String id);
+	
+	/**
+	 * NEED_JAVADOC
+	 * @param g
+	 * @return
+	 */
+	public JSONObjectAdv getDataForGuild(Guild g);
 }
