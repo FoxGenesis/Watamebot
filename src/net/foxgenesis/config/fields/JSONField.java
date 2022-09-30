@@ -1,13 +1,13 @@
-package net.foxgenesis.config;
+package net.foxgenesis.config.fields;
 
 import org.json.JSONObject;
 
 import net.dv8tion.jda.api.entities.Guild;
-import net.foxgenesis.watame.sql.DatabaseHandler;
+import net.foxgenesis.watame.sql.IDatabaseHandler;
 
 public class JSONField extends ConfigField<JSONObject>{
 
-	public JSONField(ConfigKey<JSONObject> key, DatabaseHandler database) {
+	public JSONField(ConfigKey<JSONObject> key, IDatabaseHandler database) {
 		super(key, database);
 	}
 

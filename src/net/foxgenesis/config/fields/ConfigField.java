@@ -1,14 +1,14 @@
-package net.foxgenesis.config;
+package net.foxgenesis.config.fields;
 
 import net.dv8tion.jda.api.entities.Guild;
-import net.foxgenesis.watame.sql.DatabaseHandler;
+import net.foxgenesis.watame.sql.IDatabaseHandler;
 
 public abstract class ConfigField<E> {
 	
 	private final ConfigKey<E> key;
-	private final DatabaseHandler database;
+	private final IDatabaseHandler database;
 
-	public ConfigField(ConfigKey<E> key, DatabaseHandler database) {
+	public ConfigField(ConfigKey<E> key, IDatabaseHandler database) {
 		this.key = key;
 		this.database = database;
 	}
