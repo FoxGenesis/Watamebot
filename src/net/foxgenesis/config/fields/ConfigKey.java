@@ -1,4 +1,4 @@
-package net.foxgenesis.config;
+package net.foxgenesis.config.fields;
 
 import java.util.function.Function;
 

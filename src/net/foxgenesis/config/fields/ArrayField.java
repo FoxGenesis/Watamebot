@@ -1,14 +1,14 @@
-package net.foxgenesis.config;
+package net.foxgenesis.config.fields;
 
 import org.json.JSONArray;
 
 import net.dv8tion.jda.api.entities.Guild;
-import net.foxgenesis.watame.sql.DatabaseHandler;
+import net.foxgenesis.watame.sql.IDatabaseHandler;
 
 
 public class ArrayField extends ConfigField<JSONArray> {
 
-	public ArrayField(ConfigKey<JSONArray> key, DatabaseHandler database) {
+	public ArrayField(ConfigKey<JSONArray> key, IDatabaseHandler database) {
 		super(key, database);
 	}
 
