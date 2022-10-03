@@ -128,7 +128,8 @@ public class KVPFile {
 	/**
 	 * Parse the resource {@link URL} into the configuration mapping.
 	 * 
-	 * @throws IOException
+	 * @throws IOException Thrown if an error occurs while reading the InputStream
+	 *                     of the resource
 	 */
 	public void parse() throws IOException {
 		/*
