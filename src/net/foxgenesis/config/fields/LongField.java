@@ -1,11 +1,11 @@
 package net.foxgenesis.config.fields;
 
 import net.dv8tion.jda.api.entities.Guild;
-import net.foxgenesis.watame.sql.IDatabaseHandler;
+import net.foxgenesis.watame.sql.IDatabaseManager;
 
 public class LongField extends ConfigField<Long> {
 
-	public LongField(ConfigKey<Long> key, IDatabaseHandler database) {
+	public LongField(ConfigKey<Long> key, IDatabaseManager database) {
 		super(key, database);
 	}
 

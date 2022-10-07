@@ -1,18 +1,18 @@
 package net.foxgenesis.config.fields;
 
 import net.dv8tion.jda.api.entities.Guild;
-import net.foxgenesis.watame.sql.IDatabaseHandler;
+import net.foxgenesis.watame.sql.IDatabaseManager;
 
 public abstract class ConfigField<E> {
-	
-	private final ConfigKey<E> key;
-	private final IDatabaseHandler database;
 
-	public ConfigField(ConfigKey<E> key, IDatabaseHandler database) {
+	private final ConfigKey<E> key;
+	private final IDatabaseManager database;
+
+	public ConfigField(ConfigKey<E> key, IDatabaseManager database) {
 		this.key = key;
 		this.database = database;
 	}
-	
+
 	public final String getName() {
 		return key.name;
 	}
@@ -41,23 +41,23 @@ public abstract class ConfigField<E> {
 	public void remove(Guild guild) {
 		remove(getDataForGuild(guild));
 	}
-	
+
 	private void remove(JSONObjectAdv config) {
 		config.remove(key.name);
 	}
-	
+
 	protected boolean isPresent(JSONObjectAdv config) {
 		return config.has(key.name);
 	}
-	
+
 	protected E getDefaultValue(Guild guild) {
 		return key.defaultValue.apply(guild);
 	}
-	
+
 	protected JSONObjectAdv getDataForGuild(Guild guild) {
-		return database.getDataForGuild(guild);
+		return database.getDataForGuild(guild).getConfig();
 	}
-	
+
 	abstract E optFrom(JSONObjectAdv config, Guild guild);
 
 	abstract E from(JSONObjectAdv config);

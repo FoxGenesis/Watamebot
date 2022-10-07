@@ -3,11 +3,11 @@ package net.foxgenesis.config.fields;
 import org.json.JSONObject;
 
 import net.dv8tion.jda.api.entities.Guild;
-import net.foxgenesis.watame.sql.IDatabaseHandler;
+import net.foxgenesis.watame.sql.IDatabaseManager;
 
 public class JSONField extends ConfigField<JSONObject>{
 
-	public JSONField(ConfigKey<JSONObject> key, IDatabaseHandler database) {
+	public JSONField(ConfigKey<JSONObject> key, IDatabaseManager database) {
 		super(key, database);
 	}
 

@@ -1,11 +1,11 @@
 package net.foxgenesis.config.fields;
 
 import net.dv8tion.jda.api.entities.Guild;
-import net.foxgenesis.watame.sql.IDatabaseHandler;
+import net.foxgenesis.watame.sql.IDatabaseManager;
 
 public class BooleanField extends ConfigField<Boolean> {
 	
-	public BooleanField(ConfigKey<Boolean> key, IDatabaseHandler database) {
+	public BooleanField(ConfigKey<Boolean> key, IDatabaseManager database) {
 		super(key, database);
 	}
 
