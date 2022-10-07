@@ -138,7 +138,7 @@ public class KVPFile {
 		 */
 		Map<String, String> tempMap = ResourceHelper.linesFromResource(resourceURL).stream().filter(ignoreLines)
 				.map(line -> line.split("=", 2)).filter(split -> split.length == 2)
-				.collect(Collectors.toMap(split -> split[0], split -> split[1]));
+				.collect(Collectors.toMap(split -> split[0].trim(), split -> split[1].trim()));
 
 		// Put all pairs into main map
 		config.putAll(tempMap);
