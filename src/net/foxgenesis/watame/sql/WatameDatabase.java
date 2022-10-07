@@ -1,16 +1,13 @@
 package net.foxgenesis.watame.sql;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -18,7 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.dv8tion.jda.api.entities.Guild;
-import net.foxgenesis.config.JSONObjectAdv;
+import net.foxgenesis.config.fields.JSONObjectAdv;
+import net.foxgenesis.util.ResourceHelper;
 import net.foxgenesis.watame.ExitCode;
 
 /**
@@ -27,7 +25,7 @@ import net.foxgenesis.watame.ExitCode;
  * @author Ashley
  *
  */
-public class WatameDatabase implements DatabaseHandler {
+public class WatameDatabase implements IDatabaseHandler {
 	/**
 	 *  logger
 	 */
@@ -131,7 +129,7 @@ public class WatameDatabase implements DatabaseHandler {
 		
 		// Read all lines in the file
 		logger.trace("Reading lines from SQL file");
-		List<String> lines = linesFromResource(url);
+		List<String> lines = ResourceHelper.linesFromResource(url);
 		
 		// Iterate on each line
 		for(String line : lines) {
@@ -146,35 +144,6 @@ public class WatameDatabase implements DatabaseHandler {
 			} catch (SQLException e) {
 				ExitCode.DATABASE_SETUP_ERROR.programExit(e);
 			}
-		}
-	}
-	
-	/**
-	 * Read all lines from a resource
-	 * @param path - {@link URL} path to the resource
-	 * @return Returns all lines as a {@link List<String>}
-	 * @throws IOException Thrown if an error occurs while
-	 * reading the {@link InputStream} of the resource
-	 */
-	private List<String> linesFromResource(URL path) throws IOException {
-		logger.trace("Attempting to read resource: " + path);
-		
-		// New list to hold lines
-		ArrayList<String> list = new ArrayList<>();
-		
-		// Open bufferedReader from resource input stream
-		try(InputStreamReader isr = new InputStreamReader(path.openStream());
-				BufferedReader reader = new BufferedReader(isr)) {
-			
-			// Temp line
-			String line = null;
-			
-			// Read line until EOF
-			while((line = reader.readLine()) != null)
-				list.add(line);
-			
-			// Return list
-			return list;
 		}
 	}
 	
