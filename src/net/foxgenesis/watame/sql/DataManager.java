@@ -15,7 +15,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
 
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -121,10 +120,14 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @throws UnsupportedOperationException if connection to the database failed
 	 */
 	public void connect() throws SQLException, UnsupportedOperationException, IOException {
+		// Build connection path
+		String connectionPath = databaseFolder.getPath() + File.separator + "database.db";
+		logger.trace("Database path: {}", connectionPath);
+		
 		// Attempt to connect to database file
 		logger.debug("Attempting connection to database");
 		connectionHandler = DriverManager
-				.getConnection("jdbc:sqlite:" + databaseFolder.getPath() + File.separator + "database.db");
+				.getConnection("jdbc:sqlite:" + connectionPath);
 
 		logger.info("Connected to SQL database");
 
@@ -188,8 +191,10 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 
 		// Insert all missing guilds to database
 		logger.debug("Inserting missing guilds into database");
-		jda.getGuildCache().acceptStream(stream -> stream.dropWhile(guild -> !data.contains(guild.getIdLong()))
-				.forEach(this::insertGuildInDatabase));
+		jda.getGuildCache()
+				.acceptStream(stream -> stream.filter(guild -> !data.contains(guild.getIdLong()))
+						.peek(guild -> logger.debug("Inserting {} into database", guild.getName()))
+						.forEach(this::insertGuildInDatabase));
 
 		// All data has been retrieved
 		this.allDataReady = true;
@@ -237,10 +242,10 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	private void retrieveData(Guild guild) {
 		PreparedStatement s = this.getAndAssertStatement("guild_data_get_id");
 
-		sqlLogger.debug(QUERY_MARKER, s.toString().replaceAll("\\?", "{}"), guild.getId());
-
 		try {
 			s.setString(1, guild.getId());
+			sqlLogger.debug(QUERY_MARKER, s.toString());
+			
 			try (ResultSet set = s.executeQuery()) {
 				// set.first();
 				long id = set.getLong("GuildID"); //$NON-NLS-1$
@@ -282,10 +287,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 			long guildID = guild.getIdLong();
 			st.setLong(1, guildID);
 
-			String json = new JSONObject().toString();
-			st.setString(2, json);
-
-			sqlLogger.debug(UPDATE_MARKER, st.toString().replaceAll("\\?", "{}"), guildID, json);
+			sqlLogger.debug(UPDATE_MARKER, st.toString());
 			st.executeUpdate();
 		} catch (SQLException e) {
 			sqlLogger.error(QUERY_MARKER, "Error while inserting new guild", e);
@@ -384,7 +386,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 		// Map all database operations to their statements
 		kvp.forEach((key, value) -> {
 			if (registeredStatements.containsKey(key)) {
-				logger.error("Statement '" + key + "' already exists! Skipping...");
+				logger.error("Statement '{}' already exists! Skipping...", key);
 			} else {
 				try {
 					registerStatement(key, value);
@@ -421,7 +423,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 			throw new UnsupportedOperationException("Not connected to database!");
 
 		// Create our statement
-		sqlLogger.debug("Creating PreparedStatement " + id + ": " + statement);
+		sqlLogger.debug("Creating PreparedStatement {} : {}", id, statement);
 		PreparedStatement preStatement = connectionHandler.prepareStatement(statement);
 
 		// Register our statement to ensure no duplicates are made

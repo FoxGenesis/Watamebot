@@ -1,5 +1,5 @@
 ########## GUILD DATA #########
-guild_data_insert = INSERT INTO Guild (GuildID, GuildProperties) VALUES (?, ?);
+guild_data_insert = INSERT INTO Guild (GuildID) VALUES (?);
 guild_data_get = SELECT * FROM Guild;
 guild_data_get_id = SELECT * FROM Guild WHERE GuildID = ?;
 
