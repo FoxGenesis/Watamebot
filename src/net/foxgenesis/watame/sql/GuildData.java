@@ -129,13 +129,14 @@ public class GuildData implements IGuildData, AutoCloseable {
 		if (remove)
 			try (PreparedStatement removeStatement = dataManager.getAndAssertStatement("guild_json_remove")) {
 
-				DataManager.sqlLogger.debug(DataManager.UPDATE_MARKER, "PushUpdate -> %s", removeStatement);
+				DataManager.sqlLogger.debug(DataManager.UPDATE_MARKER,
+						"PushUpdate -> " + removeStatement.toString().replaceAll("\\?", "{}"), name);
 
 				// Set data and execute update
 				removeStatement.setString(1, name);
 				result = removeStatement.executeUpdate();
 
-				DataManager.sqlLogger.trace(DataManager.UPDATE_MARKER, "ExecuteUpdate <- %d", result);
+				DataManager.sqlLogger.trace(DataManager.UPDATE_MARKER, "ExecuteUpdate <- {}", result);
 
 			} catch (SQLException e) {
 				DataManager.logger.error(DataManager.UPDATE_MARKER, "Error while removing guild json data", e);
@@ -148,7 +149,9 @@ public class GuildData implements IGuildData, AutoCloseable {
 
 			try (PreparedStatement updateStatement = dataManager.getAndAssertStatement("guild_json_update")) {
 
-				DataManager.sqlLogger.debug(DataManager.UPDATE_MARKER, "PushUpdate -> %s", updateStatement);
+				DataManager.sqlLogger.debug(DataManager.UPDATE_MARKER,
+						"PushUpdate -> " + updateStatement.toString().replaceAll("\\?", "{}"), name, data.toString(),
+						guild.getIdLong());
 
 				// Set data and execute update
 				updateStatement.setString(1, name);
@@ -156,7 +159,7 @@ public class GuildData implements IGuildData, AutoCloseable {
 				updateStatement.setLong(3, guild.getIdLong());
 				result = updateStatement.executeUpdate();
 
-				DataManager.sqlLogger.debug(DataManager.UPDATE_MARKER, "ExecuteUpdate <- %d", result);
+				DataManager.sqlLogger.debug(DataManager.UPDATE_MARKER, "ExecuteUpdate <- {}", result);
 
 			} catch (SQLException e) {
 				DataManager.logger.error(DataManager.UPDATE_MARKER, "Error while updating guild json data", e);
