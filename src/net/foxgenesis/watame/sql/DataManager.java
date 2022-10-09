@@ -188,7 +188,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 
 		// Insert all missing guilds to database
 		logger.debug("Inserting missing guilds into database");
-		jda.getGuildCache().acceptStream(stream -> stream.dropWhile(guild -> data.contains(guild.getIdLong()))
+		jda.getGuildCache().acceptStream(stream -> stream.dropWhile(guild -> !data.contains(guild.getIdLong()))
 				.forEach(this::insertGuildInDatabase));
 
 		// All data has been retrieved
