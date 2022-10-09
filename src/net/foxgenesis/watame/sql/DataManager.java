@@ -202,6 +202,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @see #addGuild(Guild)
 	 */
 	private void getAllGuildData() {
+		logger.info("Getting all guild data...");
 		logger.info("Retrieved guild data in " + MethodTimer.runFormatMS(() -> {
 			// Get prepared statement to get all guild data
 			PreparedStatement s = this.getAndAssertStatement("guild_data_get");
@@ -241,7 +242,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 		try {
 			s.setString(1, guild.getId());
 			try (ResultSet set = s.executeQuery()) {
-				//set.first();
+				// set.first();
 				long id = set.getLong("GuildID"); //$NON-NLS-1$
 				if (this.data.containsKey(id))
 					this.data.get(id).setData(set);
@@ -289,7 +290,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 		} catch (SQLException e) {
 			sqlLogger.error(QUERY_MARKER, "Error while inserting new guild", e);
 		}
-		
+
 		retrieveData(guild);
 	}
 
