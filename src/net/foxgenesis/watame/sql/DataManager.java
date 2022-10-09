@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
 
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -182,7 +183,12 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @param jda - {@link JDA} instance to use
 	 */
 	public void retrieveDatabaseData(JDA jda) {
+		// Get all guilds from database
 		getAllGuildData();
+
+		// Insert all missing guilds to database
+		jda.getGuildCache().acceptStream(stream -> stream.dropWhile(guild -> data.contains(guild.getIdLong()))
+				.forEach(this::insertGuildInDatabase));
 
 		// All data has been retrieved
 		this.allDataReady = true;
@@ -202,7 +208,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 
 			// Execute statement
 			try (ResultSet set = s.executeQuery()) {
-				//set.beforeFirst();
+				// set.beforeFirst();
 
 				// Iterate over retrieved data
 				while (set.next()) {
@@ -210,6 +216,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 
 					// Check if we are to load the data and pass the result set
 					if (this.data.containsKey(id)) {
+						logger.debug("Adding data for guild {}", id);
 						this.data.get(id).setData(set);
 					}
 				}
@@ -259,6 +266,28 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 		// Guild data doesn't exist
 		logger.warn("Attempted to get non existant data for guild: " + guild.getId());
 		return null;
+	}
+
+	/**
+	 * Insert a new row into the database for a {@link Guild}.
+	 * 
+	 * @param guild - guild to insert
+	 */
+	private void insertGuildInDatabase(Guild guild) {
+		logger.debug("Creating row for guild: " + guild.getIdLong()); //$NON-NLS-1$
+		PreparedStatement st = this.getAndAssertStatement("guild_data_insert");
+		try {
+			long guildID = guild.getIdLong();
+			st.setLong(0, guildID);
+
+			String json = new JSONObject().toString();
+			st.setString(1, json);
+
+			sqlLogger.debug(UPDATE_MARKER, st.toString().replaceAll("\\?", "{}"), guildID, json);
+			st.executeUpdate();
+		} catch (SQLException e) {
+			sqlLogger.error(QUERY_MARKER, "Error while inserting new guild", e);
+		}
 	}
 
 	@Override
