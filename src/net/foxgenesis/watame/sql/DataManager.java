@@ -278,10 +278,10 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 		PreparedStatement st = this.getAndAssertStatement("guild_data_insert");
 		try {
 			long guildID = guild.getIdLong();
-			st.setLong(0, guildID);
+			st.setLong(1, guildID);
 
 			String json = new JSONObject().toString();
-			st.setString(1, json);
+			st.setString(2, json);
 
 			sqlLogger.debug(UPDATE_MARKER, st.toString().replaceAll("\\?", "{}"), guildID, json);
 			st.executeUpdate();
