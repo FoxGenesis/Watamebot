@@ -8,6 +8,8 @@ import java.util.Set;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 
+import javax.annotation.Nonnull;
+
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -46,7 +48,7 @@ public class InteractionHandler implements IInteractionHandler {
 	 * @param guildCache - {@link JDA} guild cache
 	 * @return a {@link Collection<CommandData>} containing interactions
 	 */
-	public Collection<CommandData> getAllInteractions(SnowflakeCacheView<Guild> guildCache) {
+	public Collection<CommandData> getAllInteractions(@Nonnull SnowflakeCacheView<Guild> guildCache) {
 		Set<CommandData> interactions = new HashSet<>(globalInteractions);
 
 		interactions.addAll(guildCache.applyStream(guilds -> guilds.map(guild -> getInteractionsForGuild(guild))
@@ -60,18 +62,18 @@ public class InteractionHandler implements IInteractionHandler {
 	 * @param guild - {@link Guild} to get {@link CommandData} for
 	 * @return a {@link Collection<CommandData>} containing interactions for {@code guild}
 	 */
-	private Collection<CommandData> getInteractionsForGuild(Guild guild) {
+	private Collection<CommandData> getInteractionsForGuild(@Nonnull Guild guild) {
 		return guildInteractions.parallelStream().map(func -> func.apply(guild)).filter(cmd -> cmd != null)
 				.reduce(commandDataReduction).orElse(new ArrayList<CommandData>());
 	}
 
 	@Override
-	public boolean registerGlobalInteraction(CommandData data) {
+	public boolean registerGlobalInteraction(@Nonnull CommandData data) {
 		return globalInteractions.add(data);
 	}
 
 	@Override
-	public boolean registerGuildInteractions(Function<Guild, Collection<CommandData>> dataList) {
+	public boolean registerGuildInteractions(@Nonnull Function<Guild, Collection<CommandData>> dataList) {
 		return guildInteractions.add(dataList);
 	}
 
