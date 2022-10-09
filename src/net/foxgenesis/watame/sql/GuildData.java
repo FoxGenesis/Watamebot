@@ -102,7 +102,7 @@ public class GuildData implements IGuildData, AutoCloseable {
 				throw new NullPointerException("NO CONFIG IN RESULT SET!");
 
 		// Get our configuration column
-		String jsonString = result.getString("Config");
+		String jsonString = result.getString("GuildProperties");
 
 		// Set our current data and pass our update method
 		this.data = new JSONObjectAdv(jsonString, this::pushJSONUpdate);
