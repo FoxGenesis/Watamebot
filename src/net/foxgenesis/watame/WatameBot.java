@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.BinaryOperator;
 
 import javax.annotation.Nonnull;
 import javax.security.auth.login.LoginException;
@@ -23,7 +22,9 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import net.dv8tion.jda.api.utils.cache.SnowflakeCacheView;
 import net.foxgenesis.watame.functionality.ABotFunctionality;
+import net.foxgenesis.watame.functionality.InteractionHandler;
 import net.foxgenesis.watame.sql.DataManager;
 import net.foxgenesis.watame.sql.IDatabaseManager;
 import net.foxgenesis.watame.test.TestModule;
@@ -34,13 +35,6 @@ import net.foxgenesis.watame.test.TestModule;
  * @author Ashley
  */
 public class WatameBot {
-	/**
-	 * Operator to reduce collections to a single instance
-	 */
-	private static final BinaryOperator<Collection<CommandData>> commandDataReduction = (a, b) -> {
-		a.addAll(b);
-		return a;
-	};
 	/**
 	 * General purpose bot logger
 	 */
@@ -148,29 +142,21 @@ public class WatameBot {
 
 		// Initialize all plugins
 		plugins.parallelStream().forEach(ABotFunctionality::init);
-
+		
 		// Get global and guild interactions
-		logger.trace("Getting global integrations");
-		Collection<CommandData> globalData = plugins.parallelStream().map(plugin -> plugin.getGlobalInteractions())
-				.filter(cmdData -> cmdData != null).reduce(commandDataReduction).orElse(new ArrayList<CommandData>());
-
-		logger.trace("Getting guild integrations");
-		Collection<CommandData> guildData = discord.getGuildCache().applyStream(
-				guilds -> guilds.map(guild -> getPluginIntegrations(guild)).filter(cmdData -> cmdData != null)
-						.reduce(commandDataReduction).orElse(new ArrayList<CommandData>()));
-
-		// Merge all interactions into one collection
-		logger.trace("Merging integrations");
-		globalData.addAll(guildData);
+		logger.trace("Getting integrations");
+		SnowflakeCacheView<Guild> guildCache = discord.getGuildCache();
+		
+		Collection<CommandData> interactions = plugins.parallelStream()
+				.map(plugin -> ((InteractionHandler) plugin.getInteractionHandler()).getAllInteractions(guildCache))
+				.filter(cmdData -> cmdData != null).reduce((a, b) -> {
+					a.addAll(b);
+					return a;
+				}).orElse(new ArrayList<CommandData>());
 
 		// Tell JDA to update our command list
-		logger.info("Adding {} integrations", globalData.size());
-		discord.updateCommands().addCommands(globalData).queue();
-	}
-
-	private Collection<CommandData> getPluginIntegrations(Guild guild) {
-		return plugins.stream().map(plugin -> plugin.getGuildInteractions(guild)).filter(cmdData -> cmdData != null)
-				.reduce(commandDataReduction).orElse(new ArrayList<CommandData>());
+		logger.info("Adding {} integrations", interactions.size());
+		discord.updateCommands().addCommands(interactions).queue();
 	}
 
 	/**
