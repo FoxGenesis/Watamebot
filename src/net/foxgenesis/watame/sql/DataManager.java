@@ -289,6 +289,8 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 		} catch (SQLException e) {
 			sqlLogger.error(QUERY_MARKER, "Error while inserting new guild", e);
 		}
+		
+		retrieveData(guild);
 	}
 
 	@Override
