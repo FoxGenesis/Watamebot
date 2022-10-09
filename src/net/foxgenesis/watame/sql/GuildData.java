@@ -107,7 +107,7 @@ public class GuildData implements IGuildData, AutoCloseable {
 		// Set our current data and pass our update method
 		this.data = new JSONObjectAdv(jsonString, this::pushJSONUpdate);
 
-		DataManager.sqlLogger.debug(DataManager.SQL_MARKER, "SetData <- " + jsonString);
+		DataManager.sqlLogger.debug(DataManager.SQL_MARKER, "SetData <- [{}] {}", guild.getName(), jsonString);
 	}
 
 	/**
