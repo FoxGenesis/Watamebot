@@ -239,7 +239,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 		sqlLogger.debug(QUERY_MARKER, s.toString().replaceAll("\\?", "{}"), guild.getId());
 
 		try {
-			s.setString(0, guild.getId());
+			s.setString(1, guild.getId());
 			try (ResultSet set = s.executeQuery()) {
 				set.first();
 				long id = set.getLong("GuildID"); //$NON-NLS-1$
