@@ -127,7 +127,7 @@ public class GuildData implements IGuildData, AutoCloseable {
 		int result;
 
 		if (remove)
-			try (PreparedStatement removeStatement = dataManager.registeredStatements.get("guild_json_remove")) {
+			try (PreparedStatement removeStatement = dataManager.getAndAssertStatement("guild_json_remove")) {
 
 				DataManager.sqlLogger.debug(DataManager.UPDATE_MARKER, "PushUpdate -> %s", removeStatement);
 
@@ -146,7 +146,7 @@ public class GuildData implements IGuildData, AutoCloseable {
 			if (data == null)
 				throw new IllegalArgumentException("Data must not be null if 'remove' is 'true'!");
 
-			try (PreparedStatement updateStatement = dataManager.registeredStatements.get("guild_json_update")) {
+			try (PreparedStatement updateStatement = dataManager.getAndAssertStatement("guild_json_update")) {
 
 				DataManager.sqlLogger.debug(DataManager.UPDATE_MARKER, "PushUpdate -> %s", updateStatement);
 

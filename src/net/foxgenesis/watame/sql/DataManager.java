@@ -75,7 +75,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * Map of registered statements. This is to ensure we do not make more of the
 	 * same prepared statements.
 	 */
-	final ConcurrentHashMap<String, PreparedStatement> registeredStatements = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, PreparedStatement> registeredStatements = new ConcurrentHashMap<>();
 
 	/**
 	 * Create a new instance using the default database folder of "./{@code repo}/".
@@ -197,7 +197,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	private void getAllGuildData() {
 		logger.info("Retrieved guild data in " + MethodTimer.runFormatMS(() -> {
 			// Get prepared statement to get all guild data
-			PreparedStatement s = registeredStatements.get("guild_data_get");
+			PreparedStatement s = this.getAndAssertStatement("guild_data_get");
 			sqlLogger.debug(QUERY_MARKER, s.toString());
 
 			// Execute statement
@@ -226,7 +226,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @param guild - {@link Guild} to retrieve data for
 	 */
 	private void retrieveData(Guild guild) {
-		PreparedStatement s = this.registeredStatements.get("guild_data_get_id");
+		PreparedStatement s = this.getAndAssertStatement("guild_data_get_id");
 
 		sqlLogger.debug(QUERY_MARKER, s.toString().replaceAll("\\?", "{}"), guild.getId());
 
@@ -393,6 +393,24 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 
 		// Register our statement to ensure no duplicates are made
 		registeredStatements.put(id, preStatement);
+	}
+
+	/**
+	 * Get a {@link PreparedStatement} registered with key {@code id} and ensure it
+	 * exists. If the statement does not exist, this method will cause a program
+	 * exit with exit code {@link ExitCode.DATABASE_STATEMENT_MISSING}.
+	 * 
+	 * @param id - key of the registered statement
+	 * @return the {@link PreparedStatement} if it is registered
+	 */
+	PreparedStatement getAndAssertStatement(@Nonnull String id) {
+		Objects.nonNull(id);
+
+		if (registeredStatements.containsKey(id))
+			return registeredStatements.get(id);
+
+		ExitCode.DATABASE_STATEMENT_MISSING.programExit(String.format("Statement with id '%s' is not registered!", id));
+		return null;
 	}
 
 	@Override
