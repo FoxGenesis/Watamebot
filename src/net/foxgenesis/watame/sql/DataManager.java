@@ -241,7 +241,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 		try {
 			s.setString(1, guild.getId());
 			try (ResultSet set = s.executeQuery()) {
-				set.first();
+				//set.first();
 				long id = set.getLong("GuildID"); //$NON-NLS-1$
 				if (this.data.containsKey(id))
 					this.data.get(id).setData(set);
