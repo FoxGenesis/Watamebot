@@ -185,7 +185,7 @@ public class WatameBot {
 	 * @param token - Token used to connect to discord
 	 * @return connected JDA object
 	 */
-	private JDA createJDA(String token) {
+	private JDA createJDA(@Nonnull String token) {
 		JDA discordTmp = null;
 		boolean connected = false;
 
