@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.SQLException;
 
+import org.fusesource.jansi.AnsiConsole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +28,12 @@ public class Main {
 	 * @throws SQLException 
 	 */
 	public static void main(String[] args) throws SQLException {
+		// Parse program arguments
+		ProgramArguments params = new ProgramArguments(args);
+		
+		if(!params.hasFlag("dev"))
+			AnsiConsole.systemInstall();
+		  
 		logger.info("Starting...");
 		
 		if(logger.isDebugEnabled())
@@ -41,9 +48,6 @@ public class Main {
 			ExitCode.INSTANCE_ALREADY_RUNNING.programExit("Another instance is already running! Exiting...");
 			return;
 		}
-		
-		// Parse program arguments
-		ProgramArguments params = new ProgramArguments(args);
 		
 		// Check if the token parameter was passed in
 		if(!params.hasParameter("token"))
