@@ -218,6 +218,11 @@ public class WatameBot {
 			}
 
 		} while (!connected);
+		
+		if (discordTmp == null) {
+			ExitCode.JDA_BUILD_FAIL.programExit("Failed to build and login with JDA");
+			return null;
+		}
 
 		logger.info("Connected to discord!");
 
