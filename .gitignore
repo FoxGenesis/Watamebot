@@ -30,3 +30,4 @@ logger.log
 /nbproject/
 .pid
 export.xml
+*.exe
