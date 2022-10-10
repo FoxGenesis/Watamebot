@@ -38,8 +38,9 @@ public class ProgramArguments {
 	 * 
 	 * @see #ProgramArguments(String[])
 	 */
-	public ProgramArguments() {}
-	
+	public ProgramArguments() {
+	}
+
 	/**
 	 * NEED_JAVADOC
 	 * 
@@ -51,7 +52,9 @@ public class ProgramArguments {
 	}
 
 	/**
-	 * Parse the given arguments into {@code flags}, {@code parameters} and {@code arguments}.
+	 * Parse the given arguments into {@code flags}, {@code parameters} and
+	 * {@code arguments}.
+	 * 
 	 * @param args - program arguments to parse
 	 */
 	public void parse(String[] args) {
@@ -62,23 +65,23 @@ public class ProgramArguments {
 			case '-':
 				if (args[i].length() < 2)
 					throw new IllegalArgumentException("Not a valid argument: " + args[i]);
-				
-				switch(args[i].charAt(1)) {
-					case '-':
-						if (args[i].length() < 3)
-							throw new IllegalArgumentException("Not a valid argument: " + args[i]);
-						// --opt
-						flagList.add(args[i].substring(2));
-						break;
-					case 'D':
-						// System property
-						continue;
-					default:
-						if (args.length - 1 == i)
-							throw new IllegalArgumentException("Expected arg after: " + args[i]);
-						// -opt
-						parameterList.put(args[i].substring(1), args[i + 1]);
-						i++;
+
+				switch (args[i].charAt(1)) {
+				case '-':
+					if (args[i].length() < 3)
+						throw new IllegalArgumentException("Not a valid argument: " + args[i]);
+					// --opt
+					flagList.add(args[i].substring(2));
+					break;
+				case 'D':
+					// System property
+					continue;
+				default:
+					if (args.length - 1 == i)
+						throw new IllegalArgumentException("Expected arg after: " + args[i]);
+					// -opt
+					parameterList.put(args[i].substring(1), args[i + 1]);
+					i++;
 				}
 				break;
 //				if (args[i].charAt(1) == '-') {
@@ -151,30 +154,34 @@ public class ProgramArguments {
 	public boolean hasParameter(String key) {
 		return parameterList.containsKey(key);
 	}
-	
+
 	/**
 	 * Get the value of parameter {@code key}.
+	 * 
 	 * @param key - The parameter key
 	 * @return Returns the {@code value} of parameter {@code key}.
-	 * @throws NullPointerException Thrown if parameter list does not contain the {@code key}.
+	 * @throws NullPointerException Thrown if parameter list does not contain the
+	 *                              {@code key}.
 	 * @see #hasParameter(String)
 	 */
 	public String getParameter(String key) {
-		if(hasParameter(key))
+		if (hasParameter(key))
 			return parameterList.get(key);
 		throw new NullPointerException("Parameter list does not contain key \"" + key + "\"");
 	}
-	
+
 	/**
 	 * NEED_JAVADOC
+	 * 
 	 * @return
 	 */
 	public Map<String, String> getParameters() {
 		return Collections.unmodifiableMap(parameterList);
 	}
-	
+
 	/**
 	 * NEED_JAVADOC
+	 * 
 	 * @return
 	 */
 	public List<String> getArguments() {
@@ -189,7 +196,7 @@ public class ProgramArguments {
 		parameterList.clear();
 		flagList.clear();
 	}
-	
+
 	/**
 	 * NEED_JAVADOC
 	 */
@@ -197,16 +204,16 @@ public class ProgramArguments {
 	public String toString() {
 		// ProgramArguments{flagList=[...], parameterList={...}, argsList=[...]}
 		StringBuilder builder = new StringBuilder("ProgramArguments{flagList=");
-		
+
 		builder.append(Arrays.toString(flagList.toArray(new String[] {})));
 		builder.append(", parameterList=");
-		
+
 		builder.append(parameterList);
 		builder.append(", argsList=");
-		
+
 		builder.append(Arrays.toString(argsList.toArray(new String[] {})));
 		builder.append('}');
-		
+
 		return builder.toString();
 	}
 }

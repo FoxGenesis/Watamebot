@@ -64,8 +64,8 @@ public abstract class ABotFunctionality extends ListenerAdapter implements IStar
 	}
 
 	/**
-	 * Get the {@link InteractionHandler} interface used to register interactions with
-	 * {@link WatameBot}.
+	 * Get the {@link InteractionHandler} interface used to register interactions
+	 * with {@link WatameBot}.
 	 * 
 	 * @return this plugins {@link InteractionHandler} interface
 	 */

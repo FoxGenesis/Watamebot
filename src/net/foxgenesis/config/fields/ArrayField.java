@@ -5,7 +5,6 @@ import org.json.JSONArray;
 import net.dv8tion.jda.api.entities.Guild;
 import net.foxgenesis.watame.sql.IDatabaseManager;
 
-
 public class ArrayField extends ConfigField<JSONArray> {
 
 	public ArrayField(ConfigKey<JSONArray> key, IDatabaseManager database) {

@@ -123,11 +123,10 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 		// Build connection path
 		String connectionPath = databaseFolder.getPath() + File.separator + "database.db";
 		logger.trace("Database path: {}", connectionPath);
-		
+
 		// Attempt to connect to database file
 		logger.debug("Attempting connection to database");
-		connectionHandler = DriverManager
-				.getConnection("jdbc:sqlite:" + connectionPath);
+		connectionHandler = DriverManager.getConnection("jdbc:sqlite:" + connectionPath);
 
 		logger.info("Connected to SQL database");
 
@@ -245,7 +244,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 		try {
 			s.setString(1, guild.getId());
 			sqlLogger.debug(QUERY_MARKER, s.toString());
-			
+
 			try (ResultSet set = s.executeQuery()) {
 				// set.first();
 				long id = set.getLong("GuildID"); //$NON-NLS-1$

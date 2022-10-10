@@ -142,11 +142,11 @@ public class WatameBot {
 
 		// Initialize all plugins
 		plugins.parallelStream().forEach(ABotFunctionality::init);
-		
+
 		// Get global and guild interactions
 		logger.trace("Getting integrations");
 		SnowflakeCacheView<Guild> guildCache = discord.getGuildCache();
-		
+
 		Collection<CommandData> interactions = plugins.parallelStream()
 				.map(plugin -> ((InteractionHandler) plugin.getInteractionHandler()).getAllInteractions(guildCache))
 				.filter(cmdData -> cmdData != null).reduce((a, b) -> {
@@ -218,7 +218,7 @@ public class WatameBot {
 			}
 
 		} while (!connected);
-		
+
 		if (discordTmp == null) {
 			ExitCode.JDA_BUILD_FAIL.programExit("Failed to build and login with JDA");
 			return null;

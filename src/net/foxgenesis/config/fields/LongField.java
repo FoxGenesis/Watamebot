@@ -21,6 +21,6 @@ public class LongField extends ConfigField<Long> {
 
 	@Override
 	void set(JSONObjectAdv config, Long newState) {
-		config.put(getName(), (long)newState);
+		config.put(getName(), (long) newState);
 	}
 }

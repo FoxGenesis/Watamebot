@@ -4,12 +4,13 @@ import java.util.Objects;
 
 /**
  * Represents an operation that accepts three input arguments and returns no
- * result.  This is the three-arity specialization of {@link Consumer}.
- * Unlike most other functional interfaces, {@code TriConsumer} is expected
- * to operate via side-effects.
+ * result. This is the three-arity specialization of {@link Consumer}. Unlike
+ * most other functional interfaces, {@code TriConsumer} is expected to operate
+ * via side-effects.
  *
- * <p>This is a <a href="package-summary.html">functional interface</a>
- * whose functional method is {@link #accept(Object, Object)}.
+ * <p>
+ * This is a <a href="package-summary.html">functional interface</a> whose
+ * functional method is {@link #accept(Object, Object)}.
  *
  * @param <T> the type of the first argument to the operation
  * @param <U> the type of the second argument to the operation
@@ -20,7 +21,7 @@ import java.util.Objects;
  * @author Seth Steinberg
  */
 @FunctionalInterface
-public interface TriConsumer<T,U,R> {
+public interface TriConsumer<T, U, R> {
 
 	/**
 	 * Performs this operation on the given arguments.
@@ -34,13 +35,13 @@ public interface TriConsumer<T,U,R> {
 	/**
 	 * Returns a composed {@code TriConsumer} that performs, in sequence, this
 	 * operation followed by the {@code after} operation. If performing either
-	 * operation throws an exception, it is relayed to the caller of the
-	 * composed operation.  If performing this operation throws an exception,
-	 * the {@code after} operation will not be performed.
+	 * operation throws an exception, it is relayed to the caller of the composed
+	 * operation. If performing this operation throws an exception, the
+	 * {@code after} operation will not be performed.
 	 *
 	 * @param after the operation to perform after this operation
 	 * @return a composed {@code TriConsumer} that performs in sequence this
-	 * operation followed by the {@code after} operation
+	 *         operation followed by the {@code after} operation
 	 * @throws NullPointerException if {@code after} is null
 	 */
 	default TriConsumer<T, U, R> andThen(TriConsumer<? super T, ? super U, ? super R> after) {

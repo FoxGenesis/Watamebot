@@ -8,7 +8,7 @@ public class ConfigKey<E> {
 	public final String name;
 	public final boolean isEditable;
 	public final Function<Guild, E> defaultValue;
-	
+
 	public ConfigKey(String name, Function<Guild, E> defaultValue, boolean isEditable) {
 		this.name = name;
 		this.defaultValue = defaultValue;

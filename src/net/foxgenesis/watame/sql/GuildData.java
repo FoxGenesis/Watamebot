@@ -130,9 +130,9 @@ public class GuildData implements IGuildData, AutoCloseable {
 			try (PreparedStatement removeStatement = dataManager.getAndAssertStatement("guild_json_remove")) {
 				// Set data and execute update
 				removeStatement.setString(1, "$." + name);
-				
+
 				DataManager.sqlLogger.debug(DataManager.UPDATE_MARKER, "PushUpdate -> " + removeStatement);
-				
+
 				result = removeStatement.executeUpdate();
 			} catch (SQLException e) {
 				DataManager.logger.error(DataManager.UPDATE_MARKER, "Error while removing guild json data", e);
@@ -157,7 +157,7 @@ public class GuildData implements IGuildData, AutoCloseable {
 				return;
 			}
 		}
-		
+
 		DataManager.sqlLogger.debug(DataManager.UPDATE_MARKER, "ExecuteUpdate <- " + result);
 	}
 

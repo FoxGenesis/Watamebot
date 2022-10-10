@@ -24,6 +24,7 @@ public interface IDatabaseManager {
 
 	/**
 	 * NEED_JAVADOC
+	 * 
 	 * @param guild
 	 * @return
 	 * @throws NullPointerException if {@code guild} is null

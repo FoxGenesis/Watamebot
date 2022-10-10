@@ -59,8 +59,10 @@ public class InteractionHandler implements IInteractionHandler {
 
 	/**
 	 * Helper function to map all interaction functions into a single collection.
+	 * 
 	 * @param guild - {@link Guild} to get {@link CommandData} for
-	 * @return a {@link Collection<CommandData>} containing interactions for {@code guild}
+	 * @return a {@link Collection<CommandData>} containing interactions for
+	 *         {@code guild}
 	 */
 	private Collection<CommandData> getInteractionsForGuild(@Nonnull Guild guild) {
 		return guildInteractions.parallelStream().map(func -> func.apply(guild)).filter(cmd -> cmd != null)

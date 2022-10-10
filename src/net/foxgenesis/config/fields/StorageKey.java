@@ -3,16 +3,16 @@ package net.foxgenesis.config.fields;
 public class StorageKey {
 	public final String name, type;
 	public final SQLDataType r;
-	
+
 	public StorageKey(String name, String type, SQLDataType r) {
 		this.name = name;
 		this.type = type;
 		this.r = r;
 	}
-	
+
 	@Override
 	public String toString() {
-		return String.format("Storage{name=%s,type=%s,return=%s}",this.name,this.type,this.r);
+		return String.format("Storage{name=%s,type=%s,return=%s}", this.name, this.type, this.r);
 	}
 
 	@Override
