@@ -31,3 +31,4 @@ logger.log
 .pid
 export.xml
 *.exe
+.externalToolBuilders/New_Builder.launch
