@@ -23,6 +23,7 @@ token.txt
 logger.log
 /bin/
 /target/
+/test jar/
 .classpath
 .project
 .settings/org.eclipse.jdt.core.prefs
