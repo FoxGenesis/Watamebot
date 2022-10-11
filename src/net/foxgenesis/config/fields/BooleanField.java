@@ -1,12 +1,13 @@
 package net.foxgenesis.config.fields;
 
+import java.util.function.Function;
+
 import net.dv8tion.jda.api.entities.Guild;
-import net.foxgenesis.watame.sql.IDatabaseManager;
 
 public class BooleanField extends ConfigField<Boolean> {
 
-	public BooleanField(ConfigKey<Boolean> key, IDatabaseManager database) {
-		super(key, database);
+	public BooleanField(String name, Function<Guild, Boolean> defaultValue, boolean isEditable) {
+		super(name, defaultValue, isEditable);
 	}
 
 	@Override

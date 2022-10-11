@@ -1,14 +1,15 @@
 package net.foxgenesis.config.fields;
 
+import java.util.function.Function;
+
 import org.json.JSONObject;
 
 import net.dv8tion.jda.api.entities.Guild;
-import net.foxgenesis.watame.sql.IDatabaseManager;
 
 public class JSONField extends ConfigField<JSONObject> {
 
-	public JSONField(ConfigKey<JSONObject> key, IDatabaseManager database) {
-		super(key, database);
+	public JSONField(String name, Function<Guild, JSONObject> defaultValue, boolean isEditable) {
+		super(name, defaultValue, isEditable);
 	}
 
 	@Override

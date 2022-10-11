@@ -1,12 +1,13 @@
 package net.foxgenesis.config.fields;
 
+import java.util.function.Function;
+
 import net.dv8tion.jda.api.entities.Guild;
-import net.foxgenesis.watame.sql.IDatabaseManager;
 
 public class LongField extends ConfigField<Long> {
 
-	public LongField(ConfigKey<Long> key, IDatabaseManager database) {
-		super(key, database);
+	public LongField(String name, Function<Guild, Long> defaultValue, boolean isEditable) {
+		super(name, defaultValue, isEditable);
 	}
 
 	@Override

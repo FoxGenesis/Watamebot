@@ -1,24 +1,30 @@
 package net.foxgenesis.config.fields;
 
+import java.util.function.Function;
+
+import javax.annotation.Nonnull;
+
 import net.dv8tion.jda.api.entities.Guild;
-import net.foxgenesis.watame.sql.IDatabaseManager;
+import net.foxgenesis.watame.WatameBot;
 
 public abstract class ConfigField<E> {
 
-	private final ConfigKey<E> key;
-	private final IDatabaseManager database;
+	public final String name;
+	public final boolean isEditable;
+	private final Function<Guild, E> defaultValue;
 
-	public ConfigField(ConfigKey<E> key, IDatabaseManager database) {
-		this.key = key;
-		this.database = database;
+	public ConfigField(@Nonnull String name, @Nonnull Function<Guild, E> defaultValue, boolean isEditable) {
+		this.name = name;
+		this.defaultValue = defaultValue;
+		this.isEditable = isEditable;
 	}
 
 	public final String getName() {
-		return key.name;
+		return name;
 	}
 
 	public final boolean isEditable() {
-		return key.isEditable;
+		return isEditable;
 	}
 
 	public final boolean isPresent(Guild guild) {
@@ -43,19 +49,19 @@ public abstract class ConfigField<E> {
 	}
 
 	private void remove(JSONObjectAdv config) {
-		config.remove(key.name);
+		config.remove(name);
 	}
 
 	protected boolean isPresent(JSONObjectAdv config) {
-		return config.has(key.name);
+		return config.has(name);
 	}
 
 	protected E getDefaultValue(Guild guild) {
-		return key.defaultValue.apply(guild);
+		return defaultValue.apply(guild);
 	}
 
 	protected JSONObjectAdv getDataForGuild(Guild guild) {
-		return database.getDataForGuild(guild).getConfig();
+		return WatameBot.getInstance().getDatabase().getDataForGuild(guild).getConfig();
 	}
 
 	abstract E optFrom(JSONObjectAdv config, Guild guild);

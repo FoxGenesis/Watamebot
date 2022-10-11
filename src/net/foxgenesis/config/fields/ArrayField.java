@@ -1,14 +1,15 @@
 package net.foxgenesis.config.fields;
 
+import java.util.function.Function;
+
 import org.json.JSONArray;
 
 import net.dv8tion.jda.api.entities.Guild;
-import net.foxgenesis.watame.sql.IDatabaseManager;
 
 public class ArrayField extends ConfigField<JSONArray> {
 
-	public ArrayField(ConfigKey<JSONArray> key, IDatabaseManager database) {
-		super(key, database);
+	public ArrayField(String name, Function<Guild, JSONArray> defaultValue, boolean isEditable) {
+		super(name, defaultValue, isEditable);
 	}
 
 	@Override
