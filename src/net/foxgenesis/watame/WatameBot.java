@@ -101,14 +101,19 @@ public class WatameBot {
 		state = State.PRE_INIT;
 		logger.trace("STATE = " + state);
 
+		// Pre-initialize all plugins
+		Thread pluginPreInit = new Thread(() -> plugins.parallelStream().forEach(plugin -> plugin.preInit(this)),
+				"Plugin pre-init thread");
+		pluginPreInit.start();
+
 		// Setup and connect to the database
 		databaseInit();
 
-		// Pre-initialize all plugins
-		plugins.parallelStream().forEach(discord::addEventListener);
-
-		// Pre-initialize all plugins
-		plugins.parallelStream().forEach(plugin -> plugin.preInit(this));
+		// Wait for all plugins to be have pre-initialized
+		try {
+			pluginPreInit.join();
+		} catch (InterruptedException e) {
+		}
 	}
 
 	/**
@@ -134,6 +139,8 @@ public class WatameBot {
 			ExitCode.DATABASE_ACCESS_ERROR.programExit(e);
 		}
 
+		waitUntilReady();
+
 		// Add all guilds that will be used to the database
 		logger.trace("Adding guilds to data manager");
 		discord.getGuildCache().acceptStream(stream -> stream.parallel().forEach(database::addGuild));
@@ -144,14 +151,26 @@ public class WatameBot {
 	}
 
 	/**
+	 * If JDA isn't ready, wait for it
+	 */
+	private void waitUntilReady() {
+		if (discord.getStatus() != Status.CONNECTED)
+			try {
+				// Wait for JDA to be ready for use (BLOCKING!).
+				logger.info("Waiting for JDA to be ready...");
+				discord.awaitReady();
+			} catch (InterruptedException e) {
+			}
+		logger.info("Connected to discord!");
+	}
+
+	/**
 	 * NEED_JAVADOC
 	 */
 	protected void init() {
 		// Set our state to init
 		state = State.INIT;
 		logger.trace("STATE = " + state);
-
-		waitUntilReady();
 
 		// Initialize all plugins
 		plugins.parallelStream().forEach(plugin -> plugin.init(this));
@@ -170,17 +189,6 @@ public class WatameBot {
 		// Tell JDA to update our command list
 		logger.info("Adding {} integrations", interactions.size());
 		discord.updateCommands().addCommands(interactions).queue();
-	}
-
-	private void waitUntilReady() {
-		if (discord.getStatus() != Status.CONNECTED)
-			try {
-				// Wait for JDA to be ready for use (BLOCKING!).
-				logger.info("Waiting for JDA to be ready...");
-				discord.awaitReady();
-			} catch (InterruptedException e) {
-			}
-		logger.info("Connected to discord!");
 	}
 
 	/**
@@ -222,7 +230,9 @@ public class WatameBot {
 						GatewayIntent.GUILD_MESSAGE_REACTIONS, GatewayIntent.DIRECT_MESSAGES)
 				.setMemberCachePolicy(MemberCachePolicy.ALL).setChunkingFilter(ChunkingFilter.NONE)
 				.setAutoReconnect(true).setActivity(Activity.playing("Initializing..."))
-				.setStatus(OnlineStatus.DO_NOT_DISTURB).addEventListeners(plugins);
+				.setStatus(OnlineStatus.DO_NOT_DISTURB);
+
+		plugins.forEach(builder::addEventListeners);
 
 		// Attempt to connect to discord. If failed because no Internet, wait 10 seconds
 		// and retry.
