@@ -6,15 +6,24 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+
+import javax.annotation.Nonnull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Class to load a multiple plugin classes. Classes are loaded from jar files in
+ * a selected directory. Target classes are selected via a properties file.
+ * 
+ * @author Ashley
+ *
+ */
 public class PluginLoader {
 
 	private static Logger logger = LoggerFactory.getLogger(PluginLoader.class);
@@ -38,7 +47,7 @@ public class PluginLoader {
 	 * 
 	 * @param folder - The {@link File} to search for plugins in.
 	 */
-	public PluginLoader(File folder) {
+	public PluginLoader(@Nonnull File folder) {
 		this(folder, false);
 	}
 
@@ -48,7 +57,7 @@ public class PluginLoader {
 	 * @param folder - The {@link File} to search for plugins in.
 	 * @param mkdirs - If {@code folder} does not exist, should a new one be made
 	 */
-	public PluginLoader(File folder, boolean mkdirs) {
+	public PluginLoader(@Nonnull File folder, boolean mkdirs) {
 		setPluginDirectory(folder, mkdirs);
 	}
 
@@ -63,7 +72,7 @@ public class PluginLoader {
 	 *                                  and {@code mkdirs} is {@code false} or,
 	 *                                  {@code folder} is not a file directory.
 	 */
-	public void setPluginDirectory(File folder, boolean mkdirs) {
+	public void setPluginDirectory(@Nonnull File folder, boolean mkdirs) {
 		// Check if folder is null
 		Objects.requireNonNull(folder);
 
@@ -97,21 +106,21 @@ public class PluginLoader {
 	 * NEED_JAVADOC
 	 * 
 	 * @return
-	 * @throws MalformedURLException
-	 * @throws IOException
 	 */
-	public List<Class<? extends APlugin>> getPluginClasses() throws MalformedURLException, IOException {
+	public <T> Map<Class<? extends T>, Properties> getPluginClasses(@Nonnull Class<? extends T> pluginClass) {
+		Objects.nonNull(pluginClass);
+
 		// Get files and map to URLs
 		URL[] pluginURLs = filesToURLArray(getJarsInFolder(folder));
 
 		// Create output list
-		List<Class<? extends APlugin>> classes = new ArrayList<>(pluginURLs.length);
+		Map<Class<? extends T>, Properties> classes = new HashMap<>(pluginURLs.length);
 
 		// Create new class loader with plugin URL array
 		try (URLClassLoader loader = new URLClassLoader(pluginURLs)) {
 
 			// Get all plugin properties files
-			Enumeration<URL> resources = loader.findResources("/META-INFO/plugin.properties");
+			Enumeration<URL> resources = loader.findResources("/plugin.properties");
 
 			// Iterate over properties files
 			while (resources.hasMoreElements()) {
@@ -122,6 +131,9 @@ public class PluginLoader {
 				Properties properties = new Properties();
 				try (InputStream is = resource.openStream()) {
 					properties.load(is);
+				} catch (IOException e1) {
+					logger.error("Unable to load property file from " + resource, e1);
+					continue;
 				}
 
 				// Get plugin class from properties file
@@ -136,13 +148,13 @@ public class PluginLoader {
 
 				try {
 					// Attempt to load plugin class
-					Class<?> pluginClass = loader.loadClass(className);
+					Class<?> pluginMain = loader.loadClass(className);
 
 					// Check whether the plugin class extends APlugin
-					if (APlugin.class.isAssignableFrom(pluginClass)) {
+					if (pluginClass.isAssignableFrom(pluginMain)) {
 						// Cast and add class to our plugin list
-						Class<? extends APlugin> b = pluginClass.asSubclass(APlugin.class);
-						classes.add(b);
+						Class<? extends T> b = pluginMain.asSubclass(pluginClass);
+						classes.put(b, properties);
 					} else {
 						// Class specified in properties doesn't extend APlugin
 						logger.error("Plugin class \"" + className + "\" does not extend APlugin!",
@@ -155,6 +167,8 @@ public class PluginLoader {
 				}
 
 			}
+		} catch (IOException e2) {
+			e2.printStackTrace();
 		}
 
 		return classes;
@@ -166,7 +180,7 @@ public class PluginLoader {
 	 * @param folder - The {@link File} to search in
 	 * @return Returns an array of jar {@link File Files}
 	 */
-	private File[] getJarsInFolder(File folder) {
+	private File[] getJarsInFolder(@Nonnull File folder) {
 		return folder.listFiles(file -> file.getName().endsWith(".jar"));
 	}
 
@@ -179,13 +193,17 @@ public class PluginLoader {
 	 *                               found,or if some other error occurred while
 	 *                               constructing the URL
 	 */
-	private URL[] filesToURLArray(File[] files) throws MalformedURLException {
+	private URL[] filesToURLArray(@Nonnull File[] files) {
 		// URL output list
 		URL[] urls = new URL[files.length];
 
 		// Map file array to URL array
 		for (int i = 0; i < files.length; i++)
-			urls[i] = files[i].toURI().toURL();
+			try {
+				urls[i] = files[i].toURI().toURL();
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+			}
 
 		return urls;
 	}
