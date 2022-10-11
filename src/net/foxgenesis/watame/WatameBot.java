@@ -1,10 +1,10 @@
 package net.foxgenesis.watame;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 
 import javax.annotation.Nonnull;
@@ -24,9 +24,9 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.SnowflakeCacheView;
-import net.foxgenesis.watame.functionality.ABotFunctionality;
-import net.foxgenesis.watame.functionality.InteractionHandler;
+import net.foxgenesis.watame.plugin.AWatamePlugin;
 import net.foxgenesis.watame.plugin.InteractionHandler;
+import net.foxgenesis.watame.plugin.PluginConstructor;
 import net.foxgenesis.watame.sql.DataManager;
 import net.foxgenesis.watame.sql.IDatabaseManager;
 
@@ -68,7 +68,7 @@ public class WatameBot {
 	/**
 	 * List of all plugins
 	 */
-	private List<ABotFunctionality> plugins = new ArrayList<>();
+	private Collection<AWatamePlugin> plugins;
 
 	/**
 	 * Create a new instance with a specified login {@code token}.
@@ -79,13 +79,16 @@ public class WatameBot {
 	WatameBot(@Nonnull String token) throws SQLException {
 		Objects.requireNonNull(token);
 
-		// Create connection to discord through our token
-		discord = createJDA(token);
 		if (instance != null)
 			throw new UnsupportedOperationException("WatameBot instance already created");
 
 		// Connect to our database file
 		database = new DataManager();
+
+		plugins = loadPlugins();
+
+		// Create connection to discord through our token
+		discord = createJDA(token);
 
 		instance = this;
 	}
@@ -151,7 +154,7 @@ public class WatameBot {
 		waitUntilReady();
 
 		// Initialize all plugins
-		plugins.parallelStream().forEach(ABotFunctionality::init);
+		plugins.parallelStream().forEach(plugin -> plugin.init(this));
 
 		// Get global and guild interactions
 		logger.trace("Getting integrations");
@@ -189,7 +192,7 @@ public class WatameBot {
 		logger.trace("STATE = " + state);
 
 		// Post-initialize all plugins
-		plugins.parallelStream().forEach(ABotFunctionality::postInit);
+		plugins.parallelStream().forEach(plugin -> plugin.postInit(this));
 
 		// Display our game as ready
 		logger.debug("Setting presence to ready");
@@ -252,10 +255,25 @@ public class WatameBot {
 		return discordTmp;
 	}
 
+	/**
+	 * Load and construct all plugins
+	 * 
+	 * @return a {@link Collection} of plugins or {@code null} on fail
+	 */
+	private Collection<AWatamePlugin> loadPlugins() {
+		PluginConstructor constructor = new PluginConstructor();
 
 		try {
+			return constructor.loadPlugins(this);
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
+		return null;
 	}
 
 	/**
