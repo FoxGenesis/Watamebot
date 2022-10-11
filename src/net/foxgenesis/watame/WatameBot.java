@@ -21,10 +21,12 @@ import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.SnowflakeCacheView;
 import net.foxgenesis.watame.functionality.ABotFunctionality;
 import net.foxgenesis.watame.functionality.InteractionHandler;
+import net.foxgenesis.watame.plugin.InteractionHandler;
 import net.foxgenesis.watame.sql.DataManager;
 import net.foxgenesis.watame.sql.IDatabaseManager;
 import net.foxgenesis.watame.test.TestModule;
@@ -35,10 +37,19 @@ import net.foxgenesis.watame.test.TestModule;
  * @author Ashley
  */
 public class WatameBot {
+	// ------------------------------- STATIC ====================
 	/**
 	 * General purpose bot logger
 	 */
 	public static Logger logger = LoggerFactory.getLogger(WatameBot.class);
+
+	private static WatameBot instance;
+
+	public static WatameBot getInstance() {
+		return instance;
+	}
+
+	// ------------------------------- INSTNACE ====================
 
 	/**
 	 * the JDA object
@@ -66,16 +77,19 @@ public class WatameBot {
 	 * @param token - Token used to connect to discord
 	 * @throws SQLException - When failing to connect to the database file
 	 */
-	public WatameBot(@Nonnull String token) throws SQLException {
+	WatameBot(@Nonnull String token) throws SQLException {
 		Objects.requireNonNull(token);
 
 		// Create connection to discord through our token
 		discord = createJDA(token);
+		if (instance != null)
+			throw new UnsupportedOperationException("WatameBot instance already created");
 
 		// Connect to our database file
 		database = new DataManager();
 
 		plugins.add(new TestModule());
+		instance = this;
 	}
 
 	/**
@@ -85,10 +99,6 @@ public class WatameBot {
 		// Set our state to pre-init
 		state = State.PRE_INIT;
 		logger.trace("STATE = " + state);
-
-		// Display our game as starting up
-		logger.debug("Setting presence to initalizing");
-		discord.getPresence().setPresence(OnlineStatus.DO_NOT_DISTURB, Activity.playing("Initializing..."));
 
 		// Setup and connect to the database
 		databaseInit();
@@ -140,6 +150,8 @@ public class WatameBot {
 		state = State.INIT;
 		logger.trace("STATE = " + state);
 
+		waitUntilReady();
+
 		// Initialize all plugins
 		plugins.parallelStream().forEach(ABotFunctionality::init);
 
@@ -157,6 +169,17 @@ public class WatameBot {
 		// Tell JDA to update our command list
 		logger.info("Adding {} integrations", interactions.size());
 		discord.updateCommands().addCommands(interactions).queue();
+	}
+
+	private void waitUntilReady() {
+		if (discord.getStatus() != Status.CONNECTED)
+			try {
+				// Wait for JDA to be ready for use (BLOCKING!).
+				logger.info("Waiting for JDA to be ready...");
+				discord.awaitReady();
+			} catch (InterruptedException e) {
+			}
+		logger.info("Connected to discord!");
 	}
 
 	/**
@@ -186,15 +209,19 @@ public class WatameBot {
 	 * @return connected JDA object
 	 */
 	private JDA createJDA(@Nonnull String token) {
+		Objects.nonNull(token);
+
 		JDA discordTmp = null;
-		boolean connected = false;
+		boolean built = false;
 
 		// Setup our JDA with wanted values
 		logger.debug("Creating JDA");
 		JDABuilder builder = JDABuilder
-				.createDefault(token, GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES,
+				.create(token, GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES,
 						GatewayIntent.GUILD_MESSAGE_REACTIONS, GatewayIntent.DIRECT_MESSAGES)
-				.setMemberCachePolicy(MemberCachePolicy.ALL);
+				.setMemberCachePolicy(MemberCachePolicy.ALL).setChunkingFilter(ChunkingFilter.NONE)
+				.setAutoReconnect(true).setActivity(Activity.playing("Initializing..."))
+				.setStatus(OnlineStatus.DO_NOT_DISTURB).addEventListeners(plugins);
 
 		// Attempt to connect to discord. If failed because no Internet, wait 10 seconds
 		// and retry.
@@ -205,7 +232,7 @@ public class WatameBot {
 				discordTmp = builder.build();
 
 				// We connected. Stop loop.
-				connected = true;
+				built = true;
 			} catch (LoginException ex) {
 				// Failed to connect. Log error
 				logger.warn("Failed to connect: " + ex.getLocalizedMessage() + " retrying...", ex);
@@ -217,26 +244,20 @@ public class WatameBot {
 				}
 			}
 
-		} while (!connected);
+		} while (!built);
 
 		if (discordTmp == null) {
-			ExitCode.JDA_BUILD_FAIL.programExit("Failed to build and login with JDA");
+			ExitCode.JDA_BUILD_FAIL.programExit("Failed to build JDA");
 			return null;
 		}
 
-		logger.info("Connected to discord!");
+		return discordTmp;
+	}
 
-		// Enable auto-reconnect in case we get disconnected.
-		discordTmp.setAutoReconnect(true);
 
 		try {
-			// Wait for JDA to be ready for use (BLOCKING!).
-			logger.info("Waiting for JDA to be ready...");
-			discordTmp.awaitReady();
-		} catch (InterruptedException e) {
 		}
 
-		return discordTmp;
 	}
 
 	/**
