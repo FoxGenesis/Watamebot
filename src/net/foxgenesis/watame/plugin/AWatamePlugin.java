@@ -1,4 +1,6 @@
-package net.foxgenesis.watame.functionality;
+package net.foxgenesis.watame.plugin;
+
+import java.util.Objects;
 
 import javax.annotation.Nonnull;
 
@@ -12,12 +14,9 @@ import net.foxgenesis.watame.WatameBot;
  * @author Ashley
  *
  */
-public abstract class ABotFunctionality extends ListenerAdapter implements IStartup {
+public abstract class AWatamePlugin extends ListenerAdapter implements IStartup {
 
-	/**
-	 * Name of the functionality. This serves as an identifier.
-	 */
-	private final String name;
+	private PluginProperties properties;
 
 	/**
 	 * The instance of {@link WatameBot} this functionality is added to.
@@ -28,20 +27,22 @@ public abstract class ABotFunctionality extends ListenerAdapter implements IStar
 	 * Object used to contain all plugin interactions
 	 */
 	private InteractionHandler interactions = new InteractionHandler();
+	
+	protected AWatamePlugin() {}
 
-	/**
-	 * NEED_JAVADOC
-	 * 
-	 * @param name
-	 */
-	public ABotFunctionality(@Nonnull String name) {
-		// Set the name of the functionality
-		this.name = name;
-	}
 
 	@Override
 	public void preInit(@Nonnull WatameBot watame) {
 		// Set our current instance of the bot
+		this.watame = watame;
+	}
+	
+	void setProperties(@Nonnull PluginProperties properties) {
+		Objects.nonNull(properties);
+		this.properties = properties;
+	}
+	
+	void setWatame(@Nonnull WatameBot watame) {
 		this.watame = watame;
 	}
 
@@ -60,7 +61,7 @@ public abstract class ABotFunctionality extends ListenerAdapter implements IStar
 	 * @return The name of this functionality
 	 */
 	public String getName() {
-		return name;
+		return properties.getProperty("name", "My WatameBot Plugin");
 	}
 
 	/**

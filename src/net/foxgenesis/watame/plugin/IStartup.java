@@ -1,4 +1,4 @@
-package net.foxgenesis.watame.functionality;
+package net.foxgenesis.watame.plugin;
 
 import net.foxgenesis.watame.WatameBot;
 
@@ -9,6 +9,8 @@ import net.foxgenesis.watame.WatameBot;
  *
  */
 public interface IStartup {
+	
+	public void construct(PluginProperties properties);
 
 	/**
 	 * Startup method called when resources, needed for functionality
@@ -30,21 +32,18 @@ public interface IStartup {
 	 * </ul>
 	 * </p>
 	 * 
-	 * @param watame - the {@link WatameBot} instance to work with
-	 * @see #init(WatameBot)
-	 * @see #postInit(WatameBot)
+	 * @see #init()
+	 * @see #postInit()
 	 */
-	public default void preInit(WatameBot watame) {
-	}
+	public void preInit(WatameBot bot);
 
 	/**
 	 * NEED_JAVADOC
 	 */
-	public void init();
+	public void init(WatameBot bot);
 
 	/**
 	 * NEED_JAVADOC
 	 */
-	public default void postInit() {
-	}
+	public void postInit(WatameBot bot);
 }

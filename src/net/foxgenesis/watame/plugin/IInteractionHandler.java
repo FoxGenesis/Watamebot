@@ -1,4 +1,4 @@
-package net.foxgenesis.watame.functionality;
+package net.foxgenesis.watame.plugin;
 
 import java.util.Collection;
 import java.util.List;
