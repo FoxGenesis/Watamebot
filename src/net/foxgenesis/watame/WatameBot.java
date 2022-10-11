@@ -29,7 +29,6 @@ import net.foxgenesis.watame.functionality.InteractionHandler;
 import net.foxgenesis.watame.plugin.InteractionHandler;
 import net.foxgenesis.watame.sql.DataManager;
 import net.foxgenesis.watame.sql.IDatabaseManager;
-import net.foxgenesis.watame.test.TestModule;
 
 /**
  * Class containing WatameBot implementation
@@ -88,7 +87,6 @@ public class WatameBot {
 		// Connect to our database file
 		database = new DataManager();
 
-		plugins.add(new TestModule());
 		instance = this;
 	}
 
