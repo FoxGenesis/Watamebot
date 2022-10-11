@@ -32,6 +32,8 @@ public class PluginConstructor {
 		logger.debug("Loading plugin classes");
 		Map<Class<? extends AWatamePlugin>, Properties> classes = loader.getPluginClasses(AWatamePlugin.class);
 
+		logger.debug("Found {} plugin classes", classes.size());
+
 		// Construct each class
 		classes.forEach((key, value) -> {
 			logger.debug("Constructing {}", key);
@@ -46,7 +48,7 @@ public class PluginConstructor {
 			// Create new instance
 			try {
 				AWatamePlugin plugin = (AWatamePlugin) pluginConstructor.newInstance();
-				
+
 				// Set variables
 				plugin.setProperties(new PluginProperties(value));
 				plugin.setWatame(watame);
