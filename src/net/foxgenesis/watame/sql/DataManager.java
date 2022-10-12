@@ -14,6 +14,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -261,6 +262,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	}
 
 	@Override
+	@Nullable
 	public IGuildData getDataForGuild(@Nonnull Guild guild) {
 		// Ensure non null guild
 		Objects.nonNull(guild);
