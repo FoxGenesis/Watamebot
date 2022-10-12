@@ -38,10 +38,13 @@ import net.foxgenesis.watame.sql.IDatabaseManager;
 public class WatameBot {
 	// ------------------------------- STATIC ====================
 	/**
-	 * General purpose bot logger
+	 * General purpose logger
 	 */
 	public static Logger logger = LoggerFactory.getLogger(WatameBot.class);
 
+	/**
+	 * Singleton instance of class
+	 */
 	private static WatameBot instance;
 
 	public static WatameBot getInstance() {
