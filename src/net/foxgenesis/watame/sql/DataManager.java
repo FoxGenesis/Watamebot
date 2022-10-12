@@ -184,7 +184,9 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * 
 	 * @param jda - {@link JDA} instance to use
 	 */
-	public void retrieveDatabaseData(JDA jda) {
+	public void retrieveDatabaseData(@Nonnull JDA jda) {
+		Objects.nonNull(jda);
+		
 		// Get all guilds from database
 		getAllGuildData();
 
@@ -238,7 +240,9 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * 
 	 * @param guild - {@link Guild} to retrieve data for
 	 */
-	private void retrieveData(Guild guild) {
+	private void retrieveData(@Nonnull Guild guild) {
+		Objects.nonNull(guild);
+		
 		PreparedStatement s = this.getAndAssertStatement("guild_data_get_id");
 
 		try {
@@ -279,7 +283,9 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * 
 	 * @param guild - guild to insert
 	 */
-	private void insertGuildInDatabase(Guild guild) {
+	private void insertGuildInDatabase(@Nonnull Guild guild) {
+		Objects.nonNull(guild);
+		
 		logger.debug("Creating row for guild: " + guild.getIdLong()); //$NON-NLS-1$
 		PreparedStatement st = this.getAndAssertStatement("guild_data_insert");
 		try {
@@ -413,6 +419,8 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @see #isValid()
 	 */
 	private void registerStatement(String id, @Nonnull String statement) throws SQLException {
+		Objects.nonNull(statement);
+		
 		// Check if id is already registered
 		if (registeredStatements.containsKey(id))
 			throw new IllegalArgumentException("Statement '" + id + "' already exists!");
