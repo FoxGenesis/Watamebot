@@ -74,7 +74,7 @@ public class WatameBot {
 	 * Create a new instance with a specified login {@code token}.
 	 * 
 	 * @param token - Token used to connect to discord
-	 * @throws SQLException - When failing to connect to the database file
+	 * @throws SQLException When failing to connect to the database file
 	 */
 	WatameBot(@Nonnull String token) throws SQLException {
 		Objects.requireNonNull(token);
