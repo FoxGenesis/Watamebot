@@ -240,7 +240,20 @@ public class WatameBot {
 
 		// Initialize all plugins
 		plugins.parallelStream().forEach(plugin -> plugin.init(this));
+	}
 
+	/**
+	 * NEED_JAVADOC
+	 */
+	protected void postInit() {
+		// Set our state to post-init
+		state = State.POST_INIT;
+		logger.trace("STATE = " + state);
+
+		// Post-initialize all plugins
+		plugins.parallelStream().forEach(plugin -> plugin.postInit(this));
+		
+		
 		// Get global and guild interactions
 		logger.trace("Getting integrations");
 		SnowflakeCacheView<Guild> guildCache = discord.getGuildCache();
@@ -255,18 +268,6 @@ public class WatameBot {
 		// Tell JDA to update our command list
 		logger.info("Adding {} integrations", interactions.size());
 		discord.updateCommands().addCommands(interactions).queue();
-	}
-
-	/**
-	 * NEED_JAVADOC
-	 */
-	protected void postInit() {
-		// Set our state to post-init
-		state = State.POST_INIT;
-		logger.trace("STATE = " + state);
-
-		// Post-initialize all plugins
-		plugins.parallelStream().forEach(plugin -> plugin.postInit(this));
 
 		// Display our game as ready
 		logger.debug("Setting presence to ready");
