@@ -243,21 +243,23 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	private void retrieveData(@Nonnull Guild guild) {
 		Objects.nonNull(guild);
 
-		PreparedStatement s = this.getAndAssertStatement("guild_data_get_id");
+		logger.trace("Retrieved guild data for {} in: " + MethodTimer.runFormatMS(() -> {
+			PreparedStatement s = this.getAndAssertStatement("guild_data_get_id");
 
-		try {
-			s.setString(1, guild.getId());
-			sqlLogger.trace(QUERY_MARKER, s.toString());
+			try {
+				s.setString(1, guild.getId());
+				sqlLogger.trace(QUERY_MARKER, s.toString());
 
-			try (ResultSet set = s.executeQuery()) {
-				// set.first();
-				long id = set.getLong("GuildID"); //$NON-NLS-1$
-				if (this.data.containsKey(id))
-					this.data.get(id).setData(set);
+				try (ResultSet set = s.executeQuery()) {
+					// set.first();
+					long id = set.getLong("GuildID"); //$NON-NLS-1$
+					if (this.data.containsKey(id))
+						this.data.get(id).setData(set);
+				}
+			} catch (SQLException e) {
+				sqlLogger.error(QUERY_MARKER, "Error while getting guild data", e);
 			}
-		} catch (SQLException e) {
-			sqlLogger.error(QUERY_MARKER, "Error while getting guild data", e);
-		}
+		}), guild.getName());
 	}
 
 	@Override
@@ -276,10 +278,10 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 			logger.warn("Attempted to get non existant data for guild {}. Attempting to insert and retrieve data",
 					guild.getId());
 
-			logger.trace("Inserted row in: " + MethodTimer.runFormatMS(() -> insertGuildInDatabase(guild)));
-			logger.trace("Retrieved new row data in: " + MethodTimer.runFormatMS(() -> retrieveData(guild)));
+			insertGuildInDatabase(guild);
+			retrieveData(guild);
 		}
-		
+
 		return data.get(guild.getIdLong());
 	}
 
@@ -291,17 +293,18 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	private void insertGuildInDatabase(@Nonnull Guild guild) {
 		Objects.nonNull(guild);
 
-		logger.debug("Creating row for guild: " + guild.getIdLong()); //$NON-NLS-1$
-		PreparedStatement st = this.getAndAssertStatement("guild_data_insert");
-		try {
-			long guildID = guild.getIdLong();
-			st.setLong(1, guildID);
+		logger.trace("Inserted new row for guild {} in: " + MethodTimer.runFormatMS(() -> {
+			PreparedStatement st = this.getAndAssertStatement("guild_data_insert");
+			try {
+				long guildID = guild.getIdLong();
+				st.setLong(1, guildID);
 
-			sqlLogger.trace(UPDATE_MARKER, st.toString());
-			st.executeUpdate();
-		} catch (SQLException e) {
-			sqlLogger.error(QUERY_MARKER, "Error while inserting new guild", e);
-		}
+				sqlLogger.trace(UPDATE_MARKER, st.toString());
+				st.executeUpdate();
+			} catch (SQLException e) {
+				sqlLogger.error(QUERY_MARKER, "Error while inserting new guild", e);
+			}
+		}), guild.getName());
 	}
 
 	@Override
