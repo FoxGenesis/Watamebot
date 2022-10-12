@@ -192,15 +192,14 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 		getAllGuildData();
 
 		// Insert all missing guilds to database
-		logger.debug("Inserting missing guilds into database");
-		jda.getGuildCache()
-				.acceptStream(stream -> stream.filter(guild -> !data.contains(guild.getIdLong()))
-						.peek(guild -> logger.debug("Inserting {} into database", guild.getName()))
-						.forEach(this::insertGuildInDatabase));
+//		logger.debug("Inserting missing guilds into database");
+//		jda.getGuildCache()
+//				.acceptStream(stream -> stream.filter(guild -> !data.contains(guild.getIdLong()))
+//						.peek(guild -> logger.debug("Inserting {} into database", guild.getName()))
+//						.forEach(this::insertGuildInDatabase));
 
 		// All data has been retrieved
 		this.allDataReady = true;
-		jda.getEventManager().handle(new DatabaseLoadedEvent(jda, this));
 	}
 
 	/**
@@ -272,12 +271,16 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 			throw new UnsupportedOperationException("Data not ready yet");
 
 		// Check and get guild data
-		if (data.containsKey(guild.getIdLong()))
-			return data.get(guild.getIdLong());
+		if (!data.containsKey(guild.getIdLong())) {
+			// Guild data doesn't exist
+			logger.warn("Attempted to get non existant data for guild {}. Attempting to insert and retrieve data",
+					guild.getId());
 
-		// Guild data doesn't exist
-		logger.warn("Attempted to get non existant data for guild: " + guild.getId());
-		return null;
+			logger.trace("Inserted row in: " + MethodTimer.runFormatMS(() -> insertGuildInDatabase(guild)));
+			logger.trace("Retrieved new row data in: " + MethodTimer.runFormatMS(() -> retrieveData(guild)));
+		}
+		
+		return data.get(guild.getIdLong());
 	}
 
 	/**
@@ -299,8 +302,6 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 		} catch (SQLException e) {
 			sqlLogger.error(QUERY_MARKER, "Error while inserting new guild", e);
 		}
-
-		retrieveData(guild);
 	}
 
 	@Override

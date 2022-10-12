@@ -21,16 +21,21 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
+import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.dv8tion.jda.api.utils.cache.SnowflakeCacheView;
 import net.foxgenesis.util.ProgramArguments;
 import net.foxgenesis.watame.plugin.AWatamePlugin;
 import net.foxgenesis.watame.plugin.InteractionHandler;
 import net.foxgenesis.watame.plugin.PluginConstructor;
 import net.foxgenesis.watame.sql.DataManager;
+import net.foxgenesis.watame.sql.DataManager.DatabaseLoadedEvent;
 import net.foxgenesis.watame.sql.IDatabaseManager;
 
 /**
@@ -145,7 +150,7 @@ public class WatameBot {
 
 		// Set shutdown thread
 		logger.debug("Adding shutdown hook");
-		Runtime.getRuntime().addShutdownHook(new Thread(instance::shutdown, "WatameBot Shutdown Thread"));
+		Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "WatameBot Shutdown Thread"));
 
 		// Connect to our database file
 		database = new DataManager();
@@ -174,9 +179,12 @@ public class WatameBot {
 
 		// Wait for all plugins to be have pre-initialized
 		try {
+			logger.trace("Waiting for plugin pre-init thread");
 			pluginPreInit.join();
 		} catch (InterruptedException e) {
 		}
+
+		waitUntilReady();
 	}
 
 	/**
@@ -202,15 +210,10 @@ public class WatameBot {
 			ExitCode.DATABASE_ACCESS_ERROR.programExit(e);
 		}
 
-		waitUntilReady();
-
-		// Add all guilds that will be used to the database
-		logger.trace("Adding guilds to data manager");
-		discord.getGuildCache().acceptStream(stream -> stream.parallel().forEach(database::addGuild));
-
 		// Get all database data
 		logger.trace("Retrieving all data");
 		database.retrieveDatabaseData(discord);
+		discord.getEventManager().handle(new DatabaseLoadedEvent(discord, database));
 	}
 
 	/**
@@ -291,9 +294,23 @@ public class WatameBot {
 		JDABuilder builder = JDABuilder
 				.create(token, GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES,
 						GatewayIntent.GUILD_MESSAGE_REACTIONS, GatewayIntent.DIRECT_MESSAGES)
-				.setMemberCachePolicy(MemberCachePolicy.ALL).setChunkingFilter(ChunkingFilter.NONE)
-				.setAutoReconnect(true).setActivity(Activity.playing("Initializing..."))
-				.setStatus(OnlineStatus.DO_NOT_DISTURB);
+				.setMemberCachePolicy(MemberCachePolicy.ALL)
+				.disableCache(CacheFlag.ACTIVITY, CacheFlag.VOICE_STATE, CacheFlag.EMOJI, CacheFlag.STICKER,
+						CacheFlag.CLIENT_STATUS, CacheFlag.ONLINE_STATUS)
+				.setChunkingFilter(ChunkingFilter.NONE).setAutoReconnect(true)
+				.setActivity(Activity.playing("Initializing...")).setStatus(OnlineStatus.DO_NOT_DISTURB);
+
+		builder.addEventListeners(new ListenerAdapter() {
+			@Override
+			public void onGuildReady(GuildReadyEvent e) {
+				database.addGuild(e.getGuild());
+			}
+
+			@Override
+			public void onGuildLeave(GuildLeaveEvent e) {
+				database.removeGuild(e.getGuild());
+			}
+		});
 
 		plugins.forEach(builder::addEventListeners);
 
