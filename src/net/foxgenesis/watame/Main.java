@@ -33,16 +33,19 @@ public class Main {
 	 * @throws SQLException
 	 */
 	public static void main(String[] args) throws SQLException {
+		if (logger.isDebugEnabled())
+			logger.info("Debugging enabled");
+
 		// Parse program arguments
 		params = new ProgramArguments(args);
 
-		if (!params.hasFlag("dev"))
+		if (!params.hasFlag("dev")) {
+			logger.trace("Installing ansi console");
 			AnsiConsole.systemInstall();
+		}
 
+		System.out.println();
 		logger.info("Starting...");
-
-		if (logger.isDebugEnabled())
-			logger.info("Debugging enabled");
 
 		try {
 			// Attempt to obtain instance lock
