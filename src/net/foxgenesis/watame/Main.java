@@ -25,6 +25,11 @@ public class Main {
 	public static final Logger logger = LoggerFactory.getLogger(Main.class);
 
 	/**
+	 * Program arguments
+	 */
+	private static ProgramArguments params;
+
+	/**
 	 * Program entry point
 	 * 
 	 * @param args - program arguments
@@ -32,7 +37,7 @@ public class Main {
 	 */
 	public static void main(String[] args) throws SQLException {
 		// Parse program arguments
-		ProgramArguments params = new ProgramArguments(args);
+		params = new ProgramArguments(args);
 
 		if (!params.hasFlag("dev"))
 			AnsiConsole.systemInstall();
@@ -80,6 +85,15 @@ public class Main {
 		watame.postInit();
 
 		logger.info("Startup Complete!");
+	}
+
+	/**
+	 * Get the {@link ProgramArguments} of this application.
+	 * 
+	 * @return flags, arguments and parameters used to launch this application
+	 */
+	static ProgramArguments getProgramArguments() {
+		return params;
 	}
 
 	/**
