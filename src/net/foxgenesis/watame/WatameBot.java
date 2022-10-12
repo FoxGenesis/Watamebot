@@ -143,8 +143,6 @@ public class WatameBot {
 	private WatameBot(@Nonnull String token) throws SQLException {
 		Objects.requireNonNull(token);
 
-		if (instance != null)
-			throw new UnsupportedOperationException("WatameBot instance already created");
 		// Set shutdown thread
 		logger.debug("Adding shutdown hook");
 		Runtime.getRuntime().addShutdownHook(new Thread(instance::shutdown, "WatameBot Shutdown Thread"));
@@ -156,8 +154,6 @@ public class WatameBot {
 
 		// Create connection to discord through our token
 		discord = createJDA(token);
-
-		instance = this;
 	}
 
 	/**
