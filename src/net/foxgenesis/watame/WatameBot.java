@@ -1,5 +1,7 @@
 package net.foxgenesis.watame;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.sql.SQLException;
@@ -24,6 +26,7 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.SnowflakeCacheView;
+import net.foxgenesis.util.ProgramArguments;
 import net.foxgenesis.watame.plugin.AWatamePlugin;
 import net.foxgenesis.watame.plugin.InteractionHandler;
 import net.foxgenesis.watame.plugin.PluginConstructor;
@@ -47,8 +50,70 @@ public class WatameBot {
 	 */
 	private static WatameBot instance;
 
+	/**
+	 * Variable stating if instance has been created
+	 */
+	private static boolean toInit = true;
+
+	/**
+	 * Get the singleton instance of {@link WatameBot}.
+	 * <p>
+	 * If the instance has not been created yet, one will be upon calling this
+	 * method.
+	 * </p>
+	 * 
+	 * @return Instance of {@link WatameBot}
+	 */
 	public static WatameBot getInstance() {
+		if (toInit) {
+			synchronized (WatameBot.class) {
+				if (toInit) {
+					ProgramArguments params = Main.getProgramArguments();
+					// Check if the token parameter was passed in
+					if (!params.hasParameter("token"))
+						ExitCode.NO_TOKEN.programExit("No token file specified");
+
+					// Get discord login token from file
+					String token = readToken(params.getParameter("token"));
+
+					// initialize the main bot object with token
+					logger.debug("Creating WatameBot instance");
+					try {
+						instance = new WatameBot(token);
+					} catch (SQLException e) {
+						ExitCode.DATABASE_NOT_CONNECTED.programExit(e);
+						return null;
+					}
+
+					// Set shutdown thread
+					logger.debug("Adding shutdown hook");
+					Runtime.getRuntime().addShutdownHook(new Thread(instance::shutdown, "WatameBot Shutdown Thread"));
+					
+					toInit = false;
+				}
+			}
+		}
+
 		return instance;
+	}
+
+	/**
+	 * NEED_JAVADOC
+	 * 
+	 * @return
+	 */
+	private static String readToken(String filepath) {
+		logger.debug("Getting token from file");
+
+		// Read token from file
+		try (BufferedReader br = new BufferedReader(new FileReader(filepath))) {
+			// obtain and return the token
+			return br.readLine();
+		} catch (IOException ex) {
+			ExitCode.INVALID_TOKEN.programExit(ex);
+		}
+		// Failed to read the token
+		return null;
 	}
 
 	// ------------------------------- INSTNACE ====================
@@ -79,7 +144,7 @@ public class WatameBot {
 	 * @param token - Token used to connect to discord
 	 * @throws SQLException When failing to connect to the database file
 	 */
-	WatameBot(@Nonnull String token) throws SQLException {
+	private WatameBot(@Nonnull String token) throws SQLException {
 		Objects.requireNonNull(token);
 
 		if (instance != null)

@@ -1,8 +1,5 @@
 package net.foxgenesis.watame;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.sql.SQLException;
 
 import org.fusesource.jansi.AnsiConsole;
@@ -57,20 +54,8 @@ public class Main {
 			return;
 		}
 
-		// Check if the token parameter was passed in
-		if (!params.hasParameter("token"))
-			ExitCode.NO_TOKEN.programExit("No token file specified");
-
-		// Get discord login token from file
-		String token = readToken(params.getParameter("token"));
-
-		// initialize the main bot object with token
-		logger.debug("Creating WatameBot instance");
-		WatameBot watame = new WatameBot(token);
-
-		// Set shutdown thread
-		logger.debug("Adding shutdown hook");
-		Runtime.getRuntime().addShutdownHook(new Thread(watame::shutdown, "WatameBot Shutdown Thread"));
+		// First call of WatameBot class. Will cause instance creation
+		WatameBot watame = WatameBot.getInstance();
 
 		// Load needed resources for initialization
 		logger.debug("Pre-Initialization...");
@@ -94,24 +79,5 @@ public class Main {
 	 */
 	static ProgramArguments getProgramArguments() {
 		return params;
-	}
-
-	/**
-	 * NEED_JAVADOC
-	 * 
-	 * @return
-	 */
-	private static String readToken(String filepath) {
-		logger.debug("Getting token from file");
-
-		// Read token from file
-		try (BufferedReader br = new BufferedReader(new FileReader(filepath))) {
-			// obtain and return the token
-			return br.readLine();
-		} catch (IOException ex) {
-			ExitCode.INVALID_TOKEN.programExit(ex);
-		}
-		// Failed to read the token
-		return null;
 	}
 }
