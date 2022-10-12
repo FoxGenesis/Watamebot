@@ -18,7 +18,7 @@ public class CustomHighlight extends ForegroundCompositeConverterBase<ILoggingEv
 		case Level.INFO_INT:
 			return "38;5;255";
 		case Level.DEBUG_INT:
-			return "96";
+			return "36";
 		case Level.TRACE_INT:
 			return "38;5;117";
 		default:
