@@ -126,7 +126,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 		logger.trace("Database path: {}", connectionPath);
 
 		// Attempt to connect to database file
-		logger.debug("Attempting connection to database");
+		logger.trace("Attempting connection to database");
 		connectionHandler = DriverManager.getConnection("jdbc:sqlite:" + connectionPath);
 
 		logger.info("Connected to SQL database");
@@ -187,7 +187,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 */
 	public void retrieveDatabaseData(@Nonnull JDA jda) {
 		Objects.nonNull(jda);
-		
+
 		// Get all guilds from database
 		getAllGuildData();
 
@@ -209,11 +209,11 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @see #addGuild(Guild)
 	 */
 	private void getAllGuildData() {
-		logger.info("Getting all guild data...");
-		logger.info("Retrieved guild data in " + MethodTimer.runFormatMS(() -> {
+		logger.trace("Getting all guild data...");
+		logger.info("Retrieved initial guild data in " + MethodTimer.runFormatMS(() -> {
 			// Get prepared statement to get all guild data
 			PreparedStatement s = this.getAndAssertStatement("guild_data_get");
-			sqlLogger.debug(QUERY_MARKER, s.toString());
+			sqlLogger.trace(QUERY_MARKER, s.toString());
 
 			// Execute statement
 			try (ResultSet set = s.executeQuery()) {
@@ -243,12 +243,12 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 */
 	private void retrieveData(@Nonnull Guild guild) {
 		Objects.nonNull(guild);
-		
+
 		PreparedStatement s = this.getAndAssertStatement("guild_data_get_id");
 
 		try {
 			s.setString(1, guild.getId());
-			sqlLogger.debug(QUERY_MARKER, s.toString());
+			sqlLogger.trace(QUERY_MARKER, s.toString());
 
 			try (ResultSet set = s.executeQuery()) {
 				// set.first();
@@ -287,14 +287,14 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 */
 	private void insertGuildInDatabase(@Nonnull Guild guild) {
 		Objects.nonNull(guild);
-		
+
 		logger.debug("Creating row for guild: " + guild.getIdLong()); //$NON-NLS-1$
 		PreparedStatement st = this.getAndAssertStatement("guild_data_insert");
 		try {
 			long guildID = guild.getIdLong();
 			st.setLong(1, guildID);
 
-			sqlLogger.debug(UPDATE_MARKER, st.toString());
+			sqlLogger.trace(UPDATE_MARKER, st.toString());
 			st.executeUpdate();
 		} catch (SQLException e) {
 			sqlLogger.error(QUERY_MARKER, "Error while inserting new guild", e);
@@ -365,7 +365,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 			try (Statement statement = connectionHandler.createStatement()) {
 
 				// Execute the current line
-				sqlLogger.debug("Executing SQL statement: " + line);
+				sqlLogger.trace("Executing SQL statement: " + line);
 				statement.execute(line);
 			} catch (SQLException e) {
 				ExitCode.DATABASE_SETUP_ERROR.programExit(e);
@@ -422,7 +422,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 */
 	private void registerStatement(String id, @Nonnull String statement) throws SQLException {
 		Objects.nonNull(statement);
-		
+
 		// Check if id is already registered
 		if (registeredStatements.containsKey(id))
 			throw new IllegalArgumentException("Statement '" + id + "' already exists!");
@@ -432,7 +432,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 			throw new UnsupportedOperationException("Not connected to database!");
 
 		// Create our statement
-		sqlLogger.debug("Creating PreparedStatement {} : {}", id, statement);
+		sqlLogger.trace("Creating PreparedStatement {} : {}", id, statement);
 		PreparedStatement preStatement = connectionHandler.prepareStatement(statement);
 
 		// Register our statement to ensure no duplicates are made
@@ -477,7 +477,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 */
 	private void closeStatements() {
 		// Close all statements
-		logger.debug("Closing open statements");
+		logger.trace("Closing open statements");
 		registeredStatements.entrySet().stream().forEach(e -> {
 			try {
 				// Close the statement
@@ -490,7 +490,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 		});
 
 		// All open statements have been closed
-		logger.debug("All statements have been closed");
+		logger.trace("All statements have been closed");
 
 		// Clear our map
 		registeredStatements.clear();
