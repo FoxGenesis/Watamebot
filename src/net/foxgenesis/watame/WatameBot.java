@@ -76,20 +76,21 @@ public class WatameBot {
 					// Get discord login token from file
 					String token = readToken(params.getParameter("token"));
 
-					// initialize the main bot object with token
-					logger.debug("Creating WatameBot instance");
 					try {
+						// initialize the main bot object with token
+						logger.debug("Creating WatameBot instance");
 						instance = new WatameBot(token);
+
+						// Set shutdown thread
+						logger.debug("Adding shutdown hook");
+						Runtime.getRuntime()
+								.addShutdownHook(new Thread(instance::shutdown, "WatameBot Shutdown Thread"));
+
+						toInit = false;
 					} catch (SQLException e) {
 						ExitCode.DATABASE_NOT_CONNECTED.programExit(e);
 						return null;
 					}
-
-					// Set shutdown thread
-					logger.debug("Adding shutdown hook");
-					Runtime.getRuntime().addShutdownHook(new Thread(instance::shutdown, "WatameBot Shutdown Thread"));
-					
-					toInit = false;
 				}
 			}
 		}
