@@ -189,7 +189,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 		Objects.nonNull(jda);
 
 		// Get all guilds from database
-		getAllGuildData();
+		//getAllGuildData();
 
 		// Insert all missing guilds to database
 //		logger.debug("Inserting missing guilds into database");
