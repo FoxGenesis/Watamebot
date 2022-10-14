@@ -2,6 +2,7 @@ package net.foxgenesis.watame.plugin;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.util.Collection;
@@ -16,22 +17,26 @@ import org.slf4j.LoggerFactory;
 import net.foxgenesis.watame.Constants;
 import net.foxgenesis.watame.WatameBot;
 
-public class PluginConstructor {
+public class PluginConstructor<T> {
 
 	private static final Logger logger = LoggerFactory.getLogger(PluginConstructor.class);
 
 	private final PluginLoader loader;
 
-	public PluginConstructor() {
+	private final Class<T> typeParamaterClass;
+
+	public PluginConstructor(Class<T> typeParamaterClass) {
 		loader = new PluginLoader(Constants.pluginFolder, true);
+
+		this.typeParamaterClass = typeParamaterClass;
 	}
 
-	public Collection<AWatamePlugin> loadPlugins(WatameBot watame) throws MalformedURLException, IOException {
-		Set<AWatamePlugin> plugins = new HashSet<>();
+	public Collection<T> loadPlugins(WatameBot watame) throws MalformedURLException, IOException {
+		Map<Class<? extends T>, Properties> classes;
+		Set<T> plugins = new HashSet<>();
 
-		logger.debug("Loading plugin classes");
-		Map<Class<? extends AWatamePlugin>, Properties> classes = loader.getPluginClasses(AWatamePlugin.class);
-
+		logger.trace("Loading plugin classes");
+		classes = loader.getPluginClasses(typeParamaterClass);
 		logger.debug("Found {} plugin classes", classes.size());
 
 		// Construct each class
@@ -47,11 +52,26 @@ public class PluginConstructor {
 
 			// Create new instance
 			try {
-				AWatamePlugin plugin = (AWatamePlugin) pluginConstructor.newInstance();
+				Object obj = pluginConstructor.newInstance();
+
+				T plugin = typeParamaterClass.cast(obj);
 
 				// Set variables
-				plugin.setProperties(new PluginProperties(value));
-				plugin.setWatame(watame);
+				// plugin.setProperties(new PluginProperties(value));
+
+				try {
+					// Try to set the properties field
+					Field field = plugin.getClass().getField("properties");
+
+					if (field.getType().equals(PluginProperties.class))
+						field.set(plugin, new PluginProperties(value));
+					else
+						logger.warn("Properties field {} of class {} is not the type of {}! Not setting properties!", field, key, PluginProperties.class);
+
+				} catch (NoSuchFieldException | SecurityException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 
 				plugins.add(plugin);
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
