@@ -34,3 +34,4 @@ export.xml
 .externalToolBuilders/New_Builder.launch
 lib/ffprobe
 lib/ffmpeg-i386
+/plugins/
