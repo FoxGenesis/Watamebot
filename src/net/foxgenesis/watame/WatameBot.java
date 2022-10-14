@@ -159,7 +159,7 @@ public class WatameBot {
 	/**
 	 * NEED_JAVADOC
 	 */
-	protected void preInit() {
+	void preInit() {
 		// Set our state to pre-init
 		state = State.PRE_INIT;
 		logger.trace("STATE = " + state);
@@ -228,7 +228,7 @@ public class WatameBot {
 	/**
 	 * NEED_JAVADOC
 	 */
-	protected void init() {
+	void init() {
 		// Set our state to init
 		state = State.INIT;
 		logger.trace("STATE = " + state);
@@ -240,7 +240,7 @@ public class WatameBot {
 	/**
 	 * NEED_JAVADOC
 	 */
-	protected void postInit() {
+	void postInit() {
 		// Set our state to post-init
 		state = State.POST_INIT;
 		logger.trace("STATE = " + state);
