@@ -113,19 +113,23 @@ public class PluginLoader {
 		// Get files and map to URLs
 		URL[] pluginURLs = filesToURLArray(getJarsInFolder(folder));
 
+		logger.trace("Found {} jars in folder", pluginURLs.length);
+
 		// Create output list
 		Map<Class<? extends T>, Properties> classes = new HashMap<>(pluginURLs.length);
 
 		// Create new class loader with plugin URL array
-		try (URLClassLoader loader = new URLClassLoader(pluginURLs)) {
+		try (URLClassLoader loader = new URLClassLoader(pluginURLs, this.getClass().getClassLoader())) {
 
 			// Get all plugin properties files
-			Enumeration<URL> resources = loader.findResources("/plugin.properties");
+			Enumeration<URL> resources = loader.findResources("plugin.properties");
 
 			// Iterate over properties files
 			while (resources.hasMoreElements()) {
 				// Get current property file
 				URL resource = resources.nextElement();
+
+				logger.trace("Checking resource {} ", resource);
 
 				// Open and populate property file
 				Properties properties = new Properties();
