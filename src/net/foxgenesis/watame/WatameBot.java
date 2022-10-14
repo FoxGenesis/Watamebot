@@ -5,7 +5,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
 
@@ -20,19 +19,15 @@ import net.dv8tion.jda.api.JDA.Status;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
-import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
-import net.dv8tion.jda.api.utils.cache.SnowflakeCacheView;
 import net.foxgenesis.util.ProgramArguments;
-import net.foxgenesis.watame.plugin.AWatamePlugin;
-import net.foxgenesis.watame.plugin.InteractionHandler;
+import net.foxgenesis.watame.plugin.IPlugin;
 import net.foxgenesis.watame.plugin.PluginConstructor;
 import net.foxgenesis.watame.sql.DataManager;
 import net.foxgenesis.watame.sql.DataManager.DatabaseLoadedEvent;
@@ -137,7 +132,7 @@ public class WatameBot {
 	/**
 	 * List of all plugins
 	 */
-	private Collection<AWatamePlugin> plugins;
+	private Collection<IPlugin> plugins;
 
 	/**
 	 * Create a new instance with a specified login {@code token}.
@@ -151,7 +146,7 @@ public class WatameBot {
 		// Set shutdown thread
 		logger.debug("Adding shutdown hook");
 		Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "WatameBot Shutdown Thread"));
-
+		
 		// Connect to our database file
 		database = new DataManager();
 
@@ -170,7 +165,7 @@ public class WatameBot {
 		logger.trace("STATE = " + state);
 
 		// Pre-initialize all plugins
-		Thread pluginPreInit = new Thread(() -> plugins.parallelStream().forEach(plugin -> plugin.preInit(this)),
+		Thread pluginPreInit = new Thread(() -> plugins.parallelStream().forEach(IPlugin::preInit),
 				"Plugin pre-init thread");
 		pluginPreInit.start();
 
@@ -252,22 +247,22 @@ public class WatameBot {
 
 		// Post-initialize all plugins
 		plugins.parallelStream().forEach(plugin -> plugin.postInit(this));
-		
-		
-		// Get global and guild interactions
-		logger.trace("Getting integrations");
-		SnowflakeCacheView<Guild> guildCache = discord.getGuildCache();
 
-		Collection<CommandData> interactions = plugins.parallelStream()
-				.map(plugin -> ((InteractionHandler) plugin.getInteractionHandler()).getAllInteractions(guildCache))
-				.filter(cmdData -> cmdData != null).reduce((a, b) -> {
-					a.addAll(b);
-					return a;
-				}).orElse(new ArrayList<CommandData>());
-
-		// Tell JDA to update our command list
-		logger.info("Adding {} integrations", interactions.size());
-		discord.updateCommands().addCommands(interactions).queue();
+		// Get global and guild interactions FIXME re-implement interactions
+		/*
+		 * logger.trace("Getting integrations"); SnowflakeCacheView<Guild> guildCache =
+		 * discord.getGuildCache();
+		 * 
+		 * Collection<CommandData> interactions = plugins.parallelStream() .map(plugin
+		 * -> ((InteractionHandler)
+		 * plugin.getInteractionHandler()).getAllInteractions(guildCache))
+		 * .filter(cmdData -> cmdData != null).reduce((a, b) -> { a.addAll(b); return a;
+		 * }).orElse(new ArrayList<CommandData>());
+		 * 
+		 * 
+		 * logger.info("Adding {} integrations", interactions.size());
+		 * discord.updateCommands().addCommands(interactions).queue();
+		 */
 
 		// Display our game as ready
 		logger.debug("Setting presence to ready");
@@ -313,7 +308,8 @@ public class WatameBot {
 			}
 		});
 
-		plugins.forEach(builder::addEventListeners);
+		ProtectedJDABuilder pBuilder = new ProtectedJDABuilder(builder);
+		plugins.forEach(plugin -> plugin._construct(pBuilder));
 
 		// Attempt to connect to discord. If failed because no Internet, wait 10 seconds
 		// and retry.
@@ -351,8 +347,8 @@ public class WatameBot {
 	 * 
 	 * @return a {@link Collection} of plugins or {@code null} on fail
 	 */
-	private Collection<AWatamePlugin> loadPlugins() {
-		PluginConstructor constructor = new PluginConstructor();
+	private Collection<IPlugin> loadPlugins() {
+		PluginConstructor<IPlugin> constructor = new PluginConstructor<>(IPlugin.class);
 
 		try {
 			return constructor.loadPlugins(this);
@@ -438,5 +434,65 @@ public class WatameBot {
 	public enum State {
 		// NEED_JAVADOC javadoc needed for enum
 		CONSTRUCTING, PRE_INIT, INIT, POST_INIT, RUNNING
+	}
+
+	public class ProtectedJDABuilder {
+
+		private final JDABuilder builder;
+
+		ProtectedJDABuilder(JDABuilder builder) {
+			this.builder = builder;
+		}
+
+		/**
+		 * Adds all provided listeners to the list of listeners that will be used to
+		 * populate the {@link net.dv8tion.jda.api.JDA JDA} object. <br>
+		 * This uses the {@link net.dv8tion.jda.api.hooks.InterfacedEventManager
+		 * InterfacedEventListener} by default. <br>
+		 * To switch to the {@link net.dv8tion.jda.api.hooks.AnnotatedEventManager
+		 * AnnotatedEventManager}, use
+		 * {@link #setEventManager(net.dv8tion.jda.api.hooks.IEventManager)
+		 * setEventManager(new AnnotatedEventManager())}.
+		 *
+		 * <p>
+		 * <b>Note:</b> When using the
+		 * {@link net.dv8tion.jda.api.hooks.InterfacedEventManager
+		 * InterfacedEventListener} (default), given listener(s) <b>must</b> be instance
+		 * of {@link net.dv8tion.jda.api.hooks.EventListener EventListener}!
+		 *
+		 * @param listeners The listener(s) to add to the list.
+		 *
+		 * @throws java.lang.IllegalArgumentException If either listeners or one of it's
+		 *                                            objects is {@code null}.
+		 *
+		 * @return The JDABuilder instance. Useful for chaining.
+		 *
+		 * @see net.dv8tion.jda.api.JDA#addEventListener(Object...)
+		 *      JDA.addEventListener(Object...)
+		 */
+		@Nonnull
+		public ProtectedJDABuilder addEventListeners(@Nonnull Object... listeners) {
+			builder.addEventListeners(listeners);
+			return this;
+		}
+
+		/**
+		 * Removes all provided listeners from the list of listeners.
+		 *
+		 * @param listeners The listener(s) to remove from the list.
+		 *
+		 * @throws java.lang.IllegalArgumentException If either listeners or one of it's
+		 *                                            objects is {@code null}.
+		 *
+		 * @return The JDABuilder instance. Useful for chaining.
+		 *
+		 * @see net.dv8tion.jda.api.JDA#removeEventListener(Object...)
+		 *      JDA.removeEventListener(Object...)
+		 */
+		@Nonnull
+		public ProtectedJDABuilder removeEventListeners(@Nonnull Object... listeners) {
+			builder.removeEventListeners(listeners);
+			return this;
+		}
 	}
 }
