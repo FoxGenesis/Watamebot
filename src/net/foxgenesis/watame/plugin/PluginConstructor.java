@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.foxgenesis.watame.Constants;
-import net.foxgenesis.watame.WatameBot;
 
 public class PluginConstructor<T> {
 
@@ -31,7 +30,7 @@ public class PluginConstructor<T> {
 		this.typeParamaterClass = typeParamaterClass;
 	}
 
-	public Collection<T> loadPlugins(WatameBot watame) throws MalformedURLException, IOException {
+	public Collection<T> loadPlugins() throws MalformedURLException, IOException {
 		Map<Class<? extends T>, Properties> classes;
 		Set<T> plugins = new HashSet<>();
 

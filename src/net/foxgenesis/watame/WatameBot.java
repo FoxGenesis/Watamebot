@@ -351,7 +351,7 @@ public class WatameBot {
 		PluginConstructor<IPlugin> constructor = new PluginConstructor<>(IPlugin.class);
 
 		try {
-			return constructor.loadPlugins(this);
+			return constructor.loadPlugins();
 		} catch (MalformedURLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
