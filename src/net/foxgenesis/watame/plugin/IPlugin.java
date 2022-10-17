@@ -1,9 +1,9 @@
 package net.foxgenesis.watame.plugin;
 
 import java.lang.Runtime.Version;
-import java.util.Properties;
 
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.JDABuilder;
 import net.foxgenesis.watame.WatameBot;
 import net.foxgenesis.watame.WatameBot.ProtectedJDABuilder;
 
@@ -77,7 +77,7 @@ public interface IPlugin {
 	 * @return A string containing the name of the plugin
 	 */
 	public default String getName() {
-		return getProperties().getProperty("name", "Untitled Plugin");
+		return getProperties(getClass()).name();
 	}
 
 	/**
@@ -88,7 +88,7 @@ public interface IPlugin {
 	 * @see #getProperties()
 	 */
 	public default String getDescription() {
-		return getProperties().getProperty("description", "No description");
+		return getProperties(getClass()).description();
 	}
 
 	/**
@@ -99,15 +99,15 @@ public interface IPlugin {
 	 * @see #getProperties()
 	 */
 	public default Version getVersion() {
-		return Version.parse(getProperties().getProperty("version", "0.0.0"));
+		return Version.parse(getProperties(getClass()).version());
 	}
-
+	
 	/**
-	 * Get the properties file contained in the plugin
-	 * 
-	 * @return A read-only {@link Properties} file
-	 * @see #getName()
-	 * @see #getVersion()
+	 * Get the annotated {@link PluginProperties} of a class
+	 * @param _class - {@link Class} to get from
+	 * @return properties of class
 	 */
-	public PluginProperties getProperties();
+	private static PluginProperties getProperties(Class<? extends IPlugin> _class) {
+		return _class.getDeclaredAnnotation(PluginProperties.class);
+	}
 }

@@ -3,7 +3,6 @@ package net.foxgenesis.watame;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Objects;
@@ -28,7 +27,7 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.foxgenesis.util.ProgramArguments;
 import net.foxgenesis.watame.plugin.IPlugin;
-import net.foxgenesis.watame.plugin.PluginConstructor;
+import net.foxgenesis.watame.plugin.UntrustedPluginLoader;
 import net.foxgenesis.watame.sql.DataManager;
 import net.foxgenesis.watame.sql.DataManager.DatabaseLoadedEvent;
 import net.foxgenesis.watame.sql.IDatabaseManager;
@@ -128,6 +127,11 @@ public class WatameBot {
 	 * Current state of the bot
 	 */
 	private State state = State.CONSTRUCTING;
+	
+	/**
+	 * Plugin loader
+	 */
+	private final UntrustedPluginLoader<IPlugin> loader;
 
 	/**
 	 * List of all plugins
@@ -147,10 +151,12 @@ public class WatameBot {
 		logger.debug("Adding shutdown hook");
 		Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "WatameBot Shutdown Thread"));
 		
+		// Load plugins
+		loader = new UntrustedPluginLoader<>(IPlugin.class, Constants.pluginFolder, true);
+		plugins = loader.getPlugins();
+		
 		// Connect to our database file
 		database = new DataManager();
-
-		plugins = loadPlugins();
 
 		// Create connection to discord through our token
 		discord = createJDA(token);
@@ -246,7 +252,7 @@ public class WatameBot {
 		logger.trace("STATE = " + state);
 
 		// Post-initialize all plugins
-		plugins.parallelStream().forEach(plugin -> plugin.postInit(this));
+		plugins.forEach(plugin -> plugin.postInit(this));
 
 		// Get global and guild interactions FIXME re-implement interactions
 		/*
@@ -340,27 +346,6 @@ public class WatameBot {
 		}
 
 		return discordTmp;
-	}
-
-	/**
-	 * Load and construct all plugins
-	 * 
-	 * @return a {@link Collection} of plugins or {@code null} on fail
-	 */
-	private Collection<IPlugin> loadPlugins() {
-		PluginConstructor<IPlugin> constructor = new PluginConstructor<>(IPlugin.class);
-
-		try {
-			return constructor.loadPlugins();
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return null;
 	}
 
 	/**
