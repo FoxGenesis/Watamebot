@@ -12,17 +12,17 @@ public class BooleanField extends ConfigField<Boolean> {
 
 	@Override
 	Boolean optFrom(JSONObjectAdv config, Guild guild) {
-		return isPresent(config) ? config.optBoolean(getName()) : getDefaultValue(guild);
+		return isPresent(config) ? config.optBoolean(name) : getDefaultValue(guild);
 	}
 
 	@Override
 	Boolean from(JSONObjectAdv config) {
-		return config.getBoolean(getName());
+		return config.getBoolean(name);
 	}
 
 	@Override
 	void set(JSONObjectAdv config, Boolean newState) {
-		config.put(getName(), newState);
+		config.put(name, newState);
 	}
 
 	public boolean toggle(Guild guild) {

@@ -14,16 +14,16 @@ public class JSONField extends ConfigField<JSONObject> {
 
 	@Override
 	JSONObject optFrom(JSONObjectAdv config, Guild guild) {
-		return config.optJSONObject(getName());
+		return config.optJSONObject(name);
 	}
 
 	@Override
 	JSONObject from(JSONObjectAdv config) {
-		return config.getJSONObject(getName());
+		return config.getJSONObject(name);
 	}
 
 	@Override
 	void set(JSONObjectAdv config, JSONObject newState) {
-		config.put(getName(), newState);
+		config.put(name, newState);
 	}
 }

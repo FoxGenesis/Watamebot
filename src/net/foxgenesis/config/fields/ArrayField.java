@@ -14,16 +14,16 @@ public class ArrayField extends ConfigField<JSONArray> {
 
 	@Override
 	void set(JSONObjectAdv config, JSONArray newState) {
-		config.put(getName(), newState);
+		config.put(name, newState);
 	}
 
 	@Override
 	JSONArray optFrom(JSONObjectAdv config, Guild guild) {
-		return config.optJSONArray(getName());
+		return config.optJSONArray(name);
 	}
 
 	@Override
 	JSONArray from(JSONObjectAdv config) {
-		return config.getJSONArray(getName());
+		return config.getJSONArray(name);
 	}
 }
