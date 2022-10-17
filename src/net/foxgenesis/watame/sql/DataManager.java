@@ -207,6 +207,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * 
 	 * @see #addGuild(Guild)
 	 */
+	@SuppressWarnings("unused")
 	private void getAllGuildData() {
 		logger.trace("Getting all guild data...");
 		logger.info("Retrieved initial guild data in " + MethodTimer.runFormatMS(() -> {
@@ -253,8 +254,13 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 				try (ResultSet set = s.executeQuery()) {
 					// set.first();
 					long id = set.getLong("GuildID"); //$NON-NLS-1$
-					if (this.data.containsKey(id))
+					if (id != 0 && this.data.containsKey(id))
 						this.data.get(id).setData(set);
+					else {
+						logger.warn("Guild ({})[{}] is missing in database! Attempting to insert and retrieve...", guild.getName(), guild.getIdLong());
+						insertGuildInDatabase(guild);
+						retrieveData(guild);
+					}
 				}
 			} catch (SQLException e) {
 				sqlLogger.error(QUERY_MARKER, "Error while getting guild data", e);
@@ -271,7 +277,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 		// Check if database processing is finished
 		if (!isReady())
 			throw new UnsupportedOperationException("Data not ready yet");
-
+		System.out.println(data);
 		// Check and get guild data
 		if (!data.containsKey(guild.getIdLong())) {
 			// Guild data doesn't exist
