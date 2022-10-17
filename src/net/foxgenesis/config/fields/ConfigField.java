@@ -8,9 +8,12 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.foxgenesis.watame.WatameBot;
 
 public abstract class ConfigField<E> {
-
+	@Nonnull
 	public final String name;
+	
 	public final boolean isEditable;
+	
+	@Nonnull
 	private final Function<Guild, E> defaultValue;
 
 	public ConfigField(@Nonnull String name, @Nonnull Function<Guild, E> defaultValue, boolean isEditable) {
@@ -19,46 +22,46 @@ public abstract class ConfigField<E> {
 		this.isEditable = isEditable;
 	}
 
-	public final boolean isPresent(Guild guild) {
+	public final boolean isPresent(@Nonnull Guild guild) {
 		return isPresent(getDataForGuild(guild));
 	}
 
-	public E from(Guild guild) {
+	public E from(@Nonnull Guild guild) {
 		return from(getDataForGuild(guild));
 	}
 
-	public E optFrom(Guild guild) {
+	public E optFrom(@Nonnull Guild guild) {
 		return optFrom(getDataForGuild(guild), guild);
 	}
 
-	public void set(Guild g, E newState) {
-		if (isEditable())
+	public void set(@Nonnull Guild g, E newState) {
+		if (isEditable)
 			set(getDataForGuild(g), newState);
 	}
 
-	public void remove(Guild guild) {
+	public void remove(@Nonnull Guild guild) {
 		remove(getDataForGuild(guild));
 	}
 
-	private void remove(JSONObjectAdv config) {
+	private void remove(@Nonnull JSONObjectAdv config) {
 		config.remove(name);
 	}
 
-	protected boolean isPresent(JSONObjectAdv config) {
+	protected boolean isPresent(@Nonnull JSONObjectAdv config) {
 		return config.has(name);
 	}
 
-	protected E getDefaultValue(Guild guild) {
+	protected E getDefaultValue(@Nonnull Guild guild) {
 		return defaultValue.apply(guild);
 	}
 
-	protected JSONObjectAdv getDataForGuild(Guild guild) {
+	protected JSONObjectAdv getDataForGuild(@Nonnull Guild guild) {
 		return WatameBot.getInstance().getDatabase().getDataForGuild(guild).getConfig();
 	}
 
-	abstract E optFrom(JSONObjectAdv config, Guild guild);
+	abstract E optFrom(@Nonnull JSONObjectAdv config, @Nonnull Guild guild);
 
-	abstract E from(JSONObjectAdv config);
+	abstract E from(@Nonnull JSONObjectAdv config);
 
-	abstract void set(JSONObjectAdv config, E newState);
+	abstract void set(@Nonnull JSONObjectAdv config, E newState);
 }
