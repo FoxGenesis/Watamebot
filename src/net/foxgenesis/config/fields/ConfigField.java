@@ -19,14 +19,6 @@ public abstract class ConfigField<E> {
 		this.isEditable = isEditable;
 	}
 
-	public final String getName() {
-		return name;
-	}
-
-	public final boolean isEditable() {
-		return isEditable;
-	}
-
 	public final boolean isPresent(Guild guild) {
 		return isPresent(getDataForGuild(guild));
 	}
