@@ -277,7 +277,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 		// Check if database processing is finished
 		if (!isReady())
 			throw new UnsupportedOperationException("Data not ready yet");
-		System.out.println(data);
+		
 		// Check and get guild data
 		if (!data.containsKey(guild.getIdLong())) {
 			// Guild data doesn't exist
