@@ -43,6 +43,8 @@ public class GuildData implements IGuildData, AutoCloseable {
 	 * JSON object used to store guild settings
 	 */
 	private JSONObjectAdv data;
+	
+	private boolean setup = false;
 
 	/**
 	 * Creates a new instance of {@link GuildData} with a provided guild and the
@@ -62,23 +64,27 @@ public class GuildData implements IGuildData, AutoCloseable {
 
 	@Override
 	public Guild getGuild() {
+		checkSetup();
 		return guild;
 	}
 
 	@Override
 	@Nullable
 	public JSONObjectAdv getConfig() {
+		checkSetup();
 		return data;
 	}
 
 	@Override
 	@CheckForNull
 	public Channel getLogChannel() {
+		checkSetup();
 		return guild.getTextChannelById(data.optLong("guild.log_channel"));
 	}
 
 	@Override
 	public ConcurrentHashMap<String, Object> getTempData() {
+		checkSetup();
 		return temp;
 	}
 
@@ -97,17 +103,25 @@ public class GuildData implements IGuildData, AutoCloseable {
 		Objects.nonNull(result);
 
 		// Check if we have something to parse
-		if (result.isBeforeFirst())
-			if (!result.next())
-				throw new NullPointerException("NO CONFIG IN RESULT SET!");
+//		if (result.isBeforeFirst())
+//			if (!result.next())
+//				throw new NullPointerException("NO CONFIG IN RESULT SET!");
 
 		// Get our configuration column
 		String jsonString = result.getString("GuildProperties");
+		
+		DataManager.sqlLogger.debug(DataManager.SQL_MARKER, "SetData <- [{}] {}", guild.getName(), jsonString);
+
+		if (jsonString == null) {
+			DataManager.logger.warn("JSON STRING IS NULL FOR " + guild.getIdLong(),
+					new NullPointerException("JSON STRING IS NULL FOR " + guild.getIdLong()));
+			return;
+		}
 
 		// Set our current data and pass our update method
 		this.data = new JSONObjectAdv(jsonString, this::pushJSONUpdate);
-
-		DataManager.sqlLogger.debug(DataManager.SQL_MARKER, "SetData <- [{}] {}", guild.getName(), jsonString);
+		
+		this.setup = true;
 	}
 
 	/**
@@ -160,9 +174,19 @@ public class GuildData implements IGuildData, AutoCloseable {
 
 		DataManager.sqlLogger.debug(DataManager.UPDATE_MARKER, "ExecuteUpdate <- " + result);
 	}
+	
+	private void checkSetup() {
+		if(!setup)
+			throw new UnsupportedOperationException("GuildData has not been setup yet!");
+	}
 
 	@Override
 	public void close() throws Exception {
 		temp.clear();
+	}
+	
+	@Override
+	public String toString() {
+		return "GiuldData [setup=" + setup + ", guild=" + guild + ", temp=" + temp +", config=" + data + "]";
 	}
 }
