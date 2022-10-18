@@ -14,7 +14,7 @@ import net.foxgenesis.watame.WatameBot.ProtectedJDABuilder;
  * @author Ashley
  *
  */
-public interface IPlugin {
+public interface IPlugin extends AutoCloseable {
 
 	/**
 	 * Construction method used to register event listeners if they require to start
@@ -88,13 +88,6 @@ public interface IPlugin {
 	 * @see #onEnable(Guild)
 	 */
 	public void onDisable(Guild guild);
-
-	/**
-	 * Called on plugin shutdown
-	 * 
-	 * @throws Exception
-	 */
-	public void close() throws Exception;
 
 	/**
 	 * Get the default JSON path to stored plugin variables
