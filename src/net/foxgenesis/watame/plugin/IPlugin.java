@@ -4,6 +4,7 @@ import java.lang.Runtime.Version;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Guild;
 import net.foxgenesis.watame.WatameBot;
 import net.foxgenesis.watame.WatameBot.ProtectedJDABuilder;
 
@@ -25,7 +26,8 @@ public interface IPlugin {
 	 * @see #preInit()
 	 * @see #init(WatameBot)
 	 */
-	public default void _construct(ProtectedJDABuilder builder) {}
+	public default void _construct(ProtectedJDABuilder builder) {
+	}
 
 	/**
 	 * Startup method called when resources, needed for functionality
@@ -72,9 +74,43 @@ public interface IPlugin {
 	public void postInit(WatameBot bot);
 
 	/**
+	 * Called on plugin enable for guild
+	 * 
+	 * @param guild - {@link Guild} to enable for
+	 * @see #onDisable(Guild)
+	 */
+	public void onEnable(Guild guild);
+
+	/**
+	 * Called on plugin disable for guild
+	 * 
+	 * @param guild - {@link Guild} to disable for
+	 * @see #onEnable(Guild)
+	 */
+	public void onDisable(Guild guild);
+
+	/**
+	 * Called on plugin shutdown
+	 * 
+	 * @throws Exception
+	 */
+	public void close() throws Exception;
+
+	/**
+	 * Get the default JSON path to stored plugin variables
+	 * 
+	 * @return A JSON path to store guild variables
+	 */
+	public default String getJSONPath() {
+		return getName().toLowerCase();
+	}
+
+	/**
 	 * Get the name of this plugin.
 	 * 
 	 * @return A string containing the name of the plugin
+	 * @see #getDescription()
+	 * @see #getVersion()
 	 */
 	public default String getName() {
 		return getProperties(getClass()).name();
@@ -85,7 +121,7 @@ public interface IPlugin {
 	 * 
 	 * @return A string containing the description of this plugin
 	 * @see #getVersion()
-	 * @see #getProperties()
+	 * @see #getName()
 	 */
 	public default String getDescription() {
 		return getProperties(getClass()).description();
@@ -96,14 +132,15 @@ public interface IPlugin {
 	 * 
 	 * @return A {@link Version} representing this plugin
 	 * @see #getName()
-	 * @see #getProperties()
+	 * @see #getDescription()
 	 */
 	public default Version getVersion() {
 		return Version.parse(getProperties(getClass()).version());
 	}
-	
+
 	/**
 	 * Get the annotated {@link PluginProperties} of a class
+	 * 
 	 * @param _class - {@link Class} to get from
 	 * @return properties of class
 	 */
