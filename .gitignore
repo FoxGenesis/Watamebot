@@ -35,3 +35,4 @@ export.xml
 lib/ffprobe
 lib/ffmpeg-i386
 /plugins/
+/doc/
