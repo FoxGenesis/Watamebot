@@ -16,12 +16,8 @@ public class StringField extends ConfigField<String> {
 	}
 
 	@Override
-	String from(JSONObjectAdv config) {
-		return config.getString(name);
-	}
+	String from(JSONObjectAdv config) { return config.getString(name); }
 
 	@Override
-	void set(JSONObjectAdv config, String newState) {
-		config.put(name, newState);
-	}
+	void set(JSONObjectAdv config, String newState) { config.put(name, newState); }
 }

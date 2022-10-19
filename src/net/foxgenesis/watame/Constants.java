@@ -12,8 +12,7 @@ public final class Constants {
 
 	public static final URL DATABASE_SETUP_FILE = resource("CreateDatabase.sql");
 	public static final URL DATABASE_OPERATIONS_FILE = resource("sql statements.kvp");
-	
-	
+
 	public static final File pluginFolder = new File("plugins");
 
 	private static final URL resource(@Nonnull String path) {

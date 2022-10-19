@@ -92,9 +92,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @throws IllegalArgumentException if folder exists and is not a directory
 	 * @see #DataManager(File)
 	 */
-	public DataManager() {
-		this(new File("repo"));
-	}
+	public DataManager() { this(new File("repo")); }
 
 	/**
 	 * Create a new instance using the specified folder as the repository folder.
@@ -189,14 +187,15 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 		Objects.nonNull(jda);
 
 		// Get all guilds from database
-		//getAllGuildData();
+		// getAllGuildData();
 
 		// Insert all missing guilds to database
-//		logger.debug("Inserting missing guilds into database");
-//		jda.getGuildCache()
-//				.acceptStream(stream -> stream.filter(guild -> !data.contains(guild.getIdLong()))
-//						.peek(guild -> logger.debug("Inserting {} into database", guild.getName()))
-//						.forEach(this::insertGuildInDatabase));
+		// logger.debug("Inserting missing guilds into database");
+		// jda.getGuildCache()
+		// .acceptStream(stream -> stream.filter(guild ->
+		// !data.contains(guild.getIdLong()))
+		// .peek(guild -> logger.debug("Inserting {} into database", guild.getName()))
+		// .forEach(this::insertGuildInDatabase));
 
 		// All data has been retrieved
 		this.allDataReady = true;
@@ -257,7 +256,8 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 					if (id != 0 && this.data.containsKey(id))
 						this.data.get(id).setData(set);
 					else {
-						logger.warn("Guild ({})[{}] is missing in database! Attempting to insert and retrieve...", guild.getName(), guild.getIdLong());
+						logger.warn("Guild ({})[{}] is missing in database! Attempting to insert and retrieve...",
+								guild.getName(), guild.getIdLong());
 						insertGuildInDatabase(guild);
 						retrieveData(guild);
 					}
@@ -277,7 +277,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 		// Check if database processing is finished
 		if (!isReady())
 			throw new UnsupportedOperationException("Data not ready yet");
-		
+
 		// Check and get guild data
 		if (!data.containsKey(guild.getIdLong())) {
 			// Guild data doesn't exist
@@ -314,9 +314,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	}
 
 	@Override
-	public boolean isReady() {
-		return this.allDataReady;
-	}
+	public boolean isReady() { return this.allDataReady; }
 
 	@Override
 	public boolean isConnectionValid() {

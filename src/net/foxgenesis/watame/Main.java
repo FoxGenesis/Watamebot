@@ -11,7 +11,7 @@ import net.foxgenesis.util.SingleInstanceUtil;
 
 /**
  * Program main class
- * 
+ *
  * @author Ashley
  */
 public class Main {
@@ -28,7 +28,7 @@ public class Main {
 
 	/**
 	 * Program entry point
-	 * 
+	 *
 	 * @param args - program arguments
 	 * @throws SQLException
 	 */
@@ -77,10 +77,8 @@ public class Main {
 
 	/**
 	 * Get the {@link ProgramArguments} of this application.
-	 * 
+	 *
 	 * @return flags, arguments and parameters used to launch this application
 	 */
-	static ProgramArguments getProgramArguments() {
-		return params;
-	}
+	static ProgramArguments getProgramArguments() { return params; }
 }

@@ -29,18 +29,14 @@ public enum ExitCode {
 	 * 
 	 * @param statusCode - exit code number
 	 */
-	ExitCode(int statusCode) {
-		this.statusCode = statusCode;
-	}
+	ExitCode(int statusCode) { this.statusCode = statusCode; }
 
 	/**
 	 * Returns the {@link ExitCode}'s number.
 	 * 
 	 * @return exit code
 	 */
-	public Integer getCode() {
-		return statusCode;
-	}
+	public Integer getCode() { return statusCode; }
 
 	/**
 	 * Exit the program with a specific {@code message} and {@link Throwable}.
@@ -82,9 +78,7 @@ public enum ExitCode {
 	 * @see #programExit(String, Throwable)
 	 * @param thrown - Throwable to log
 	 */
-	public void programExit(Throwable thrown) {
-		programExit(null, thrown);
-	}
+	public void programExit(Throwable thrown) { programExit(null, thrown); }
 
 	/**
 	 * Exit the program with a specific {@code message}.
@@ -102,9 +96,7 @@ public enum ExitCode {
 	 * @see #programExit(String, Throwable)
 	 * @param exitMessage - Exit message to log
 	 */
-	public void programExit(String exitMessage) {
-		programExit(exitMessage, null);
-	}
+	public void programExit(String exitMessage) { programExit(exitMessage, null); }
 
 	/**
 	 * Exit the program with this {@link ExitCode}'s &quot{@code exit code}&quot.
@@ -120,7 +112,5 @@ public enum ExitCode {
 	 * 
 	 * @see #programExit(String, Throwable)
 	 */
-	public void programExit() {
-		System.exit(getCode());
-	}
+	public void programExit() { System.exit(getCode()); }
 }

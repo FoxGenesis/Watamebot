@@ -11,17 +11,11 @@ public class LongField extends ConfigField<Long> {
 	}
 
 	@Override
-	Long optFrom(JSONObjectAdv config, Guild guild) {
-		return config.optLong(name, getDefaultValue(guild));
-	}
+	Long optFrom(JSONObjectAdv config, Guild guild) { return config.optLong(name, getDefaultValue(guild)); }
 
 	@Override
-	Long from(JSONObjectAdv config) {
-		return config.getLong(name);
-	}
+	Long from(JSONObjectAdv config) { return config.getLong(name); }
 
 	@Override
-	void set(JSONObjectAdv config, Long newState) {
-		config.put(name, (long) newState);
-	}
+	void set(JSONObjectAdv config, Long newState) { config.put(name, (long) newState); }
 }

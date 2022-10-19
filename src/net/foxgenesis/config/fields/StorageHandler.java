@@ -11,7 +11,5 @@ public class StorageHandler {
 		this.update = update;
 	}
 
-	public void update() {
-		this.update.accept(this.data);
-	}
+	public void update() { this.update.accept(this.data); }
 }

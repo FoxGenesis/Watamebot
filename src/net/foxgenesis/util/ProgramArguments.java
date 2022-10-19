@@ -38,8 +38,7 @@ public class ProgramArguments {
 	 * 
 	 * @see #ProgramArguments(String[])
 	 */
-	public ProgramArguments() {
-	}
+	public ProgramArguments() {}
 
 	/**
 	 * NEED_JAVADOC
@@ -47,9 +46,7 @@ public class ProgramArguments {
 	 * @param args - program arguments to parse
 	 * @see #ProgramArguments()
 	 */
-	public ProgramArguments(String[] args) {
-		parse(args);
-	}
+	public ProgramArguments(String[] args) { parse(args); }
 
 	/**
 	 * Parse the given arguments into {@code flags}, {@code parameters} and
@@ -84,18 +81,18 @@ public class ProgramArguments {
 					i++;
 				}
 				break;
-//				if (args[i].charAt(1) == '-') {
-//					if (args[i].length() < 3)
-//						throw new IllegalArgumentException("Not a valid argument: " + args[i]);
-//					// --opt
-//					flagList.add(args[i].substring(2));
-//				} else {
-//					if (args.length - 1 == i)
-//						throw new IllegalArgumentException("Expected arg after: " + args[i]);
-//					// -opt
-//					parameterList.put(args[i].substring(1), args[i + 1]);
-//					i++;
-//				}
+			// if (args[i].charAt(1) == '-') {
+			// if (args[i].length() < 3)
+			// throw new IllegalArgumentException("Not a valid argument: " + args[i]);
+			// // --opt
+			// flagList.add(args[i].substring(2));
+			// } else {
+			// if (args.length - 1 == i)
+			// throw new IllegalArgumentException("Expected arg after: " + args[i]);
+			// // -opt
+			// parameterList.put(args[i].substring(1), args[i + 1]);
+			// i++;
+			// }
 
 			default:
 				// arg
@@ -111,27 +108,21 @@ public class ProgramArguments {
 	 * 
 	 * @return
 	 */
-	public int argumentCount() {
-		return argsList.size();
-	}
+	public int argumentCount() { return argsList.size(); }
 
 	/**
 	 * NEED_JAVADOC
 	 * 
 	 * @return
 	 */
-	public int flagCount() {
-		return flagList.size();
-	}
+	public int flagCount() { return flagList.size(); }
 
 	/**
 	 * NEED_JAVADOC
 	 * 
 	 * @return
 	 */
-	public int parameterCount() {
-		return parameterList.size();
-	}
+	public int parameterCount() { return parameterList.size(); }
 
 	/**
 	 * Check if the {@code program arguments} contains the flag
@@ -140,9 +131,7 @@ public class ProgramArguments {
 	 * @param key - flag to check
 	 * @return returns {@code true} if the arguments contains the flag
 	 */
-	public boolean hasFlag(String key) {
-		return flagList.contains(key);
-	}
+	public boolean hasFlag(String key) { return flagList.contains(key); }
 
 	/**
 	 * Check if the {@code program arguments} contains the parameter
@@ -151,9 +140,7 @@ public class ProgramArguments {
 	 * @param key - parameter to check
 	 * @return returns {@code true} if the arguments contains the parameter
 	 */
-	public boolean hasParameter(String key) {
-		return parameterList.containsKey(key);
-	}
+	public boolean hasParameter(String key) { return parameterList.containsKey(key); }
 
 	/**
 	 * Get the value of parameter {@code key}.
@@ -175,18 +162,14 @@ public class ProgramArguments {
 	 * 
 	 * @return
 	 */
-	public Map<String, String> getParameters() {
-		return Collections.unmodifiableMap(parameterList);
-	}
+	public Map<String, String> getParameters() { return Collections.unmodifiableMap(parameterList); }
 
 	/**
 	 * NEED_JAVADOC
 	 * 
 	 * @return
 	 */
-	public List<String> getArguments() {
-		return List.copyOf(argsList);
-	}
+	public List<String> getArguments() { return List.copyOf(argsList); }
 
 	/**
 	 * NEED_JAVADOC

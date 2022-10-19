@@ -36,9 +36,7 @@ public class UntrustedPluginLoader<T> implements AutoCloseable {
 	@Nonnull
 	private final Class<T> pluginClass;
 
-	public UntrustedPluginLoader(@Nonnull Class<T> pluginClass) {
-		this(pluginClass, new File("plugins"));
-	}
+	public UntrustedPluginLoader(@Nonnull Class<T> pluginClass) { this(pluginClass, new File("plugins")); }
 
 	/**
 	 * Create a new {@link PluginLoader} instance and set the directory to use.
@@ -90,9 +88,7 @@ public class UntrustedPluginLoader<T> implements AutoCloseable {
 	 *                                   declare that it uses service
 	 * @see #getPlugins(Function)
 	 */
-	public Collection<T> getPlugins() {
-		return getPlugins(Provider::get);
-	}
+	public Collection<T> getPlugins() { return getPlugins(Provider::get); }
 
 	/**
 	 * Get all plugins of type {@link T} in the selected folder.
@@ -178,18 +174,14 @@ public class UntrustedPluginLoader<T> implements AutoCloseable {
 	 * 
 	 * @return Returns the {@link File} selected as the plugin directory
 	 */
-	public File getPluginDirectory() {
-		return folder;
-	}
+	public File getPluginDirectory() { return folder; }
 
 	/**
 	 * Get the class of {@link T}.
 	 * 
 	 * @return
 	 */
-	public Class<T> getPluginClass() {
-		return pluginClass;
-	}
+	public Class<T> getPluginClass() { return pluginClass; }
 
 	@Override
 	public void close() throws Exception {

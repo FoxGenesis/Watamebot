@@ -45,9 +45,7 @@ public class KVPFile {
 	 * @param file - {@link File} to parse
 	 * @throws MalformedURLException
 	 */
-	public KVPFile(@Nonnull File file) throws MalformedURLException {
-		this(file.toURI().toURL());
-	}
+	public KVPFile(@Nonnull File file) throws MalformedURLException { this(file.toURI().toURL()); }
 
 	/**
 	 * Parse a {@link URL} into a KVP (Key Value Pair) file.
@@ -70,9 +68,7 @@ public class KVPFile {
 	 * @param action - The action to be performed for each entry
 	 * @see Map#forEach(BiConsumer)
 	 */
-	public void forEach(BiConsumer<? super String, ? super String> action) {
-		config.forEach(action);
-	}
+	public void forEach(BiConsumer<? super String, ? super String> action) { config.forEach(action); }
 
 	/**
 	 * NEED_JAVADOC
@@ -82,9 +78,7 @@ public class KVPFile {
 	 * @see HashMap#get(Object)
 	 */
 	@Nullable
-	public String get(String key) {
-		return config.get(key);
-	}
+	public String get(String key) { return config.get(key); }
 
 	/**
 	 * NEED_JAVADOC
@@ -94,9 +88,7 @@ public class KVPFile {
 	 * @see HashMap#getOrDefault(Object, Object)
 	 */
 	@Nullable
-	public String getOrDefault(String key, String defaultValue) {
-		return config.getOrDefault(key, defaultValue);
-	}
+	public String getOrDefault(String key, String defaultValue) { return config.getOrDefault(key, defaultValue); }
 
 	/**
 	 * NEED_JAVADOC
@@ -105,25 +97,19 @@ public class KVPFile {
 	 * @return
 	 * @see HashMap#containsKey(Object)
 	 */
-	public boolean containsKey(String key) {
-		return config.containsKey(key);
-	}
+	public boolean containsKey(String key) { return config.containsKey(key); }
 
 	/**
 	 * Clear the configuration mapping.
 	 */
-	public void clear() {
-		config.clear();
-	}
+	public void clear() { config.clear(); }
 
 	/**
 	 * Checks if the configuration mapping is empty.
 	 * 
 	 * @return Returns {@code true} if there are no configuration entries mapped
 	 */
-	public boolean isEmpty() {
-		return config.isEmpty();
-	}
+	public boolean isEmpty() { return config.isEmpty(); }
 
 	/**
 	 * Parse the resource {@link URL} into the configuration mapping.
@@ -145,9 +131,7 @@ public class KVPFile {
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash(config, resourceURL);
-	}
+	public int hashCode() { return Objects.hash(config, resourceURL); }
 
 	@Override
 	public boolean equals(Object obj) {
@@ -162,7 +146,5 @@ public class KVPFile {
 	}
 
 	@Override
-	public String toString() {
-		return "KVPFile [resourceURL=" + resourceURL + ", config=" + config + "]";
-	}
+	public String toString() { return "KVPFile [resourceURL=" + resourceURL + ", config=" + config + "]"; }
 }

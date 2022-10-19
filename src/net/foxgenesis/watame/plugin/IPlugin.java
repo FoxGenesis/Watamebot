@@ -26,8 +26,7 @@ public interface IPlugin extends AutoCloseable {
 	 * @see #preInit()
 	 * @see #init(WatameBot)
 	 */
-	public default void _construct(ProtectedJDABuilder builder) {
-	}
+	public default void _construct(ProtectedJDABuilder builder) {}
 
 	/**
 	 * Startup method called when resources, needed for functionality
@@ -94,9 +93,7 @@ public interface IPlugin extends AutoCloseable {
 	 * 
 	 * @return A JSON path to store guild variables
 	 */
-	public default String getJSONPath() {
-		return getName().toLowerCase();
-	}
+	public default String getJSONPath() { return getName().toLowerCase(); }
 
 	/**
 	 * Get the name of this plugin.
@@ -105,9 +102,7 @@ public interface IPlugin extends AutoCloseable {
 	 * @see #getDescription()
 	 * @see #getVersion()
 	 */
-	public default String getName() {
-		return getProperties(getClass()).name();
-	}
+	public default String getName() { return getProperties(getClass()).name(); }
 
 	/**
 	 * Get the description of this plugin.
@@ -116,9 +111,7 @@ public interface IPlugin extends AutoCloseable {
 	 * @see #getVersion()
 	 * @see #getName()
 	 */
-	public default String getDescription() {
-		return getProperties(getClass()).description();
-	}
+	public default String getDescription() { return getProperties(getClass()).description(); }
 
 	/**
 	 * Get the version of this plugin.
@@ -127,9 +120,7 @@ public interface IPlugin extends AutoCloseable {
 	 * @see #getName()
 	 * @see #getDescription()
 	 */
-	public default Version getVersion() {
-		return Version.parse(getProperties(getClass()).version());
-	}
+	public default Version getVersion() { return Version.parse(getProperties(getClass()).version()); }
 
 	/**
 	 * Get the annotated {@link PluginProperties} of a class

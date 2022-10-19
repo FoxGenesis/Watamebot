@@ -43,7 +43,7 @@ public class GuildData implements IGuildData, AutoCloseable {
 	 * JSON object used to store guild settings
 	 */
 	private JSONObjectAdv data;
-	
+
 	private boolean setup = false;
 
 	/**
@@ -103,13 +103,13 @@ public class GuildData implements IGuildData, AutoCloseable {
 		Objects.nonNull(result);
 
 		// Check if we have something to parse
-//		if (result.isBeforeFirst())
-//			if (!result.next())
-//				throw new NullPointerException("NO CONFIG IN RESULT SET!");
+		// if (result.isBeforeFirst())
+		// if (!result.next())
+		// throw new NullPointerException("NO CONFIG IN RESULT SET!");
 
 		// Get our configuration column
 		String jsonString = result.getString("GuildProperties");
-		
+
 		DataManager.sqlLogger.debug(DataManager.SQL_MARKER, "SetData <- [{}] {}", guild.getName(), jsonString);
 
 		if (jsonString == null) {
@@ -120,7 +120,7 @@ public class GuildData implements IGuildData, AutoCloseable {
 
 		// Set our current data and pass our update method
 		this.data = new JSONObjectAdv(jsonString, this::pushJSONUpdate);
-		
+
 		this.setup = true;
 	}
 
@@ -174,19 +174,17 @@ public class GuildData implements IGuildData, AutoCloseable {
 
 		DataManager.sqlLogger.debug(DataManager.UPDATE_MARKER, "ExecuteUpdate <- " + result);
 	}
-	
+
 	private void checkSetup() {
-		if(!setup)
+		if (!setup)
 			throw new UnsupportedOperationException("GuildData has not been setup yet!");
 	}
 
 	@Override
-	public void close() throws Exception {
-		temp.clear();
-	}
-	
+	public void close() throws Exception { temp.clear(); }
+
 	@Override
 	public String toString() {
-		return "GiuldData [setup=" + setup + ", guild=" + guild + ", temp=" + temp +", config=" + data + "]";
+		return "GiuldData [setup=" + setup + ", guild=" + guild + ", temp=" + temp + ", config=" + data + "]";
 	}
 }

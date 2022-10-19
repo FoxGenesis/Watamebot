@@ -127,7 +127,7 @@ public class WatameBot {
 	 * Current state of the bot
 	 */
 	private State state = State.CONSTRUCTING;
-	
+
 	/**
 	 * Plugin loader
 	 */
@@ -150,11 +150,11 @@ public class WatameBot {
 		// Set shutdown thread
 		logger.debug("Adding shutdown hook");
 		Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "WatameBot Shutdown Thread"));
-		
+
 		// Load plugins
 		loader = new UntrustedPluginLoader<>(IPlugin.class, Constants.pluginFolder, true);
 		plugins = loader.getPlugins();
-		
+
 		// Connect to our database file
 		database = new DataManager();
 
@@ -182,8 +182,7 @@ public class WatameBot {
 		try {
 			logger.trace("Waiting for plugin pre-init thread");
 			pluginPreInit.join();
-		} catch (InterruptedException e) {
-		}
+		} catch (InterruptedException e) {}
 
 		waitUntilReady();
 	}
@@ -226,8 +225,7 @@ public class WatameBot {
 				// Wait for JDA to be ready for use (BLOCKING!).
 				logger.info("Waiting for JDA to be ready...");
 				discord.awaitReady();
-			} catch (InterruptedException e) {
-			}
+			} catch (InterruptedException e) {}
 		logger.info("Connected to discord!");
 	}
 
@@ -304,14 +302,10 @@ public class WatameBot {
 
 		builder.addEventListeners(new ListenerAdapter() {
 			@Override
-			public void onGuildReady(GuildReadyEvent e) {
-				database.addGuild(e.getGuild());
-			}
+			public void onGuildReady(GuildReadyEvent e) { database.addGuild(e.getGuild()); }
 
 			@Override
-			public void onGuildLeave(GuildLeaveEvent e) {
-				database.removeGuild(e.getGuild());
-			}
+			public void onGuildLeave(GuildLeaveEvent e) { database.removeGuild(e.getGuild()); }
 		});
 
 		ProtectedJDABuilder pBuilder = new ProtectedJDABuilder(builder);
@@ -334,8 +328,7 @@ public class WatameBot {
 				// Sleep for one second before
 				try {
 					Thread.sleep(10000);
-				} catch (InterruptedException e) {
-				}
+				} catch (InterruptedException e) {}
 			}
 
 		} while (!built);
@@ -379,27 +372,21 @@ public class WatameBot {
 	 * @return {@link JDA} instance is built and its current status is
 	 *         {@link Status#CONNECTED}.
 	 */
-	public boolean isConnectedToDiscord() {
-		return discord != null && discord.getStatus() == Status.CONNECTED;
-	}
+	public boolean isConnectedToDiscord() { return discord != null && discord.getStatus() == Status.CONNECTED; }
 
 	/**
 	 * NEED_JAVADOC
 	 * 
 	 * @return
 	 */
-	public IDatabaseManager getDatabase() {
-		return database;
-	}
+	public IDatabaseManager getDatabase() { return database; }
 
 	/**
 	 * NEED_JAVADOC
 	 * 
 	 * @return
 	 */
-	public JDA getJDA() {
-		return discord;
-	}
+	public JDA getJDA() { return discord; }
 
 	/**
 	 * Get the current state of the bot.
@@ -407,9 +394,7 @@ public class WatameBot {
 	 * @return Returns the {@link State} of the bot
 	 * @see State
 	 */
-	public State getState() {
-		return state;
-	}
+	public State getState() { return state; }
 
 	/**
 	 * States {@link WatameBot} goes through on startup.
@@ -425,9 +410,7 @@ public class WatameBot {
 
 		private final JDABuilder builder;
 
-		ProtectedJDABuilder(JDABuilder builder) {
-			this.builder = builder;
-		}
+		ProtectedJDABuilder(JDABuilder builder) { this.builder = builder; }
 
 		/**
 		 * Adds all provided listeners to the list of listeners that will be used to

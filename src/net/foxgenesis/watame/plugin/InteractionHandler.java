@@ -70,9 +70,7 @@ public class InteractionHandler implements IInteractionHandler {
 	}
 
 	@Override
-	public boolean registerGlobalInteraction(@Nonnull CommandData data) {
-		return globalInteractions.add(data);
-	}
+	public boolean registerGlobalInteraction(@Nonnull CommandData data) { return globalInteractions.add(data); }
 
 	@Override
 	public boolean registerGuildInteractions(@Nonnull Function<Guild, Collection<CommandData>> dataList) {
@@ -80,9 +78,7 @@ public class InteractionHandler implements IInteractionHandler {
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash(globalInteractions, guildInteractions);
-	}
+	public int hashCode() { return Objects.hash(globalInteractions, guildInteractions); }
 
 	@Override
 	public boolean equals(Object obj) {

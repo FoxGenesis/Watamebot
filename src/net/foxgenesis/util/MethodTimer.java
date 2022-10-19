@@ -60,9 +60,7 @@ public final class MethodTimer {
 	 * @see #runFormatMS(Runnable, int)
 	 * @see #runFormatMS(Runnable, int, int)
 	 */
-	public static String runFormatMS(Runnable r) {
-		return runFormatMS(r, 2);
-	}
+	public static String runFormatMS(Runnable r) { return runFormatMS(r, 2); }
 
 	/**
 	 * Time how long it takes to execute {@link Runnable} {@code r}. Time is
