@@ -24,8 +24,6 @@ logger.log
 /bin/
 /target/
 /test jar/
-.classpath
-.project
 .settings/*
 /nbproject/
 .pid
