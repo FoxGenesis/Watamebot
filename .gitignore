@@ -36,3 +36,4 @@ lib/ffprobe
 lib/ffmpeg-i386
 /plugins/
 /doc/
+.externalToolBuilders/Ant Builder.launch
