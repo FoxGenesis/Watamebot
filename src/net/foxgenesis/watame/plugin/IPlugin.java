@@ -4,13 +4,12 @@ import java.lang.Runtime.Version;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.entities.Guild;
 import net.foxgenesis.watame.WatameBot;
 import net.foxgenesis.watame.WatameBot.ProtectedJDABuilder;
 
 /**
  * NEED_JAVADOC
- * 
+ *
  * @author Ashley
  *
  */
@@ -20,7 +19,7 @@ public interface IPlugin extends AutoCloseable {
 	 * Construction method used to register event listeners if they require to start
 	 * listening to events while {@link JDA} is still building. For all other event
 	 * listener registration, use {@link #preInit()} or {@link #init(WatameBot)}.
-	 * 
+	 *
 	 * @param builder - wrapper class of {@link JDABuilder} containing event
 	 *                listener registration
 	 * @see #preInit()
@@ -47,7 +46,7 @@ public interface IPlugin extends AutoCloseable {
 	 * <li>Images</li>
 	 * </ul>
 	 * </p>
-	 * 
+	 *
 	 * @see #_construct(ProtectedJDABuilder)
 	 * @see #init(WatameBot)
 	 * @see #postInit(WatameBot)
@@ -56,7 +55,7 @@ public interface IPlugin extends AutoCloseable {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @param bot
 	 * @see #preInit()
 	 * @see #postInit(WatameBot)
@@ -65,7 +64,7 @@ public interface IPlugin extends AutoCloseable {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @param bot
 	 * @see #preInit()
 	 * @see #init(WatameBot)
@@ -73,31 +72,8 @@ public interface IPlugin extends AutoCloseable {
 	public void postInit(WatameBot bot);
 
 	/**
-	 * Called on plugin enable for guild
-	 * 
-	 * @param guild - {@link Guild} to enable for
-	 * @see #onDisable(Guild)
-	 */
-	public void onEnable(Guild guild);
-
-	/**
-	 * Called on plugin disable for guild
-	 * 
-	 * @param guild - {@link Guild} to disable for
-	 * @see #onEnable(Guild)
-	 */
-	public void onDisable(Guild guild);
-
-	/**
-	 * Get the default JSON path to stored plugin variables
-	 * 
-	 * @return A JSON path to store guild variables
-	 */
-	public default String getJSONPath() { return getName().toLowerCase(); }
-
-	/**
 	 * Get the name of this plugin.
-	 * 
+	 *
 	 * @return A string containing the name of the plugin
 	 * @see #getDescription()
 	 * @see #getVersion()
@@ -106,7 +82,7 @@ public interface IPlugin extends AutoCloseable {
 
 	/**
 	 * Get the description of this plugin.
-	 * 
+	 *
 	 * @return A string containing the description of this plugin
 	 * @see #getVersion()
 	 * @see #getName()
@@ -115,7 +91,7 @@ public interface IPlugin extends AutoCloseable {
 
 	/**
 	 * Get the version of this plugin.
-	 * 
+	 *
 	 * @return A {@link Version} representing this plugin
 	 * @see #getName()
 	 * @see #getDescription()
@@ -124,7 +100,7 @@ public interface IPlugin extends AutoCloseable {
 
 	/**
 	 * Get the annotated {@link PluginProperties} of a class
-	 * 
+	 *
 	 * @param _class - {@link Class} to get from
 	 * @return properties of class
 	 */
