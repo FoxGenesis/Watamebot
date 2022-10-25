@@ -42,6 +42,8 @@ public abstract class ConfigField<E> {
 	protected E getDefaultValue(@Nonnull Guild guild) { return defaultValue.apply(guild); }
 
 	protected JSONObjectAdv getDataForGuild(@Nonnull Guild guild) {
+		// FIXME need new way of field creation that doesn't require hard coded database
+		// call
 		return WatameBot.getInstance().getDatabase().getDataForGuild(guild).getConfig();
 	}
 
