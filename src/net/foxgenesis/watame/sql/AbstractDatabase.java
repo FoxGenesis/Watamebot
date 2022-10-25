@@ -281,9 +281,13 @@ public class AbstractDatabase implements AutoCloseable {
 			if (!file.isFile())
 				throw new IllegalArgumentException("Selected file is a directory!");
 		} else {
-			// Repository file doesn't exist. Make new one
-			logger.info("Repo file does not exist! Creating...");
-			file.mkdirs();
+			try {
+				// Repository file doesn't exist. Make new one
+				logger.info("Repo file does not exist! Creating...");
+				file.createNewFile();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
