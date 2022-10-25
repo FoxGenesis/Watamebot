@@ -72,6 +72,13 @@ public interface IPlugin extends AutoCloseable {
 	public void postInit(WatameBot bot);
 
 	/**
+	 * NEED_JAVADOC
+	 *
+	 * @param bot
+	 */
+	public void onReady(WatameBot bot);
+
+	/**
 	 * Get the name of this plugin.
 	 *
 	 * @return A string containing the name of the plugin
