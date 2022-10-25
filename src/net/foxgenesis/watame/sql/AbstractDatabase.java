@@ -25,7 +25,7 @@ import net.foxgenesis.watame.ExitCode;
  * Abstract class used to create SQLite databases. Class is able to create
  * database file, setup tables and create {@link PreparedStatement
  * PreparedStatements} for all operations.
- * 
+ *
  * @author Ashley
  *
  */
@@ -63,13 +63,13 @@ public class AbstractDatabase implements AutoCloseable {
 	 * Create a new instance using the default database folder of "./{@code repo}/".
 	 * <p>
 	 * This method is effectively equivalent to: <blockquote>
-	 * 
+	 *
 	 * <pre>
 	 * new RoleStorageDatabase(new File("repo"))
 	 * </pre>
-	 * 
+	 *
 	 * </blockquote>
-	 * 
+	 *
 	 * @throws IllegalArgumentException if folder exists and is not a directory
 	 * @see #AbstractDatabase(File, URL, URL, String)
 	 */
@@ -80,7 +80,7 @@ public class AbstractDatabase implements AutoCloseable {
 	/**
 	 * Create and initialize a new database at the specified file. Additionally,
 	 * creating prepared operations for use.
-	 * 
+	 *
 	 * @param databaseFile           - {@link File} that will be used as the
 	 *                               repository
 	 * @param databaseSetupFile      - {@link URL} pointing to a file containing SQL
@@ -107,7 +107,7 @@ public class AbstractDatabase implements AutoCloseable {
 
 	/**
 	 * Attempt to connect to the database.
-	 * 
+	 *
 	 * @throws SQLException                  if a database access error occurs
 	 * @throws IOException                   thrown if an error occurs while reading
 	 *                                       the InputStream of the resource
@@ -115,7 +115,7 @@ public class AbstractDatabase implements AutoCloseable {
 	 */
 	public void connect() throws SQLException, UnsupportedOperationException, IOException {
 		createDatabaseFile(databaseFile);
-		
+
 		// Build connection path
 		String connectionPath = databaseFile.getPath();
 		logger.trace("Database path: {}", connectionPath);
@@ -134,7 +134,7 @@ public class AbstractDatabase implements AutoCloseable {
 	 * Check if the database connection is valid. This method checks if our
 	 * connection is not {@code null} and then asks the {@link Connection} if it's
 	 * valid with a one second timeout.
-	 * 
+	 *
 	 * @return If the database connection is valid and usable
 	 */
 	public boolean isConnectionValid() {
@@ -150,7 +150,7 @@ public class AbstractDatabase implements AutoCloseable {
 	/**
 	 * Compile a new {@link PreparedStatement} linked with {@code id} in the
 	 * database.
-	 * 
+	 *
 	 * @param id        - statement id
 	 * @param statement - SQL code to prepare
 	 * @return Compiled {@link PreparedStatement} that is ready to be used
@@ -184,7 +184,7 @@ public class AbstractDatabase implements AutoCloseable {
 	 * Get a {@link PreparedStatement} registered with key {@code id} and ensure it
 	 * exists. If the statement does not exist, this method will cause a program
 	 * exit with exit code {@link ExitCode.DATABASE_STATEMENT_MISSING}.
-	 * 
+	 *
 	 * @param id - key of the registered statement
 	 * @return the {@link PreparedStatement} if it is registered
 	 */
@@ -200,7 +200,7 @@ public class AbstractDatabase implements AutoCloseable {
 
 	/**
 	 * Setup database with SQL code from a {@link URL}.
-	 * 
+	 *
 	 * @param url - {@link URL} containing SQL code to run
 	 * @throws IOException                   Thrown if IO error occurs during file
 	 *                                       processing
@@ -217,7 +217,7 @@ public class AbstractDatabase implements AutoCloseable {
 
 		// Iterate on each line
 		for (String line : lines) {
-			if(line.startsWith("--"))
+			if (line.startsWith("--"))
 				continue;
 			try (Statement statement = connectionHandler.createStatement()) {
 
@@ -234,7 +234,7 @@ public class AbstractDatabase implements AutoCloseable {
 	/**
 	 * Load all database operations from a KVP (Key. Value. Pair) resource file and
 	 * map the values to {@link PreparedStatement PreparedStatements}.
-	 * 
+	 *
 	 * @param url - {@link URL} path to a KVP resource
 	 * @throws IOException Thrown if an error occurs while reading the InputStream
 	 *                     of the resource
@@ -262,23 +262,23 @@ public class AbstractDatabase implements AutoCloseable {
 
 	/**
 	 * Create the database folder if it doesn't exist
-	 * 
+	 *
 	 * @param file - {@link File} used as the database folder
 	 * @throws IllegalArgumentException if folder exists and is not a directory
 	 * @throws NullPointerException     if {@code folder} is null
 	 */
 	private void createDatabaseFile(@Nonnull File file) {
 		Objects.requireNonNull(file);
-		
+
 		// Ensure folder is created
 		File folder = file.getParentFile();
-		if(!folder.exists()) 
+		if (!folder.exists())
 			folder.mkdirs();
-		
+
 		// Check if file exists
 		if (file.exists()) {
 			// Ensure file is a file
-			if (file.isFile())
+			if (!file.isFile())
 				throw new IllegalArgumentException("Selected file is a directory!");
 		} else {
 			// Repository file doesn't exist. Make new one
@@ -288,7 +288,7 @@ public class AbstractDatabase implements AutoCloseable {
 	}
 
 	@Override
-	public void close() throws Exception {
+	public void close() throws SQLException {
 		// Check if we are connected
 		if (connectionHandler != null && !connectionHandler.isClosed()) {
 			// Close open statements
