@@ -42,7 +42,7 @@ public class WatameBot {
 	/**
 	 * General purpose logger
 	 */
-	public static Logger logger = LoggerFactory.getLogger(WatameBot.class);
+	public static final Logger logger = LoggerFactory.getLogger(WatameBot.class);
 
 	/**
 	 * Singleton instance of class
