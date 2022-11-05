@@ -36,3 +36,4 @@ lib/ffmpeg-i386
 /doc/
 .externalToolBuilders/Ant Builder.launch
 .settings/
+test-deploy-token.txt
