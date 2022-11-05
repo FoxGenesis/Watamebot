@@ -7,6 +7,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 import java.util.ServiceLoader.Provider;
 import java.util.function.Function;
@@ -42,14 +43,14 @@ public class UntrustedPluginLoader<T> implements AutoCloseable {
 	 * Create a new {@link PluginLoader} instance and set the directory to use.
 	 * <p>
 	 * This constructor is effectively equivalent to: <blockquote>
-	 * 
+	 *
 	 * <pre>
 	 * new PluginLoader(folder, false)
 	 * </pre>
-	 * 
+	 *
 	 * </blockquote>
 	 * </p>
-	 * 
+	 *
 	 * @param folder - The {@link File} to search for plugins in.
 	 */
 	public UntrustedPluginLoader(@Nonnull Class<T> pluginClass, @Nonnull File folder) {
@@ -58,7 +59,7 @@ public class UntrustedPluginLoader<T> implements AutoCloseable {
 
 	/**
 	 * Create a new {@link PluginLoader} instance and set the directory to use.
-	 * 
+	 *
 	 * @param folder - The {@link File} to search for plugins in.
 	 * @param mkdirs - If {@code folder} does not exist, should a new one be made
 	 */
@@ -73,14 +74,14 @@ public class UntrustedPluginLoader<T> implements AutoCloseable {
 	 * Get all plugins of type {@link T} in the selected folder.
 	 * <p>
 	 * This method is effectively equivalent to: <blockquote>
-	 * 
+	 *
 	 * <pre>
 	 * getPlugins(Provider::get)
 	 * </pre>
-	 * 
+	 *
 	 * </blockquote>
 	 * </p>
-	 * 
+	 *
 	 * @return A {@link Collection} of {@link T}
 	 * @throws ServiceConfigurationError if the service type is not accessible to
 	 *                                   the caller or the caller is in an explicit
@@ -92,7 +93,7 @@ public class UntrustedPluginLoader<T> implements AutoCloseable {
 
 	/**
 	 * Get all plugins of type {@link T} in the selected folder.
-	 * 
+	 *
 	 * @param providerMap - {@link Function} to map a {@link Provider} to {@link T}
 	 * @return A {@link Collection} of {@link T}
 	 * @throws ServiceConfigurationError if the service type is not accessible to
@@ -118,7 +119,7 @@ public class UntrustedPluginLoader<T> implements AutoCloseable {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @param urls
 	 * @return
 	 */
@@ -131,7 +132,7 @@ public class UntrustedPluginLoader<T> implements AutoCloseable {
 			e.printStackTrace();
 		}
 
-		// FIXME add security measures for untrusted code
+		// TODO add security measures for untrusted code
 		URLClassLoader loader = new URLClassLoader(urls, this.getClass().getClassLoader());
 
 		return loader;
@@ -139,7 +140,7 @@ public class UntrustedPluginLoader<T> implements AutoCloseable {
 
 	/**
 	 * Set the plugin folder to use during class search.
-	 * 
+	 *
 	 * @param folder - The {@link File} to search in
 	 * @param mkdirs - If {@code folder} does not exist, should a new directory be
 	 *               made
@@ -171,14 +172,14 @@ public class UntrustedPluginLoader<T> implements AutoCloseable {
 
 	/**
 	 * Get the plugin folder currently selected.
-	 * 
+	 *
 	 * @return Returns the {@link File} selected as the plugin directory
 	 */
 	public File getPluginDirectory() { return folder; }
 
 	/**
 	 * Get the class of {@link T}.
-	 * 
+	 *
 	 * @return
 	 */
 	public Class<T> getPluginClass() { return pluginClass; }
@@ -191,7 +192,7 @@ public class UntrustedPluginLoader<T> implements AutoCloseable {
 
 	/**
 	 * Get all the jar files in a folder.
-	 * 
+	 *
 	 * @param folder - The {@link File} to search in
 	 * @return Returns an array of jar {@link File Files}
 	 * @throws SecurityException If a security manager exists and its
@@ -207,7 +208,7 @@ public class UntrustedPluginLoader<T> implements AutoCloseable {
 
 	/**
 	 * Map {@link File} array to {@link URL} array.
-	 * 
+	 *
 	 * @param files - {@link File} array to map
 	 * @return Returns a {@link URL} array mapped from {@code files}.
 	 * @throws MalformedURLException If a protocol handler for the URL could not be
