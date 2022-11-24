@@ -2,8 +2,6 @@ package net.foxgenesis.watame.plugin;
 
 import java.lang.Runtime.Version;
 
-import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.JDABuilder;
 import net.foxgenesis.watame.WatameBot;
 import net.foxgenesis.watame.WatameBot.ProtectedJDABuilder;
 
@@ -14,18 +12,6 @@ import net.foxgenesis.watame.WatameBot.ProtectedJDABuilder;
  *
  */
 public interface IPlugin extends AutoCloseable {
-
-	/**
-	 * Construction method used to register event listeners if they require to start
-	 * listening to events while {@link JDA} is still building. For all other event
-	 * listener registration, use {@link #preInit()} or {@link #init(WatameBot)}.
-	 *
-	 * @param builder - wrapper class of {@link JDABuilder} containing event
-	 *                listener registration
-	 * @see #preInit()
-	 * @see #init(WatameBot)
-	 */
-	public default void _construct(ProtectedJDABuilder builder) {}
 
 	/**
 	 * Startup method called when resources, needed for functionality
@@ -56,11 +42,10 @@ public interface IPlugin extends AutoCloseable {
 	/**
 	 * NEED_JAVADOC
 	 *
-	 * @param bot
 	 * @see #preInit()
 	 * @see #postInit(WatameBot)
 	 */
-	public void init(WatameBot bot);
+	public void init(ProtectedJDABuilder builder);
 
 	/**
 	 * NEED_JAVADOC
