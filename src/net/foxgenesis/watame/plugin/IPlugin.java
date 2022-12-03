@@ -20,7 +20,7 @@ public interface IPlugin extends AutoCloseable {
 	 * here.
 	 * <p>
 	 * <b>Database and Discord information might not be loaded at the time of this
-	 * method!</b> Use {@link #init(WatameBot)} for functionality that requires
+	 * method!</b> Use {@link #onReady(WatameBot)} for functionality that requires
 	 * valid connections.
 	 * </p>
 	 * <p>
