@@ -265,6 +265,7 @@ public class AbstractDatabase implements AutoCloseable {
 	 * @throws IllegalArgumentException if folder exists and is not a directory
 	 * @throws NullPointerException     if {@code folder} is null
 	 */
+	@SuppressWarnings("unused")
 	private void createDatabaseFile(@Nonnull File file) {
 		Objects.requireNonNull(file);
 
