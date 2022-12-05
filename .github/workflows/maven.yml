@@ -3,7 +3,10 @@
 name: Java CI with Maven
 on:
   push:
-    branches: [ main ]
+    branches: [ "1.0.0-SNAPSHOT" ]
+  pull_request:
+    branches: [ "1.0.0-SNAPSHOT" ]
+
 jobs:
   build:
     runs-on: ubuntu-latest
