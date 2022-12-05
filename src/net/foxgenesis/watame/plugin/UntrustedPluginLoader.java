@@ -6,6 +6,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
@@ -104,7 +105,7 @@ public class UntrustedPluginLoader<T> implements AutoCloseable {
 		File[] files = getJarsInFolder(folder);
 		if (files == null || files.length == 0) {
 			logger.warn("No jar files found in plugins directory");
-			return null;
+			return Collections.emptyList();
 		}
 
 		URL[] urls = filesToURLArray(files);
