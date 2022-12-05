@@ -470,7 +470,7 @@ public class WatameBot {
 		 * InterfacedEventListener} by default. <br>
 		 * To switch to the {@link net.dv8tion.jda.api.hooks.AnnotatedEventManager
 		 * AnnotatedEventManager}, use
-		 * {@link #setEventManager(net.dv8tion.jda.api.hooks.IEventManager)
+		 * {@link JDA#setEventManager(net.dv8tion.jda.api.hooks.IEventManager)
 		 * setEventManager(new AnnotatedEventManager())}.
 		 *
 		 * <p>

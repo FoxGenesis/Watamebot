@@ -15,14 +15,13 @@ public interface IPlugin extends AutoCloseable {
 
 	/**
 	 * Startup method called when resources, needed for functionality
-	 * {@linkplain #init(WatameBot) initialization}, are to be loaded. Resources
-	 * that do not require connection to Discord or the database should be loaded
-	 * here.
+	 * initialization, are to be loaded. Resources that do not require connection to
+	 * Discord or the database should be loaded here.
 	 * <p>
 	 * <b>Database and Discord information might not be loaded at the time of this
 	 * method!</b> Use {@link #onReady(WatameBot)} for functionality that requires
 	 * valid connections.
-	 * </p>
+	 * 
 	 * <p>
 	 * Typical resources to load here include:
 	 * <ul>
@@ -31,10 +30,9 @@ public interface IPlugin extends AutoCloseable {
 	 * <li>Files</li>
 	 * <li>Images</li>
 	 * </ul>
-	 * </p>
+	 * 
 	 *
-	 * @see #_construct(ProtectedJDABuilder)
-	 * @see #init(WatameBot)
+	 * @see #init(ProtectedJDABuilder)
 	 * @see #postInit(WatameBot)
 	 */
 	public void preInit();
@@ -52,7 +50,7 @@ public interface IPlugin extends AutoCloseable {
 	 *
 	 * @param bot
 	 * @see #preInit()
-	 * @see #init(WatameBot)
+	 * @see #init(ProtectedJDABuilder)
 	 */
 	public void postInit(WatameBot bot);
 

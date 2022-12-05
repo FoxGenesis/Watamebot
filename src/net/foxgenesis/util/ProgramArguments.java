@@ -126,7 +126,7 @@ public class ProgramArguments {
 
 	/**
 	 * Check if the {@code program arguments} contains the flag
-	 * &quot{@code --key}&quot.
+	 * "{@code --key}".
 	 * 
 	 * @param key - flag to check
 	 * @return returns {@code true} if the arguments contains the flag
@@ -135,7 +135,7 @@ public class ProgramArguments {
 
 	/**
 	 * Check if the {@code program arguments} contains the parameter
-	 * &quot{@code -key}&quot.
+	 * "{@code -key}".
 	 * 
 	 * @param key - parameter to check
 	 * @return returns {@code true} if the arguments contains the parameter

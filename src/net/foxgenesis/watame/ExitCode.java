@@ -42,14 +42,16 @@ public enum ExitCode {
 	 * Exit the program with a specific {@code message} and {@link Throwable}.
 	 * <p>
 	 * The call {@code exitCode.exitProgram(null, null)} is effectively equivalent
-	 * to the call: <blockquote>
+	 * to the call:
+	 * </p>
+	 * <blockquote>
 	 * 
 	 * <pre>
 	 * exitCode.exitProgram()
 	 * </pre>
 	 * 
 	 * </blockquote>
-	 * </p>
+	 * 
 	 * 
 	 * @see #programExit()
 	 * @param exitMessage - Exit message to log
@@ -66,14 +68,15 @@ public enum ExitCode {
 	 * Exit the program with a specific {@link Throwable}.
 	 * <p>
 	 * The call {@code exitCode.exitProgram(thrown)} is effectively equivalent to
-	 * the call: <blockquote>
+	 * the call:
+	 * </p>
+	 * <blockquote>
 	 * 
 	 * <pre>
 	 * exitCode.exitProgram(null, thrown)
 	 * </pre>
 	 * 
 	 * </blockquote>
-	 * </p>
 	 * 
 	 * @see #programExit(String, Throwable)
 	 * @param thrown - Throwable to log
@@ -84,14 +87,16 @@ public enum ExitCode {
 	 * Exit the program with a specific {@code message}.
 	 * <p>
 	 * The call {@code exitCode.exitProgram(message)} is effectively equivalent to
-	 * the call: <blockquote>
+	 * the call:
+	 * </p>
+	 * <blockquote>
 	 * 
 	 * <pre>
 	 * exitCode.exitProgram(message, null)
 	 * </pre>
 	 * 
 	 * </blockquote>
-	 * </p>
+	 * 
 	 * 
 	 * @see #programExit(String, Throwable)
 	 * @param exitMessage - Exit message to log
@@ -99,16 +104,18 @@ public enum ExitCode {
 	public void programExit(String exitMessage) { programExit(exitMessage, null); }
 
 	/**
-	 * Exit the program with this {@link ExitCode}'s &quot{@code exit code}&quot.
+	 * Exit the program with this {@link ExitCode}'s {@code "exit code"}.
 	 * <p>
-	 * This method is effectively equivalent to the call: <blockquote>
+	 * This method is effectively equivalent to the call:
+	 * </p>
+	 * <blockquote>
 	 * 
 	 * <pre>
 	 * System.exit(n)
 	 * </pre>
 	 * 
 	 * </blockquote>
-	 * </p>
+	 * 
 	 * 
 	 * @see #programExit(String, Throwable)
 	 */

@@ -40,7 +40,7 @@ public class UntrustedPluginLoader<T> implements AutoCloseable {
 	public UntrustedPluginLoader(@Nonnull Class<T> pluginClass) { this(pluginClass, new File("plugins")); }
 
 	/**
-	 * Create a new {@link PluginLoader} instance and set the directory to use.
+	 * Create a new {@link UntrustedPluginLoader} instance and set the directory to use.
 	 * <p>
 	 * This constructor is effectively equivalent to: <blockquote>
 	 *
@@ -49,7 +49,6 @@ public class UntrustedPluginLoader<T> implements AutoCloseable {
 	 * </pre>
 	 *
 	 * </blockquote>
-	 * </p>
 	 *
 	 * @param folder - The {@link File} to search for plugins in.
 	 */
@@ -58,7 +57,7 @@ public class UntrustedPluginLoader<T> implements AutoCloseable {
 	}
 
 	/**
-	 * Create a new {@link PluginLoader} instance and set the directory to use.
+	 * Create a new {@link UntrustedPluginLoader} instance and set the directory to use.
 	 *
 	 * @param folder - The {@link File} to search for plugins in.
 	 * @param mkdirs - If {@code folder} does not exist, should a new one be made
@@ -80,7 +79,6 @@ public class UntrustedPluginLoader<T> implements AutoCloseable {
 	 * </pre>
 	 *
 	 * </blockquote>
-	 * </p>
 	 *
 	 * @return A {@link Collection} of {@link T}
 	 * @throws ServiceConfigurationError if the service type is not accessible to

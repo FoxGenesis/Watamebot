@@ -53,7 +53,6 @@ public final class MethodTimer {
 	 * </pre>
 	 * 
 	 * </blockquote>
-	 * </p>
 	 * 
 	 * @param r - {@link Runnable} to time
 	 * @return formatted string with two decimal places
@@ -74,7 +73,6 @@ public final class MethodTimer {
 	 * </pre>
 	 * 
 	 * </blockquote>
-	 * </p>
 	 * 
 	 * @param r        - {@link Runnable} to time
 	 * @param decimals - Amount of decimal places to format
@@ -98,7 +96,6 @@ public final class MethodTimer {
 	 * </pre>
 	 * 
 	 * </blockquote>
-	 * </p>
 	 * 
 	 * @param r        - {@link Runnable} to time
 	 * @param n        - Amount of times to execute {@code r}
