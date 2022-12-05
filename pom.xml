@@ -19,6 +19,7 @@
 			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
 		</license>
 	</licenses>
+	
 	<developers>
 		<developer>
 			<id>FoxGenesis</id>
@@ -26,11 +27,23 @@
 			<email>contact@foxgenesis.net</email>
 		</developer>
 	</developers>
+	
 	<scm>
 		<url>https://github.com/FoxGenesis/Watamebot/tree/main</url>
 		<connection>scm:git:git@github.com;FoxGenesis/Watamebot.git</connection>
 		<developerConnection>scm:git:ssh://github.com;FoxGenesis/Watamebot.git</developerConnection>
 	</scm>
+	
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+        </repository>
+    </distributionManagement>
 
 	<build>
 		<sourceDirectory>src</sourceDirectory>
