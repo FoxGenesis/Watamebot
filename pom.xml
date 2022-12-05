@@ -1,8 +1,37 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>net.foxgenesis.watame</groupId>
-	<artifactId>Watamebot</artifactId>
+	<artifactId>watamebot</artifactId>
 	<version>1.0.0</version>
+	<packaging>pom</packaging>
+
+	<name>WatameBot</name>
+	<url>https://foxgenesis.net/watamebot</url>
+	<description>A plugin based Discord bot written in Java.</description>
+	<organization>
+		<name>FoxGenesis</name>
+		<url>https://foxgenesis.net</url>
+	</organization>
+
+	<licenses>
+		<license>
+			<name>The Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+		</license>
+	</licenses>
+	<developers>
+		<developer>
+			<id>FoxGenesis</id>
+			<name>FoxGenesis</name>
+			<email>contact@foxgenesis.net</email>
+		</developer>
+	</developers>
+	<scm>
+		<url>https://github.com/FoxGenesis/Watamebot/tree/main</url>
+		<connection>scm:git:git@github.com;FoxGenesis/Watamebot.git</connection>
+		<developerConnection>scm:git:ssh://github.com;FoxGenesis/Watamebot.git</developerConnection>
+	</scm>
+
 	<build>
 		<sourceDirectory>src</sourceDirectory>
 		<resources>
@@ -20,6 +49,40 @@
 				<configuration>
 					<release>17</release>
 				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>3.2.1</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.2.0</version>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.22.2</version>
 			</plugin>
 		</plugins>
 	</build>
@@ -43,6 +106,7 @@
 			<artifactId>slf4j-api</artifactId>
 			<version>1.7.36</version>
 		</dependency>
+
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
@@ -67,19 +131,17 @@
 			<artifactId>HikariCP</artifactId>
 			<version>5.0.1</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
 			<version>8.0.31</version>
 		</dependency>
-		
-		<dependency>
-  <groupId>org.apache.commons</groupId>
-  <artifactId>commons-text</artifactId>
-  <version>1.9</version>
-</dependency>
 
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-text</artifactId>
+			<version>1.9</version>
+		</dependency>
 	</dependencies>
-	<packaging>pom</packaging>
 </project>
