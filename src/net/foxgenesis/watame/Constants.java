@@ -10,12 +10,12 @@ public final class Constants {
 			"discord.new", "discord.gift", "discord.gifts", "discord.media", "discord.gg", "discord.co", "discord.app",
 			"dis.gd" };
 
-	public static final URL DATABASE_SETUP_FILE = resource("CreateDatabase.sql");
+	public static final URL DATABASE_SETUP_FILE = resource("table setup.sql");
 	public static final URL DATABASE_OPERATIONS_FILE = resource("sql statements.kvp");
 
-	public static final File pluginFolder = new File("plugins");
+	public static final File PLUGINS_FOLDER = new File("plugins");
 
 	private static final URL resource(@Nonnull String path) {
-		return Constants.class.getResource("/main/resources/" + path);
+		return Constants.class.getResource("/resources/" + path);
 	}
 }
