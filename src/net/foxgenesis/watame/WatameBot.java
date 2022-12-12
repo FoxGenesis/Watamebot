@@ -75,7 +75,7 @@ public class WatameBot {
 						ExitCode.NO_TOKEN.programExit("No token file specified");
 
 					// Get discord login token from file
-					String token = readToken(params.getParameter("token"));
+					String token = Objects.requireNonNull(readToken(params.getParameter("token")));
 
 					try {
 						// initialize the main bot object with token
@@ -147,15 +147,13 @@ public class WatameBot {
 	 * @param token - Token used to connect to discord
 	 * @throws SQLException When failing to connect to the database file
 	 */
-	private WatameBot(String token) throws SQLException {
-		Objects.requireNonNull(token);
-
+	private WatameBot(@Nonnull String token) throws SQLException {
 		// Set shutdown thread
 		logger.debug("Adding shutdown hook");
 		Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "WatameBot Shutdown Thread"));
 
 		// Load plugins
-		loader = new UntrustedPluginLoader<>(IPlugin.class, Constants.pluginFolder, true);
+		loader = new UntrustedPluginLoader<>(IPlugin.class, Constants.PLUGINS_FOLDER, true);
 		plugins = loader.getPlugins();
 
 		// Connect to our database file
