@@ -21,7 +21,7 @@ module watamebot {
 	exports net.foxgenesis.watame.util;
 	
 	uses net.foxgenesis.watame.plugin.IPlugin;
-	uses net.foxgenesis.watame.plugin.WatameBotPlugin;
+	//uses net.foxgenesis.watame.plugin.WatameBotPlugin;
 	
 	opens assets;
 }
