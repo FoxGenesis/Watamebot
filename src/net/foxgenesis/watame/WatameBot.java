@@ -22,11 +22,13 @@ import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.foxgenesis.util.ProgramArguments;
+import net.foxgenesis.watame.command.PingCommand;
 import net.foxgenesis.watame.plugin.IPlugin;
 import net.foxgenesis.watame.plugin.UntrustedPluginLoader;
 import net.foxgenesis.watame.sql.DataManager;
@@ -242,6 +244,8 @@ public class WatameBot {
 				.allOf(plugins.stream().map(plugin -> CompletableFuture.runAsync(() -> plugin.init(pBuilder)))
 						.toArray(CompletableFuture[]::new));
 
+		pBuilder.addEventListeners(new PingCommand());
+
 		/*
 		 * ====== END INITIALIZATION ======
 		 */
@@ -271,6 +275,8 @@ public class WatameBot {
 		CompletableFuture<Void> pluginPostInit = CompletableFuture
 				.allOf(plugins.stream().map(plugin -> CompletableFuture.runAsync(() -> plugin.postInit(this)))
 						.toArray(CompletableFuture[]::new));
+
+		discord.upsertCommand(Commands.slash("ping", "Ping the bot to test the connection")).queue();
 
 		/*
 		 * ====== END POST-INITIALIZATION ======
