@@ -141,7 +141,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @see #removeGuild(Guild)
 	 */
 	public void addGuild(@Nonnull Guild guild) {
-		Objects.nonNull(guild);
+		Objects.requireNonNull(guild);
 
 		logger.debug("Loading guild ({})[{}]", guild.getName(), guild.getIdLong());
 
@@ -162,7 +162,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @see #addGuild(Guild)
 	 */
 	public void removeGuild(@Nonnull Guild guild) {
-		Objects.nonNull(guild);
+		Objects.requireNonNull(guild);
 
 		logger.debug("Removing guild ({})[{}]", guild.getName(), guild.getIdLong());
 
@@ -184,7 +184,6 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @param jda - {@link JDA} instance to use
 	 */
 	public void retrieveDatabaseData(@Nonnull JDA jda) {
-		Objects.nonNull(jda);
 
 		// Get all guilds from database
 		// getAllGuildData();
@@ -241,7 +240,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @param guild - {@link Guild} to retrieve data for
 	 */
 	private void retrieveData(@Nonnull Guild guild) {
-		Objects.nonNull(guild);
+		Objects.requireNonNull(guild);
 
 		logger.trace("Retrieved guild data for {} in: " + MethodTimer.runFormatMS(() -> {
 			PreparedStatement s = this.getAndAssertStatement("guild_data_get_id");
@@ -272,7 +271,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	@Nullable
 	public IGuildData getDataForGuild(@Nonnull Guild guild) {
 		// Ensure non null guild
-		Objects.nonNull(guild);
+		Objects.requireNonNull(guild);
 
 		// Check if database processing is finished
 		if (!isReady())
@@ -297,8 +296,8 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @param guild - guild to insert
 	 */
 	private void insertGuildInDatabase(@Nonnull Guild guild) {
-		Objects.nonNull(guild);
-
+		Objects.requireNonNull(guild);
+		
 		logger.trace("Inserted new row for guild {} in: " + MethodTimer.runFormatMS(() -> {
 			PreparedStatement st = this.getAndAssertStatement("guild_data_insert");
 			try {
@@ -335,7 +334,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @throws NullPointerException     if {@code folder} is null
 	 */
 	private void createDatabaseFolder(@Nonnull File folder) {
-		Objects.nonNull(folder);
+		Objects.requireNonNull(folder);
 
 		// Check if folder exists
 		if (folder.exists()) {
@@ -358,15 +357,13 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @throws UnsupportedOperationException Thrown if not connected to database
 	 */
 	private void setupDatabase(@Nonnull URL url) throws IOException, UnsupportedOperationException {
-		Objects.nonNull(url);
-
 		// Check if we are connected to database
 		if (!isConnectionValid())
 			throw new UnsupportedOperationException("Not connected to database!");
 
 		// Read all lines in the file
 		logger.trace("Reading lines from SQL file");
-		List<String> lines = ResourceHelper.linesFromResource(url);
+		List<String> lines = ResourceHelper.linesFromResource(Objects.requireNonNull(url));
 
 		// Iterate on each line
 		for (String line : lines) {
@@ -392,10 +389,8 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @see KVPFile#KVPFile(URL)
 	 */
 	private void initalizeOperations(@Nonnull URL url) throws IOException {
-		Objects.nonNull(url);
-
 		// Read and parse database operations
-		KVPFile kvp = new KVPFile(url);
+		KVPFile kvp = new KVPFile(Objects.requireNonNull(url));
 		kvp.parse();
 
 		// Map all database operations to their statements
@@ -429,7 +424,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @see #isValid()
 	 */
 	private void registerStatement(String id, @Nonnull String statement) throws SQLException {
-		Objects.nonNull(statement);
+		Objects.requireNonNull(statement);
 
 		// Check if id is already registered
 		if (registeredStatements.containsKey(id))
@@ -456,7 +451,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @return the {@link PreparedStatement} if it is registered
 	 */
 	PreparedStatement getAndAssertStatement(@Nonnull String id) {
-		Objects.nonNull(id);
+		Objects.requireNonNull(id);
 
 		if (registeredStatements.containsKey(id))
 			return registeredStatements.get(id);
