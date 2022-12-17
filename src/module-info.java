@@ -7,7 +7,7 @@ module watamebot {
 	requires logback.core;
 	requires org.fusesource.jansi;
 	requires org.json;
-	requires org.slf4j;
+	requires transitive org.slf4j;
 	
 	exports net.foxgenesis.config;
 	exports net.foxgenesis.config.fields;
@@ -23,5 +23,5 @@ module watamebot {
 	uses net.foxgenesis.watame.plugin.IPlugin;
 	//uses net.foxgenesis.watame.plugin.WatameBotPlugin;
 	
-	opens assets;
+	opens resources;
 }
