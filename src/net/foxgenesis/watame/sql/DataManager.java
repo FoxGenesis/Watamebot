@@ -363,7 +363,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 
 		// Read all lines in the file
 		logger.trace("Reading lines from SQL file");
-		List<String> lines = ResourceHelper.linesFromResource(Objects.requireNonNull(url));
+		List<String> lines = ResourceHelper.linesFromResource(Objects.requireNonNull(url, "Invalid asset URL"));
 
 		// Iterate on each line
 		for (String line : lines) {
@@ -390,7 +390,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 */
 	private void initalizeOperations(@Nonnull URL url) throws IOException {
 		// Read and parse database operations
-		KVPFile kvp = new KVPFile(Objects.requireNonNull(url));
+		KVPFile kvp = new KVPFile(Objects.requireNonNull(url, "Invalid asset URL"));
 		kvp.parse();
 
 		// Map all database operations to their statements
