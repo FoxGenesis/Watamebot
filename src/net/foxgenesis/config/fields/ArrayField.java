@@ -19,5 +19,5 @@ public class ArrayField extends ConfigField<JSONArray> {
 	JSONArray optFrom(JSONObjectAdv config, Guild guild) { return config.optJSONArray(name); }
 
 	@Override
-	JSONArray from(JSONObjectAdv config) { return config.getJSONArray(name); }
+	JSONArray from(JSONObjectAdv config, Guild guild) { return config.getJSONArray(name); }
 }

@@ -16,7 +16,7 @@ public class BooleanField extends ConfigField<Boolean> {
 	}
 
 	@Override
-	Boolean from(JSONObjectAdv config) { return config.getBoolean(name); }
+	Boolean from(JSONObjectAdv config, Guild guild) { return config.getBoolean(name); }
 
 	@Override
 	void set(JSONObjectAdv config, Boolean newState) { config.put(name, newState); }

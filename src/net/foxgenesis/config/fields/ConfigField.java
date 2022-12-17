@@ -24,7 +24,7 @@ public abstract class ConfigField<E> {
 
 	public final boolean isPresent(@Nonnull Guild guild) { return isPresent(getDataForGuild(guild)); }
 
-	public E from(@Nonnull Guild guild) { return from(getDataForGuild(guild)); }
+	public E from(@Nonnull Guild guild) { return from(getDataForGuild(guild), guild); }
 
 	public E optFrom(@Nonnull Guild guild) { return optFrom(getDataForGuild(guild), guild); }
 
@@ -49,7 +49,7 @@ public abstract class ConfigField<E> {
 
 	abstract E optFrom(@Nonnull JSONObjectAdv config, @Nonnull Guild guild);
 
-	abstract E from(@Nonnull JSONObjectAdv config);
+	abstract E from(@Nonnull JSONObjectAdv config, @Nonnull Guild guild);
 
 	abstract void set(@Nonnull JSONObjectAdv config, E newState);
 }
