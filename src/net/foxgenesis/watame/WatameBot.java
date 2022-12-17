@@ -1,10 +1,13 @@
 package net.foxgenesis.watame;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
@@ -18,16 +21,21 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDA.Status;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.foxgenesis.util.ProgramArguments;
+import net.foxgenesis.watame.command.ConfigCommand;
 import net.foxgenesis.watame.command.PingCommand;
 import net.foxgenesis.watame.plugin.IPlugin;
 import net.foxgenesis.watame.plugin.UntrustedPluginLoader;
@@ -242,7 +250,7 @@ public class WatameBot {
 				.allOf(plugins.stream().map(plugin -> CompletableFuture.runAsync(() -> plugin.init(pBuilder)))
 						.toArray(CompletableFuture[]::new));
 
-		pBuilder.addEventListeners(new PingCommand());
+		pBuilder.addEventListeners(new PingCommand(), new ConfigCommand());
 
 		/*
 		 * ====== END INITIALIZATION ======
@@ -274,7 +282,18 @@ public class WatameBot {
 				.allOf(plugins.stream().map(plugin -> CompletableFuture.runAsync(() -> plugin.postInit(this)))
 						.toArray(CompletableFuture[]::new));
 
-		discord.upsertCommand(Commands.slash("ping", "Ping the bot to test the connection")).queue();
+		// Register default commands
+		discord.upsertCommand(Commands.slash("ping", "Ping the bot to test the connection"))
+				.and(discord.upsertCommand(Commands.slash("config-get", "Get the configuration of the bot")
+						.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
+						.setGuildOnly(true)
+						.addOption(OptionType.STRING, "key", "Location of the variable", true, false)))
+				.and(discord.upsertCommand(Commands.slash("config-set", "Get the configuration of the bot")
+						.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
+						.setGuildOnly(true).addOption(OptionType.STRING, "key", "Location of the variable", true, false)
+						.addOption(OptionType.STRING, "type", "The variable's type", true, true)
+						.addOptions(createAllOptions())))
+				.queue();
 
 		/*
 		 * ====== END POST-INITIALIZATION ======
@@ -517,5 +536,15 @@ public class WatameBot {
 			builder.removeEventListeners(listeners);
 			return this;
 		}
+	}
+
+	private static List<OptionData> createAllOptions() {
+		OptionType[] values = OptionType.values();
+		List<OptionData> list = new ArrayList<>(values.length-3);
+		for (OptionType type : values)
+			if (!(type == OptionType.UNKNOWN || type == OptionType.SUB_COMMAND || type == OptionType.SUB_COMMAND_GROUP))
+				list.add(new OptionData(type, type.name().toLowerCase(), "Value to set of type " + type.name().toLowerCase()).setAutoComplete(false)
+						.setRequired(false));
+		return list;
 	}
 }
