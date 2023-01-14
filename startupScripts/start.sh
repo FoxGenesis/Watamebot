@@ -1,0 +1,1 @@
+java -DLOG_LEVEL=info -jar "watamebot.jar" -token "config/token.txt"
