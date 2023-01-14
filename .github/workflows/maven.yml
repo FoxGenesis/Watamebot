@@ -11,7 +11,7 @@ on:
         type: string
       tag_name:
         description: 'Tag to use'
-        required: false
+        required: true
         type: string
       release_notes:
         description: 'Release body'
@@ -23,6 +23,10 @@ on:
         type: boolean
       draft:
         description: 'Is release a draft'
+        required: false
+        type: boolean
+      generate_release_notes:
+        description: 'Auto generate name and\or body'
         required: false
         type: boolean
 
@@ -47,12 +51,13 @@ jobs:
     - name: Creating Release
       uses: softprops/action-gh-release@v1
       with:
-        #tag_name: ${{ github.event.inputs.tag_name }}
-        tag_name: ${{ github.ref }}
+        tag_name: ${{ github.event.inputs.tag_name }}
+        #tag_name: ${{ github.ref }}
         name: ${{ github.event.inputs.release_name }}
         body: ${{ github.event.inputs.release_notes }}
         prerelease: ${{ github.event.inputs.pre_release }}
         draft: ${{ github.event.inputs.draft }}
+        generate_release_notes: ${{ github.event.inputs.generate_release_notes }}
         fail_on_unmatched_files: true
         files: "/home/runner/work/Watamebot/Watamebot/target/*.zip"
     - name: Deploy with Maven
