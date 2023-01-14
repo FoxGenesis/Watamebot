@@ -51,7 +51,7 @@ jobs:
         name: ${{ github.event.inputs.release_name }}
         body: ${{ github.event.inputs.release_notes }}
         prerelease: ${{ github.event.inputs.pre_release }}
-        draft: false
+        draft: ${{ github.event.inputs.draft }}
         fail_on_unmatched_files: true
         files: "/home/runner/work/Watamebot/Watamebot/target/*.zip"
     - name: Deploy with Maven
