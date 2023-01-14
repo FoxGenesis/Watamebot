@@ -25,6 +25,8 @@ jobs:
     - name: Creating Release
       uses: softprops/action-gh-release@v1
       with:
+        prerelease: true
+        tag_name: ${{ github.head_ref || github.ref_name }}
         files: \*.zip
     - name: Deploy with Maven
       run: mvn -B deploy -Pci-cd
