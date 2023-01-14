@@ -2,9 +2,10 @@ package net.foxgenesis.config;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -14,7 +15,8 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import net.foxgenesis.util.ResourceHelper;
+import net.foxgenesis.util.ResourceUtils;
+import net.foxgenesis.util.StringUtils;
 
 /**
  * Key Value Pair (KVP) file implementation.
@@ -30,32 +32,51 @@ public class KVPFile {
 	private static final Predicate<String> ignoreLines = line -> line.matches("^(.+?)=(.*?)$");
 
 	/**
-	 * File refrence for this KVP File.
-	 */
-	private final URL resourceURL;
-
-	/**
 	 * Map containing key value pairs of the KVP file.
 	 */
 	private final HashMap<String, String> config = new HashMap<>();
 
 	/**
+	 * Create a new instance with an empty mapping.
+	 * 
+	 * @see #parse(InputStream)
+	 * @see #parse(URL)
+	 */
+	public KVPFile() {}
+
+	/**
 	 * Parse a {@link File} into a KVP (Key Value Pair) file.
 	 *
 	 * @param file - {@link File} to parse
-	 * @throws MalformedURLException
+	 * @throws IOException Thrown if an error occurs while reading the InputStream
+	 *                     of the resource
 	 */
-	public KVPFile(@Nonnull File file) throws MalformedURLException { this(file.toURI().toURL()); }
+	public KVPFile(@Nonnull File file) throws IOException { this(file.toURI().toURL()); }
 
 	/**
 	 * Parse a {@link URL} into a KVP (Key Value Pair) file.
 	 *
 	 * @param url - {@link URL} to parse
+	 * @throws IOException Thrown if an error occurs while reading the InputStream
+	 *                     of the resource
 	 */
-	public KVPFile(@Nonnull URL url) {
+	public KVPFile(@Nonnull URL url) throws IOException {
 		// Ensure url is not null
-		Objects.nonNull(url);
-		this.resourceURL = url;
+		Objects.requireNonNull(url);
+		parse(url);
+	}
+
+	/**
+	 * Parse a {@link InputStream} into a KVP (Key Value Pair) file.
+	 * 
+	 * @param input - the {@link InputStream} to parse
+	 * @throws IOException Thrown if an error occurs while reading the InputStream
+	 *                     of the resource
+	 */
+	public KVPFile(@Nonnull InputStream input) throws IOException {
+		// Ensure the stream is not null
+		Objects.requireNonNull(input);
+		parse(input);
 	}
 
 	/**
@@ -150,39 +171,41 @@ public class KVPFile {
 	public boolean isEmpty() { return config.isEmpty(); }
 
 	/**
-	 * Parse the resource {@link URL} into the configuration mapping.
+	 * Parse a resource {@link URL} into the configuration mapping.
 	 *
+	 * @param resourceURL - URL pointing to the resource to parse
 	 * @throws IOException Thrown if an error occurs while reading the InputStream
 	 *                     of the resource
 	 */
-	public void parse() throws IOException {
+	public void parse(@Nonnull URL resourceURL) throws IOException {
+		parse(ResourceUtils.linesFromResource(Objects.requireNonNull(resourceURL, "Resource url must not be null!")));
+	}
+
+	/**
+	 * Parse a resource {@link InputStream} into the configuration mapping.
+	 * 
+	 * @param input - The input stream to parse
+	 * @throws IOException Thrown if an error occurs while reading the InputStream
+	 *                     of the resource
+	 */
+	public void parse(@Nonnull InputStream input) throws IOException {
+		parse(List.of(StringUtils.toSplitString(input)));
+	}
+
+	/**
+	 * Convert the parsed inputs into a key value mapping
+	 * @param input - raw KVP style strings
+	 */
+	private void parse(List<String> input) {
 		/*
 		 * - Read all lines - Filter out ignored lines - Split line based on regex with
 		 * limit of two - Ensure split has two elements - Collect into a map
 		 */
-		Map<String, String> tempMap = ResourceHelper.linesFromResource(resourceURL).stream().filter(ignoreLines)
-				.map(line -> line.split("=", 2)).filter(split -> split.length == 2)
+		Map<String, String> tempMap = input.stream().filter(ignoreLines).map(line -> line.split("=", 2))
+				.filter(split -> split.length == 2)
 				.collect(Collectors.toMap(split -> split[0].trim(), split -> split[1].trim()));
 
 		// Put all pairs into main map
 		config.putAll(tempMap);
 	}
-
-	@Override
-	public int hashCode() { return Objects.hash(config, resourceURL); }
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		KVPFile other = (KVPFile) obj;
-		return Objects.equals(config, other.config) && Objects.equals(resourceURL, other.resourceURL);
-	}
-
-	@Override
-	public String toString() { return "KVPFile [resourceURL=" + resourceURL + ", config=" + config + "]"; }
 }

@@ -161,8 +161,7 @@ public class WatameBot {
 		Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "WatameBot Shutdown Thread"));
 
 		// Load plugins
-		loader = new UntrustedPluginLoader<>(IPlugin.class, Constants.PLUGINS_FOLDER, true);
-		plugins = loader.getPlugins();
+		loader = new UntrustedPluginLoader<>(IPlugin.class);
 
 		// Connect to our database file
 		database = new DataManager();
@@ -173,6 +172,10 @@ public class WatameBot {
 
 	void start() {
 		logger.info("Starting...");
+
+		plugins = loader.getPlugins();
+		logger.debug("Found {} plugins", plugins.size());
+
 		preInit();
 	}
 
@@ -275,7 +278,6 @@ public class WatameBot {
 		 */
 
 		discord = buildJDA();
-
 		// Post-initialize all plugins
 		logger.debug("Calling plugin post-initialization async");
 		CompletableFuture<Void> pluginPostInit = CompletableFuture
@@ -313,8 +315,7 @@ public class WatameBot {
 		logger.trace("STATE = " + state);
 
 		logger.debug("Calling plugin on ready async");
-		CompletableFuture.allOf(plugins.stream()
-				.map(plugin -> CompletableFuture.runAsync(() -> plugin.onReady(this), discord.getCallbackPool()))
+		CompletableFuture.allOf(plugins.stream().map(plugin -> CompletableFuture.runAsync(() -> plugin.onReady(this)))
 				.toArray(CompletableFuture[]::new));
 	}
 
@@ -338,7 +339,7 @@ public class WatameBot {
 	 * @return connected JDA object
 	 */
 	private JDABuilder createJDA(String token) {
-		Objects.nonNull(token);
+		Objects.requireNonNull(token, "Login token must not be null");
 
 		// Setup our JDA with wanted values
 		logger.debug("Creating JDA");

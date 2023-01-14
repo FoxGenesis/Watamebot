@@ -1,5 +1,8 @@
 package net.foxgenesis.util;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
@@ -34,7 +37,7 @@ public final class StringUtils {
 	public static final Pattern PATTERN_URL_WITH_GROUPING = Pattern.compile(
 			"\\b(?<protocol>http[s]?|ftp|file)://(?<domain>[-a-zA-Z0-9+&@#%?=~_|!:,.;]*[-a-zA-Z0-9+&@#%=~_|])(?<path>\\S*)",
 			Pattern.CASE_INSENSITIVE);
-	
+
 	/**
 	 * NEED_JAVADOC
 	 */
@@ -50,5 +53,18 @@ public final class StringUtils {
 	 */
 	public static Stream<MatchResult> findURLWithGroups(@Nonnull String str) {
 		return PATTERN_URL_WITH_GROUPING.matcher(str).results();
+	}
+
+	public static String limit(String str, int length) {
+		return str.length() > length ? str.substring(0, length) : str;
+	}
+	
+	public static String toString(@Nonnull InputStream input) throws IOException {
+		Objects.requireNonNull(input, "InputStream must not be null!");
+		return new String(input.readAllBytes());
+	}
+	
+	public static String[] toSplitString(@Nonnull InputStream input) throws IOException {
+		return toString(input).split("(\\r\\n|\\r|\\n)");
 	}
 }

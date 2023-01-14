@@ -12,9 +12,9 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class ResourceHelper {
+public final class ResourceUtils {
 
-	private static final Logger logger = LoggerFactory.getLogger(ResourceHelper.class);
+	private static final Logger logger = LoggerFactory.getLogger(ResourceUtils.class);
 
 	/**
 	 * Read all lines from a resource
@@ -53,5 +53,15 @@ public final class ResourceHelper {
 		properties.load(path.openStream());
 
 		return properties;
+	}
+
+	public record ModuleResource(Module module, String resourcePath) {
+		public ModuleResource(String moduleName, String resourcePath) {
+			this(ModuleLayer.boot().findModule(moduleName).orElseThrow(), resourcePath);
+		}
+		
+		public InputStream openStream() throws IOException {
+			return module.getResourceAsStream(resourcePath);
+		}
 	}
 }

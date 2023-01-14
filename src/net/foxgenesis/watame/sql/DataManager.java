@@ -2,14 +2,13 @@ package net.foxgenesis.watame.sql;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -26,7 +25,8 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.Event;
 import net.foxgenesis.config.KVPFile;
 import net.foxgenesis.util.MethodTimer;
-import net.foxgenesis.util.ResourceHelper;
+import net.foxgenesis.util.ResourceUtils.ModuleResource;
+import net.foxgenesis.util.StringUtils;
 import net.foxgenesis.watame.Constants;
 import net.foxgenesis.watame.ExitCode;
 
@@ -297,7 +297,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 */
 	private void insertGuildInDatabase(@Nonnull Guild guild) {
 		Objects.requireNonNull(guild);
-		
+
 		logger.trace("Inserted new row for guild {} in: " + MethodTimer.runFormatMS(() -> {
 			PreparedStatement st = this.getAndAssertStatement("guild_data_insert");
 			try {
@@ -349,21 +349,22 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	}
 
 	/**
-	 * Setup database with SQL code from a {@link URL}.
+	 * Setup database with SQL code from a {@link ModuleResource}.
 	 * 
-	 * @param url - {@link URL} containing SQL code to run
+	 * @param resource - {@link ModuleResource} containing SQL code to run
 	 * @throws IOException                   Thrown if IO error occurs during file
 	 *                                       processing
 	 * @throws UnsupportedOperationException Thrown if not connected to database
 	 */
-	private void setupDatabase(@Nonnull URL url) throws IOException, UnsupportedOperationException {
+	private void setupDatabase(@Nonnull ModuleResource resource) throws IOException, UnsupportedOperationException {
 		// Check if we are connected to database
 		if (!isConnectionValid())
 			throw new UnsupportedOperationException("Not connected to database!");
 
 		// Read all lines in the file
 		logger.trace("Reading lines from SQL file");
-		List<String> lines = ResourceHelper.linesFromResource(Objects.requireNonNull(url, "Invalid asset URL"));
+		String[] lines = StringUtils
+				.toSplitString(Objects.requireNonNull(resource, "Resource must not be null!").openStream());
 
 		// Iterate on each line
 		for (String line : lines) {
@@ -383,15 +384,14 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * Load all database operations from a KVP (Key. Value. Pair) resource file and
 	 * map the values to {@link PreparedStatement PreparedStatements}.
 	 * 
-	 * @param url - {@link URL} path to a KVP resource
+	 * @param resource - {@link ModuleResource} containing a KVP resource
 	 * @throws IOException Thrown if an error occurs while reading the InputStream
 	 *                     of the resource
-	 * @see KVPFile#KVPFile(URL)
+	 * @see KVPFile#KVPFile(InputStream)
 	 */
-	private void initalizeOperations(@Nonnull URL url) throws IOException {
+	private void initalizeOperations(@Nonnull ModuleResource resource) throws IOException {
 		// Read and parse database operations
-		KVPFile kvp = new KVPFile(Objects.requireNonNull(url, "Invalid asset URL"));
-		kvp.parse();
+		KVPFile kvp = new KVPFile(Objects.requireNonNull(resource, "Resource must not be null!").openStream());
 
 		// Map all database operations to their statements
 		kvp.forEach((key, value) -> {

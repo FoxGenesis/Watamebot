@@ -22,7 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.foxgenesis.config.KVPFile;
-import net.foxgenesis.util.ResourceHelper;
+import net.foxgenesis.util.ResourceUtils;
 import net.foxgenesis.watame.ExitCode;
 
 /**
@@ -107,7 +107,7 @@ public class AbstractDatabase implements AutoCloseable {
 
 		// Read all lines in the file
 		logger.trace("Reading lines from SQL file");
-		List<String> lines = ResourceHelper.linesFromResource(url);
+		List<String> lines = ResourceUtils.linesFromResource(url);
 
 		try (Connection conn = source.getConnection()) {
 			// Iterate on each line
@@ -139,7 +139,6 @@ public class AbstractDatabase implements AutoCloseable {
 	private void initalizeOperations(@Nonnull URL url) throws IOException {
 		// Read and parse database operations
 		KVPFile kvp = new KVPFile(url);
-		kvp.parse();
 
 		// Map all database operations to their statements
 		kvp.forEach((key, value) -> {
