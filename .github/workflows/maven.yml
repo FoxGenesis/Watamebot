@@ -11,7 +11,7 @@ on:
         type: string
       tag_name:
         description: 'Tag to use'
-        required: true
+        required: false
         type: string
       release_notes:
         description: 'Release body'
@@ -47,12 +47,12 @@ jobs:
     - name: Creating Release
       uses: softprops/action-gh-release@v1
       with:
-        target_commitish: ${{ github.ref }}
-        tag_name: ${{ github.event.inputs.tag_name }}
+        #tag_name: ${{ github.event.inputs.tag_name }}
         name: ${{ github.event.inputs.release_name }}
         body: ${{ github.event.inputs.release_notes }}
-        draft: false
         prerelease: ${{ github.event.inputs.pre_release }}
+        draft: false
+        fail_on_unmatched_files: true
         files: "/home/runner/work/Watamebot/Watamebot/target/*.zip"
     - name: Deploy with Maven
       run: mvn -B deploy -Pci-cd
