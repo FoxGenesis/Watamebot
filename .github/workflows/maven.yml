@@ -52,7 +52,7 @@ jobs:
         gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
         gpg-passphrase: MAVEN_GPG_PASSPHRASE
     - name: Build with Maven
-      run: mvn clean package #-Pzip
+      run: mvn -B clean package #-Pzip
 #    - name: Creating Release
 #      uses: softprops/action-gh-release@v1
 #      with:
