@@ -204,8 +204,11 @@ public class WatameBot {
 
 		// Pre-initialize all plugins async
 		logger.debug("Calling plugin pre-initialization async");
-		CompletableFuture<Void> pluginPreInit = CompletableFuture.allOf(plugins.stream()
-				.map(plugin -> CompletableFuture.runAsync(plugin::preInit)).toArray(CompletableFuture[]::new));
+		CompletableFuture<Void> pluginPreInit = CompletableFuture.allOf(
+				plugins.stream().map(plugin -> CompletableFuture.runAsync(plugin::preInit).exceptionally(error -> {
+					logger.error("Error in " + plugin.getName() + " pre-init", error);
+					return null;
+				})).toArray(CompletableFuture[]::new));
 
 		// Setup and connect to the database
 		databaseInit();
@@ -260,9 +263,11 @@ public class WatameBot {
 		// Initialize all plugins
 		logger.debug("Calling plugin initialization async");
 		ProtectedJDABuilder pBuilder = new ProtectedJDABuilder(builder);
-		CompletableFuture<Void> pluginInit = CompletableFuture
-				.allOf(plugins.stream().map(plugin -> CompletableFuture.runAsync(() -> plugin.init(pBuilder)))
-						.toArray(CompletableFuture[]::new));
+		CompletableFuture<Void> pluginInit = CompletableFuture.allOf(plugins.stream()
+				.map(plugin -> CompletableFuture.runAsync(() -> plugin.init(pBuilder)).exceptionally(error -> {
+					logger.error("Error in " + plugin.getName() + " init", error);
+					return null;
+				})).toArray(CompletableFuture[]::new));
 
 		pBuilder.addEventListeners(new PingCommand(), new ConfigCommand());
 
@@ -291,10 +296,12 @@ public class WatameBot {
 		discord = buildJDA();
 		// Post-initialize all plugins
 		logger.debug("Calling plugin post-initialization async");
-		CompletableFuture<Void> pluginPostInit = CompletableFuture
-				.allOf(plugins.stream().map(plugin -> CompletableFuture.runAsync(() -> plugin.postInit(this)))
-						.toArray(CompletableFuture[]::new));
-
+		CompletableFuture<Void> pluginPostInit = CompletableFuture.allOf(plugins.stream()
+				.map(plugin -> CompletableFuture.runAsync(() -> plugin.postInit(this)).exceptionally(error -> {
+					logger.error("Error in " + plugin.getName() + " post-init", error);
+					return null;
+				})).toArray(CompletableFuture[]::new));
+		// discord.updateCommands().queue();
 		// Register default commands
 		discord.upsertCommand(Commands.slash("ping", "Ping the bot to test the connection"))
 				.and(discord.upsertCommand(Commands.slash("config-get", "Get the configuration of the bot")
@@ -326,8 +333,11 @@ public class WatameBot {
 		logger.trace("STATE = " + state);
 
 		logger.debug("Calling plugin on ready async");
-		CompletableFuture.allOf(plugins.stream().map(plugin -> CompletableFuture.runAsync(() -> plugin.onReady(this)))
-				.toArray(CompletableFuture[]::new));
+		CompletableFuture.allOf(plugins.stream()
+				.map(plugin -> CompletableFuture.runAsync(() -> plugin.onReady(this)).exceptionally(error -> {
+					logger.error("Error in " + plugin.getName() + " onReady", error);
+					return null;
+				})).toArray(CompletableFuture[]::new));
 	}
 
 	/**
