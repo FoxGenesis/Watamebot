@@ -2,7 +2,7 @@ package net.foxgenesis.watame.sql;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -22,7 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.foxgenesis.config.KVPFile;
-import net.foxgenesis.util.ResourceUtils;
+import net.foxgenesis.util.ResourceUtils.ModuleResource;
 import net.foxgenesis.watame.ExitCode;
 
 /**
@@ -40,10 +40,13 @@ public class AbstractDatabase implements AutoCloseable {
 	protected final Logger logger;
 
 	@Nullable
-	private final URL databaseSetupFile;
+	private final ModuleResource databaseSetupFile;
 
 	@Nonnull
-	private final URL databaseOperationsFile;
+	private final ModuleResource databaseOperationsFile;
+
+	@Nonnull
+	private final ModuleResource databaseCallableOperationsFile;
 
 	/**
 	 * On close methods
@@ -64,6 +67,9 @@ public class AbstractDatabase implements AutoCloseable {
 	@Nonnull
 	private final ConcurrentHashMap<String, String> registeredStatements = new ConcurrentHashMap<>();
 
+	@Nonnull
+	private final ConcurrentHashMap<String, String> registeredCallableStatements = new ConcurrentHashMap<>();
+
 	/**
 	 * NEED_JAVADOC
 	 *
@@ -77,6 +83,7 @@ public class AbstractDatabase implements AutoCloseable {
 		this.source = Objects.requireNonNull(properties.source());
 		this.databaseSetupFile = Objects.requireNonNull(properties.setupFile());
 		this.databaseOperationsFile = Objects.requireNonNull(properties.operationsFile());
+		this.databaseCallableOperationsFile = Objects.requireNonNull(properties.callableOperationsFile());
 	}
 
 	/**
@@ -91,23 +98,23 @@ public class AbstractDatabase implements AutoCloseable {
 			setupDatabase(databaseSetupFile);
 
 		if (Objects.nonNull(databaseOperationsFile))
-			initalizeOperations(databaseOperationsFile);
+			initalizeOperations(databaseOperationsFile, databaseCallableOperationsFile);
 	}
 
 	/**
-	 * Setup database with SQL code from a {@link URL}.
+	 * Setup database with SQL code from a {@link ModuleResource}.
 	 *
-	 * @param url - {@link URL} containing SQL code to run
+	 * @param resource - {@link ModuleResource} containing SQL code to run
 	 * @throws IOException                   Thrown if IO error occurs during file
 	 *                                       processing
 	 * @throws UnsupportedOperationException Thrown if not connected to database
 	 */
-	private void setupDatabase(@Nonnull URL url) throws IOException, UnsupportedOperationException {
-		Objects.requireNonNull(url);
+	private void setupDatabase(@Nonnull ModuleResource resource) throws IOException, UnsupportedOperationException {
+		Objects.requireNonNull(resource);
 
 		// Read all lines in the file
 		logger.trace("Reading lines from SQL file");
-		List<String> lines = ResourceUtils.linesFromResource(url);
+		List<String> lines = List.of(resource.readAllLines());
 
 		try (Connection conn = source.getConnection()) {
 			// Iterate on each line
@@ -131,14 +138,19 @@ public class AbstractDatabase implements AutoCloseable {
 	 * Load all database operations from a KVP (Key. Value. Pair) resource file and
 	 * map the values to {@link PreparedStatement PreparedStatements}.
 	 *
-	 * @param url - {@link URL} path to a KVP resource
+	 * @param resource                        - {@link ModuleResource} path to a KVP
+	 *                                        resource
+	 * @param databaseCallableOperationsFile2 - {@link ModuleResource} path to a KVP
+	 *                                        resource containing callable
+	 *                                        statements
 	 * @throws IOException Thrown if an error occurs while reading the InputStream
 	 *                     of the resource
-	 * @see KVPFile#KVPFile(URL)
+	 * @see KVPFile#KVPFile(ModuleResource)
 	 */
-	private void initalizeOperations(@Nonnull URL url) throws IOException {
+	private void initalizeOperations(@Nonnull ModuleResource resource, ModuleResource databaseCallableOperationsFile)
+			throws IOException {
 		// Read and parse database operations
-		KVPFile kvp = new KVPFile(url);
+		KVPFile kvp = new KVPFile(resource);
 
 		// Map all database operations to their statements
 		kvp.forEach((key, value) -> {
@@ -147,6 +159,23 @@ public class AbstractDatabase implements AutoCloseable {
 			} else {
 				try {
 					registerStatement(key, value);
+				} catch (SQLException e) {
+					ExitCode.DATABASE_STATEMENT_ERROR.programExit(e);
+					return;
+				}
+			}
+		});
+
+		kvp.clear();
+
+		kvp.parse(databaseCallableOperationsFile);
+		// Map all database operations to their statements
+		kvp.forEach((key, value) -> {
+			if (registeredCallableStatements.containsKey(key)) {
+				logger.error("Callable statement '{}' already exists! Skipping...", key);
+			} else {
+				try {
+					registerCallableStatement(key, value);
 				} catch (SQLException e) {
 					ExitCode.DATABASE_STATEMENT_ERROR.programExit(e);
 					return;
@@ -170,8 +199,27 @@ public class AbstractDatabase implements AutoCloseable {
 			throw new IllegalArgumentException("Statement '" + id + "' already exists!");
 
 		// Register our statement to ensure no duplicates are made
-		logger.trace("Creating PreparedStatement {} : {}", id, statement);
+		logger.debug("Creating PreparedStatement {} : {}", id, statement);
 		registeredStatements.put(id, statement);
+	}
+
+	/**
+	 * NEED_JAVADOC
+	 *
+	 * @param id
+	 * @param statement
+	 * @throws SQLException
+	 */
+	private void registerCallableStatement(String id, @Nonnull String statement) throws SQLException {
+		Objects.requireNonNull(statement);
+
+		// Check if id is already registered
+		if (registeredCallableStatements.containsKey(id))
+			throw new IllegalArgumentException("Callable statement '" + id + "' already exists!");
+
+		// Register our statement to ensure no duplicates are made
+		logger.debug("Creating CallableStatement {} : {}", id, statement);
+		registeredCallableStatements.put(id, statement);
 	}
 
 	/**
@@ -194,6 +242,30 @@ public class AbstractDatabase implements AutoCloseable {
 		if (statement != null)
 			return statement;
 		ExitCode.DATABASE_STATEMENT_MISSING.programExit(String.format("Statement with id '%s' is not registered!", id));
+		return null;
+	}
+
+	/**
+	 * NEED_JAVADOC
+	 *
+	 * @param id
+	 * @return
+	 */
+	@CheckForNull
+	protected String getRawCallableStatement(String id) { return registeredCallableStatements.get(id); }
+
+	/**
+	 *
+	 * @param id
+	 * @return
+	 */
+	@Nullable
+	protected String assertRawCallableStatement(String id) {
+		String statement = getRawCallableStatement(id);
+		if (statement != null)
+			return statement;
+		ExitCode.DATABASE_STATEMENT_MISSING
+				.programExit(String.format("Callable statement with id '%s' is not registered!", id));
 		return null;
 	}
 
@@ -235,11 +307,46 @@ public class AbstractDatabase implements AutoCloseable {
 	/**
 	 * NEED_JAVADOC
 	 *
+	 * @param <R>
+	 * @param id
+	 * @param function
+	 * @return
+	 */
+	protected <R> R mapCallableStatement(@Nonnull String id, @Nonnull CallableStatementFunction<R> function) {
+		return mapCallableStatement(id, function, null);
+	}
+
+	/**
+	 * NEED_JAVADOC
+	 *
+	 * @param <R>
+	 * @param id
+	 * @param function
+	 * @return
+	 */
+	protected <R> R mapCallableStatement(String id, @Nonnull CallableStatementFunction<R> function,
+			Consumer<SQLException> errorHandler) {
+		String raw = assertRawCallableStatement(id);
+
+		try (Connection conn = source.getConnection(); CallableStatement statement = conn.prepareCall(raw)) {
+			return function.apply(statement);
+		} catch (SQLException e) {
+			if (errorHandler != null)
+				errorHandler.accept(e);
+			else
+				e.printStackTrace();
+		}
+		return null;
+	}
+
+	/**
+	 * NEED_JAVADOC
+	 *
 	 * @param id
 	 * @param consumer
 	 */
-	protected void callStatement(@Nonnull String id, @Nonnull StatementConsumer consumer) {
-		callStatement(id, consumer, null);
+	protected void executeStatement(@Nonnull String id, @Nonnull StatementConsumer consumer) {
+		executeStatement(id, consumer, null);
 	}
 
 	/**
@@ -249,9 +356,34 @@ public class AbstractDatabase implements AutoCloseable {
 	 * @param consumer
 	 * @param errorHandler
 	 */
-	protected void callStatement(@Nonnull String id, @Nonnull StatementConsumer consumer,
+	protected void executeStatement(@Nonnull String id, @Nonnull StatementConsumer consumer,
 			Consumer<SQLException> errorHandler) {
 		mapStatement(id, statement -> {
+			consumer.accept(statement);
+			return null;
+		}, errorHandler);
+	}
+
+	/**
+	 * NEED_JAVADOC
+	 *
+	 * @param id
+	 * @param consumer
+	 */
+	protected void executeCallableStatement(@Nonnull String id, @Nonnull CallableStatementConsumer consumer) {
+		executeCallableStatement(id, consumer, null);
+	}
+
+	/**
+	 * NEED_JAVADOC
+	 *
+	 * @param id
+	 * @param consumer
+	 * @param errorHandler
+	 */
+	protected void executeCallableStatement(@Nonnull String id, @Nonnull CallableStatementConsumer consumer,
+			Consumer<SQLException> errorHandler) {
+		mapCallableStatement(id, statement -> {
 			consumer.accept(statement);
 			return null;
 		}, errorHandler);
@@ -321,4 +453,14 @@ public class AbstractDatabase implements AutoCloseable {
 
 	@FunctionalInterface
 	protected interface StatementConsumer { public void accept(PreparedStatement statement) throws SQLException; }
+
+	@FunctionalInterface
+	protected interface CallableStatementFunction<R> {
+		public R apply(CallableStatement statement) throws SQLException;
+	}
+
+	@FunctionalInterface
+	protected interface CallableStatementConsumer {
+		public void accept(CallableStatement statement) throws SQLException;
+	}
 }

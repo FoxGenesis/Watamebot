@@ -1,28 +1,36 @@
 package net.foxgenesis.watame.sql;
 
-import java.net.URL;
 import java.util.function.Supplier;
 
 import javax.sql.DataSource;
 
-public record DatabaseProperties(DataSource source, URL setupFile, URL operationsFile, String name) {
-	public DatabaseProperties(Supplier<DataSource> source, URL setupFile, URL operationsFile, String name) {
-		this(source.get(), setupFile, operationsFile, name);
+import net.foxgenesis.util.ResourceUtils.ModuleResource;
+
+public record DatabaseProperties(DataSource source, ModuleResource setupFile, ModuleResource operationsFile,
+		ModuleResource callableOperationsFile, String name) {
+	public DatabaseProperties(Supplier<DataSource> source, ModuleResource setupFile, ModuleResource operationsFile,
+			ModuleResource callableOperationsFile, String name) {
+		this(source.get(), setupFile, operationsFile, callableOperationsFile, name);
 	}
 
-	public DatabaseProperties(Supplier<DataSource> source, URL operationsFile, String name) {
-		this(source.get(), null, operationsFile, name);
+	public DatabaseProperties(Supplier<DataSource> source, ModuleResource operationsFile,
+			ModuleResource callableOperationsFile, String name) {
+		this(source.get(), null, operationsFile, callableOperationsFile, name);
 	}
 
-	public DatabaseProperties(DataSource source, URL operationsFile, String name) {
-		this(source, null, operationsFile, name);
+	public DatabaseProperties(DataSource source, ModuleResource operationsFile, ModuleResource callableOperationsFile,
+			String name) {
+		this(source, null, operationsFile, callableOperationsFile, name);
 	}
 
-	public DatabaseProperties(Supplier<DataSource> source, URL operationsFile) {
-		this(source.get(), null, operationsFile, null);
+	public DatabaseProperties(Supplier<DataSource> source, ModuleResource operationsFile,
+			ModuleResource callableOperationsFile) {
+		this(source.get(), null, operationsFile, callableOperationsFile, null);
 	}
 
-	public DatabaseProperties(DataSource source, URL operationsFile) { this(source, null, operationsFile, null); }
+	public DatabaseProperties(DataSource source, ModuleResource operationsFile, ModuleResource callableOperationsFile) {
+		this(source, null, operationsFile, callableOperationsFile, null);
+	}
 
 	public DatabaseProperties(Supplier<DataSource> source) { this(source.get(), null, null, null); }
 

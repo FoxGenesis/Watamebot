@@ -7,7 +7,11 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Properties;
+
+import javax.annotation.Nonnull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,13 +59,35 @@ public final class ResourceUtils {
 		return properties;
 	}
 
+	public static String toString(@Nonnull InputStream input) throws IOException {
+		Objects.requireNonNull(input, "InputStream must not be null!");
+		return new String(input.readAllBytes());
+	}
+
+	public static String[] toSplitString(@Nonnull InputStream input) throws IOException {
+		return toString(input).split("(\\r\\n|\\r|\\n)");
+	}
+
 	public record ModuleResource(Module module, String resourcePath) {
 		public ModuleResource(String moduleName, String resourcePath) {
-			this(ModuleLayer.boot().findModule(moduleName).orElseThrow(), resourcePath);
+			this(ModuleLayer.boot().findModule(moduleName).orElseThrow(
+					() -> new NoSuchElementException("No module found '" + moduleName + "'")), resourcePath);
 		}
-		
+
 		public InputStream openStream() throws IOException {
+			logger.trace("Attempting to read resource: " + resourcePath);
 			return module.getResourceAsStream(resourcePath);
+		}
+
+		public String readToString() throws IOException { return ResourceUtils.toString(openStream()); }
+
+		public String[] readAllLines() throws IOException { return ResourceUtils.toSplitString(openStream()); }
+
+		public Properties asProperties() throws IOException {
+			Properties properties = new Properties();
+			properties.load(openStream());
+
+			return properties;
 		}
 	}
 }
