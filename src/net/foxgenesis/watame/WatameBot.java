@@ -34,11 +34,14 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
+import net.foxgenesis.property.IPropertyProvider;
 import net.foxgenesis.util.ProgramArguments;
 import net.foxgenesis.watame.command.ConfigCommand;
 import net.foxgenesis.watame.command.PingCommand;
 import net.foxgenesis.watame.plugin.IPlugin;
 import net.foxgenesis.watame.plugin.UntrustedPluginLoader;
+import net.foxgenesis.watame.property.GuildPropertyProvider;
+import net.foxgenesis.watame.property.IGuildPropertyMapping;
 import net.foxgenesis.watame.sql.DataManager;
 import net.foxgenesis.watame.sql.IDatabaseManager;
 
@@ -135,6 +138,11 @@ public class WatameBot {
 	private final DataManager database;
 
 	/**
+	 * Property provider
+	 */
+	private final GuildPropertyProvider provider;
+
+	/**
 	 * Current state of the bot
 	 */
 	private State state = State.CONSTRUCTING;
@@ -168,6 +176,9 @@ public class WatameBot {
 
 		// Create connection to discord through our token
 		builder = createJDA(token);
+
+		// Create our property provider
+		provider = new GuildPropertyProvider(database);
 	}
 
 	void start() {
@@ -318,6 +329,13 @@ public class WatameBot {
 		CompletableFuture.allOf(plugins.stream().map(plugin -> CompletableFuture.runAsync(() -> plugin.onReady(this)))
 				.toArray(CompletableFuture[]::new));
 	}
+
+	/**
+	 * Get the property provider instance.
+	 * 
+	 * @return The current {@link IPropertyProvider} instance
+	 */
+	public IPropertyProvider<String, Guild, IGuildPropertyMapping> getPropertyProvider() { return provider; }
 
 	/**
 	 * If JDA isn't ready, wait for it
