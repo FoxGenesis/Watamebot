@@ -20,6 +20,7 @@ module watamebot {
 
 	exports net.foxgenesis.config;
 	exports net.foxgenesis.config.fields;
+	exports net.foxgenesis.property;
 	exports net.foxgenesis.log;
 	exports net.foxgenesis.watame.sql;
 	exports net.foxgenesis.watame;
@@ -27,7 +28,11 @@ module watamebot {
 	exports net.foxgenesis.util;
 	exports net.foxgenesis.util.function;
 	exports net.foxgenesis.watame.util;
+	exports net.foxgenesis.watame.property;
 
 	uses net.foxgenesis.watame.plugin.IPlugin;
+
+	provides net.foxgenesis.watame.plugin.IPlugin with net.foxgenesis.watame.command.IntegratedCommands;
+
 	opens resources;
 }

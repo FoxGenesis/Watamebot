@@ -5,9 +5,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
@@ -21,24 +19,23 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDA.Status;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
-import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
-import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
+import net.foxgenesis.property.IPropertyProvider;
 import net.foxgenesis.util.ProgramArguments;
 import net.foxgenesis.watame.command.ConfigCommand;
 import net.foxgenesis.watame.command.PingCommand;
 import net.foxgenesis.watame.plugin.IPlugin;
 import net.foxgenesis.watame.plugin.UntrustedPluginLoader;
+import net.foxgenesis.watame.property.GuildPropertyProvider;
+import net.foxgenesis.watame.property.IGuildPropertyMapping;
 import net.foxgenesis.watame.sql.DataManager;
 import net.foxgenesis.watame.sql.IDatabaseManager;
 
@@ -135,6 +132,11 @@ public class WatameBot {
 	private final DataManager database;
 
 	/**
+	 * Property provider
+	 */
+	private final GuildPropertyProvider provider;
+
+	/**
 	 * Current state of the bot
 	 */
 	private State state = State.CONSTRUCTING;
@@ -168,6 +170,9 @@ public class WatameBot {
 
 		// Create connection to discord through our token
 		builder = createJDA(token);
+
+		// Create our property provider
+		provider = new GuildPropertyProvider(database);
 	}
 
 	void start() {
@@ -193,8 +198,11 @@ public class WatameBot {
 
 		// Pre-initialize all plugins async
 		logger.debug("Calling plugin pre-initialization async");
-		CompletableFuture<Void> pluginPreInit = CompletableFuture.allOf(plugins.stream()
-				.map(plugin -> CompletableFuture.runAsync(plugin::preInit)).toArray(CompletableFuture[]::new));
+		CompletableFuture<Void> pluginPreInit = CompletableFuture.allOf(
+				plugins.stream().map(plugin -> CompletableFuture.runAsync(plugin::preInit).exceptionally(error -> {
+					logger.error("Error in " + plugin.getName() + " pre-init", error);
+					return null;
+				})).toArray(CompletableFuture[]::new));
 
 		// Setup and connect to the database
 		databaseInit();
@@ -249,9 +257,11 @@ public class WatameBot {
 		// Initialize all plugins
 		logger.debug("Calling plugin initialization async");
 		ProtectedJDABuilder pBuilder = new ProtectedJDABuilder(builder);
-		CompletableFuture<Void> pluginInit = CompletableFuture
-				.allOf(plugins.stream().map(plugin -> CompletableFuture.runAsync(() -> plugin.init(pBuilder)))
-						.toArray(CompletableFuture[]::new));
+		CompletableFuture<Void> pluginInit = CompletableFuture.allOf(plugins.stream()
+				.map(plugin -> CompletableFuture.runAsync(() -> plugin.init(pBuilder)).exceptionally(error -> {
+					logger.error("Error in " + plugin.getName() + " init", error);
+					return null;
+				})).toArray(CompletableFuture[]::new));
 
 		pBuilder.addEventListeners(new PingCommand(), new ConfigCommand());
 
@@ -276,26 +286,22 @@ public class WatameBot {
 		/*
 		 * ====== POST-INITIALIZATION ======
 		 */
-
+		logger.trace("building discord connection");
 		discord = buildJDA();
+
+		// Register commands
+		logger.trace("Collecting command data");
+		CommandListUpdateAction update = discord.updateCommands();
+		plugins.stream().filter(IPlugin::providesCommands).forEach(plugin -> update.addCommands(plugin.getCommands()));
+		update.queue();
+
 		// Post-initialize all plugins
 		logger.debug("Calling plugin post-initialization async");
-		CompletableFuture<Void> pluginPostInit = CompletableFuture
-				.allOf(plugins.stream().map(plugin -> CompletableFuture.runAsync(() -> plugin.postInit(this)))
-						.toArray(CompletableFuture[]::new));
-
-		// Register default commands
-		discord.upsertCommand(Commands.slash("ping", "Ping the bot to test the connection"))
-				.and(discord.upsertCommand(Commands.slash("config-get", "Get the configuration of the bot")
-						.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
-						.setGuildOnly(true)
-						.addOption(OptionType.STRING, "key", "Location of the variable", true, false)))
-				.and(discord.upsertCommand(Commands.slash("config-set", "Get the configuration of the bot")
-						.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
-						.setGuildOnly(true).addOption(OptionType.STRING, "key", "Location of the variable", true, false)
-						.addOption(OptionType.STRING, "type", "The variable's type", true, true)
-						.addOptions(createAllOptions())))
-				.queue();
+		CompletableFuture<Void> pluginPostInit = CompletableFuture.allOf(plugins.stream()
+				.map(plugin -> CompletableFuture.runAsync(() -> plugin.postInit(this)).exceptionally(error -> {
+					logger.error("Error in " + plugin.getName() + " post-init", error);
+					return null;
+				})).toArray(CompletableFuture[]::new));
 
 		/*
 		 * ====== END POST-INITIALIZATION ======
@@ -315,9 +321,19 @@ public class WatameBot {
 		logger.trace("STATE = " + state);
 
 		logger.debug("Calling plugin on ready async");
-		CompletableFuture.allOf(plugins.stream().map(plugin -> CompletableFuture.runAsync(() -> plugin.onReady(this)))
-				.toArray(CompletableFuture[]::new));
+		CompletableFuture.allOf(plugins.stream()
+				.map(plugin -> CompletableFuture.runAsync(() -> plugin.onReady(this)).exceptionally(error -> {
+					logger.error("Error in " + plugin.getName() + " onReady", error);
+					return null;
+				})).toArray(CompletableFuture[]::new));
 	}
+
+	/**
+	 * Get the property provider instance.
+	 * 
+	 * @return The current {@link IPropertyProvider} instance
+	 */
+	public IPropertyProvider<String, Guild, IGuildPropertyMapping> getPropertyProvider() { return provider; }
 
 	/**
 	 * If JDA isn't ready, wait for it
@@ -539,13 +555,5 @@ public class WatameBot {
 		}
 	}
 
-	private static List<OptionData> createAllOptions() {
-		OptionType[] values = OptionType.values();
-		List<OptionData> list = new ArrayList<>(values.length-3);
-		for (OptionType type : values)
-			if (!(type == OptionType.UNKNOWN || type == OptionType.SUB_COMMAND || type == OptionType.SUB_COMMAND_GROUP))
-				list.add(new OptionData(type, type.name().toLowerCase(), "Value to set of type " + type.name().toLowerCase()).setAutoComplete(false)
-						.setRequired(false));
-		return list;
 	}
 }

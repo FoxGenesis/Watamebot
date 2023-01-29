@@ -25,8 +25,8 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.Event;
 import net.foxgenesis.config.KVPFile;
 import net.foxgenesis.util.MethodTimer;
+import net.foxgenesis.util.ResourceUtils;
 import net.foxgenesis.util.ResourceUtils.ModuleResource;
-import net.foxgenesis.util.StringUtils;
 import net.foxgenesis.watame.Constants;
 import net.foxgenesis.watame.ExitCode;
 
@@ -363,7 +363,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 
 		// Read all lines in the file
 		logger.trace("Reading lines from SQL file");
-		String[] lines = StringUtils
+		String[] lines = ResourceUtils
 				.toSplitString(Objects.requireNonNull(resource, "Resource must not be null!").openStream());
 
 		// Iterate on each line

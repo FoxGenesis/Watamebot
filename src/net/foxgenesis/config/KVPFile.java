@@ -16,7 +16,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import net.foxgenesis.util.ResourceUtils;
-import net.foxgenesis.util.StringUtils;
+import net.foxgenesis.util.ResourceUtils.ModuleResource;
 
 /**
  * Key Value Pair (KVP) file implementation.
@@ -67,7 +67,7 @@ public class KVPFile {
 	}
 
 	/**
-	 * Parse a {@link InputStream} into a KVP (Key Value Pair) file.
+	 * Parse an {@link InputStream} into a KVP (Key Value Pair) file.
 	 * 
 	 * @param input - the {@link InputStream} to parse
 	 * @throws IOException Thrown if an error occurs while reading the InputStream
@@ -77,6 +77,19 @@ public class KVPFile {
 		// Ensure the stream is not null
 		Objects.requireNonNull(input);
 		parse(input);
+	}
+
+	/**
+	 * Parse A {@link ModuleResource} into a KVP (Key Value Pair) file.
+	 * 
+	 * @param resource - the {@link ModuleResource} to parse
+	 * @throws IOException Thrown if an error occurs while reading the InputStream
+	 *                     of the resource
+	 */
+	public KVPFile(@Nonnull ModuleResource resource) throws IOException {
+		// Ensure the resource is not null
+		Objects.requireNonNull(resource);
+		parse(resource);
 	}
 
 	/**
@@ -182,18 +195,28 @@ public class KVPFile {
 	}
 
 	/**
-	 * Parse a resource {@link InputStream} into the configuration mapping.
+	 * Parse an {@link InputStream} into the configuration mapping.
 	 * 
-	 * @param input - The input stream to parse
+	 * @param input - the input stream to parse
 	 * @throws IOException Thrown if an error occurs while reading the InputStream
 	 *                     of the resource
 	 */
 	public void parse(@Nonnull InputStream input) throws IOException {
-		parse(List.of(StringUtils.toSplitString(input)));
+		parse(List.of(ResourceUtils.toSplitString(input)));
 	}
 
 	/**
+	 * Parse a {@link ModuleResource} into the configuration mapping.
+	 * 
+	 * @param resource - the resource to parse
+	 * @throws IOException Thrown if an error occurs while reading the InputStream
+	 *                     of the resource
+	 */
+	public void parse(@Nonnull ModuleResource resource) throws IOException { parse(resource.openStream()); }
+
+	/**
 	 * Convert the parsed inputs into a key value mapping
+	 * 
 	 * @param input - raw KVP style strings
 	 */
 	private void parse(List<String> input) {

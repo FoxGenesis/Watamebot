@@ -1,8 +1,5 @@
 package net.foxgenesis.util;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
@@ -57,14 +54,5 @@ public final class StringUtils {
 
 	public static String limit(String str, int length) {
 		return str.length() > length ? str.substring(0, length) : str;
-	}
-	
-	public static String toString(@Nonnull InputStream input) throws IOException {
-		Objects.requireNonNull(input, "InputStream must not be null!");
-		return new String(input.readAllBytes());
-	}
-	
-	public static String[] toSplitString(@Nonnull InputStream input) throws IOException {
-		return toString(input).split("(\\r\\n|\\r|\\n)");
 	}
 }

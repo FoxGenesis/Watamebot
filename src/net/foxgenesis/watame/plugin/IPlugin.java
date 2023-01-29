@@ -1,7 +1,10 @@
 package net.foxgenesis.watame.plugin;
 
 import java.lang.Runtime.Version;
+import java.util.Collection;
+import java.util.Collections;
 
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.foxgenesis.watame.WatameBot;
 import net.foxgenesis.watame.WatameBot.ProtectedJDABuilder;
 
@@ -61,6 +64,7 @@ public interface IPlugin extends AutoCloseable {
 	 */
 	public void onReady(WatameBot bot);
 
+	public default Collection<CommandData> getCommands() { return Collections.emptyList(); }
 	/**
 	 * Get the name of this plugin.
 	 *
@@ -88,6 +92,14 @@ public interface IPlugin extends AutoCloseable {
 	 */
 	public default Version getVersion() { return Version.parse(getProperties(getClass()).version()); }
 
+	/**
+	 * 
+	 * 
+	 * Check whether this plugin provides commands/interactions.
+	 * 
+	 * @return If this plugin provides command data
+	 */
+	public default boolean providesCommands() { return getProperties(getClass()).providesCommands(); }
 	/**
 	 * Get the annotated {@link PluginProperties} of a class
 	 *
