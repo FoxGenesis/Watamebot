@@ -5,7 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target({ElementType.TYPE})
+@Target({ ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface PluginProperties {
 	/**
@@ -29,4 +29,11 @@ public @interface PluginProperties {
 	 * @return The version of this plugin.
 	 */
 	public String version();
+
+	/**
+	 * Check whether this plugin provides commands/interactions.
+	 * 
+	 * @return If this plugin provides command data
+	 */
+	public boolean providesCommands();
 }

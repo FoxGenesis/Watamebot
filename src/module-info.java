@@ -31,5 +31,8 @@ module watamebot {
 	exports net.foxgenesis.watame.property;
 
 	uses net.foxgenesis.watame.plugin.IPlugin;
+
+	provides net.foxgenesis.watame.plugin.IPlugin with net.foxgenesis.watame.command.IntegratedCommands;
+
 	opens resources;
 }
