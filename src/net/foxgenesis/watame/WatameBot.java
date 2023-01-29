@@ -288,6 +288,13 @@ public class WatameBot {
 		 */
 		logger.trace("building discord connection");
 		discord = buildJDA();
+
+		// Register commands
+		logger.trace("Collecting command data");
+		CommandListUpdateAction update = discord.updateCommands();
+		plugins.stream().filter(IPlugin::providesCommands).forEach(plugin -> update.addCommands(plugin.getCommands()));
+		update.queue();
+
 		// Post-initialize all plugins
 		logger.debug("Calling plugin post-initialization async");
 		CompletableFuture<Void> pluginPostInit = CompletableFuture.allOf(plugins.stream()
