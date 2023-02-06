@@ -8,6 +8,7 @@ import org.fusesource.jansi.AnsiConsole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.foxgenesis.util.MethodTimer;
 import net.foxgenesis.util.ProgramArguments;
 import net.foxgenesis.util.SingleInstanceUtil;
 
@@ -61,9 +62,7 @@ public class Main {
 		// First call of WatameBot class. Will cause instance creation
 		WatameBot watame = WatameBot.getInstance();
 
-		watame.start();
-
-		logger.info("Startup Complete!");
+		logger.info("Startup completed in " + MethodTimer.runFormatSec(watame::start));
 	}
 
 	/**

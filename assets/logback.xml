@@ -1,14 +1,43 @@
 <configuration>
 	<!-- custom coloring conversion -->
 	<conversionRule conversionWord="colorize" converterClass="net.foxgenesis.log.CustomHighlight" />
+	<property name="LOG_DIR" value="logs" />
+	<property name="LOG_FILE_NAME" value="logs" />
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-		
 		<encoder>
-			<pattern>%colorize(%d{HH:mm:ss.SSS} [%thread] %-5level %logger{16} - %msg) %n</pattern>
+			<pattern>%colorize(%d{HH:mm:ss.SSS} %-5level %marker [%thread] %logger{0} - %msg) %n</pattern>
 		</encoder>
 	</appender>
-
-	<root level="${LOG_LEVEL}">
+	<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${LOG_DIR}/${LOG_FILE_NAME}.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<fileNamePattern>${LOG_DIR}/${LOG_FILE_NAME}-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+			<maxFileSize>10MB</maxFileSize>    
+			<maxHistory>30</maxHistory>
+			<totalSizeCap>100GB</totalSizeCap>
+		</rollingPolicy>
+		<encoder>
+			<pattern>%colorize([%d{HH:mm:ss.SSS}] %-5level[%-9marker] [%thread] %logger{0} - %msg) %n</pattern>
+		</encoder>
+	</appender>
+	<appender name="ASYNC_CONSOLE"
+		class="ch.qos.logback.classic.AsyncAppender">
+		<discardingThreshold>0</discardingThreshold> 
 		<appender-ref ref="STDOUT" />
+		<queueSize>1</queueSize>
+		<includeCallerData>false</includeCallerData>
+		<neverBlock>true</neverBlock>
+	</appender>
+	<appender name="ASYNC_FILE"
+		class="ch.qos.logback.classic.AsyncAppender">
+		<discardingThreshold>0</discardingThreshold>
+		<appender-ref ref="FILE" />
+		<queueSize>1</queueSize> 
+		<includeCallerData>false</includeCallerData> 
+		<neverBlock>false</neverBlock>
+	</appender>
+	<root level="${LOG_LEVEL}">
+		<appender-ref ref="ASYNC_CONSOLE" />
+		<appender-ref ref="ASYNC_FILE" />
 	</root>
 </configuration>
