@@ -5,8 +5,8 @@ import java.util.Collection;
 import java.util.Collections;
 
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.foxgenesis.watame.ProtectedJDABuilder;
 import net.foxgenesis.watame.WatameBot;
-import net.foxgenesis.watame.WatameBot.ProtectedJDABuilder;
 
 /**
  * NEED_JAVADOC
@@ -38,7 +38,7 @@ public interface IPlugin extends AutoCloseable {
 	 * @see #init(ProtectedJDABuilder)
 	 * @see #postInit(WatameBot)
 	 */
-	public void preInit();
+	public void preInit() throws SeverePluginException;
 
 	/**
 	 * NEED_JAVADOC
@@ -46,7 +46,7 @@ public interface IPlugin extends AutoCloseable {
 	 * @see #preInit()
 	 * @see #postInit(WatameBot)
 	 */
-	public void init(ProtectedJDABuilder builder);
+	public void init(ProtectedJDABuilder builder) throws SeverePluginException;
 
 	/**
 	 * NEED_JAVADOC
@@ -55,16 +55,17 @@ public interface IPlugin extends AutoCloseable {
 	 * @see #preInit()
 	 * @see #init(ProtectedJDABuilder)
 	 */
-	public void postInit(WatameBot bot);
+	public void postInit(WatameBot bot) throws SeverePluginException;
 
 	/**
 	 * NEED_JAVADOC
 	 *
 	 * @param bot
 	 */
-	public void onReady(WatameBot bot);
+	public void onReady(WatameBot bot) throws SeverePluginException;
 
 	public default Collection<CommandData> getCommands() { return Collections.emptyList(); }
+
 	/**
 	 * Get the name of this plugin.
 	 *
