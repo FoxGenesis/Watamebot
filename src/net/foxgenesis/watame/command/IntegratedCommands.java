@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -54,3 +55,4 @@ public class IntegratedCommands implements IPlugin {
 						"Value to set of type " + type.name().toLowerCase()).setAutoComplete(false).setRequired(false))
 				.toList();
 	}
+}
