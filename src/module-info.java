@@ -13,11 +13,11 @@ module watamebot {
 	requires transitive java.sql;
 	requires java.logging;
 	requires jsr305;
-	requires logback.classic;
-	requires logback.core;
 	requires org.fusesource.jansi;
 	requires org.apache.commons.lang3;
 	requires com.zaxxer.hikari;
+	requires ch.qos.logback.classic;
+	requires ch.qos.logback.core;
 
 	exports net.foxgenesis.config;
 	exports net.foxgenesis.config.fields;
