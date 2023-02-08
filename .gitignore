@@ -41,3 +41,4 @@ test-deploy-token.txt
 *.gz
 /test/
 assets/resources/database.properties
+/logs/
