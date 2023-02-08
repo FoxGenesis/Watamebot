@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
  * @author Ashley
  */
 public enum ExitCode {
-	INSTANCE_ALREADY_RUNNING(1), RESOURCE_IO_ERROR(5),
+	INSTANCE_ALREADY_RUNNING(1), SETUP_ERROR(2), RESOURCE_IO_ERROR(5),
 
 	NO_TOKEN(12), INVALID_TOKEN(13),
 
@@ -29,31 +29,29 @@ public enum ExitCode {
 	 * 
 	 * @param statusCode - exit code number
 	 */
-	ExitCode(int statusCode) {
-		this.statusCode = statusCode;
-	}
+	ExitCode(int statusCode) { this.statusCode = statusCode; }
 
 	/**
 	 * Returns the {@link ExitCode}'s number.
 	 * 
 	 * @return exit code
 	 */
-	public Integer getCode() {
-		return statusCode;
-	}
+	public Integer getCode() { return statusCode; }
 
 	/**
 	 * Exit the program with a specific {@code message} and {@link Throwable}.
 	 * <p>
 	 * The call {@code exitCode.exitProgram(null, null)} is effectively equivalent
-	 * to the call: <blockquote>
+	 * to the call:
+	 * </p>
+	 * <blockquote>
 	 * 
 	 * <pre>
 	 * exitCode.exitProgram()
 	 * </pre>
 	 * 
 	 * </blockquote>
-	 * </p>
+	 * 
 	 * 
 	 * @see #programExit()
 	 * @param exitMessage - Exit message to log
@@ -70,57 +68,56 @@ public enum ExitCode {
 	 * Exit the program with a specific {@link Throwable}.
 	 * <p>
 	 * The call {@code exitCode.exitProgram(thrown)} is effectively equivalent to
-	 * the call: <blockquote>
+	 * the call:
+	 * </p>
+	 * <blockquote>
 	 * 
 	 * <pre>
 	 * exitCode.exitProgram(null, thrown)
 	 * </pre>
 	 * 
 	 * </blockquote>
-	 * </p>
 	 * 
 	 * @see #programExit(String, Throwable)
 	 * @param thrown - Throwable to log
 	 */
-	public void programExit(Throwable thrown) {
-		programExit(null, thrown);
-	}
+	public void programExit(Throwable thrown) { programExit(null, thrown); }
 
 	/**
 	 * Exit the program with a specific {@code message}.
 	 * <p>
 	 * The call {@code exitCode.exitProgram(message)} is effectively equivalent to
-	 * the call: <blockquote>
+	 * the call:
+	 * </p>
+	 * <blockquote>
 	 * 
 	 * <pre>
 	 * exitCode.exitProgram(message, null)
 	 * </pre>
 	 * 
 	 * </blockquote>
-	 * </p>
+	 * 
 	 * 
 	 * @see #programExit(String, Throwable)
 	 * @param exitMessage - Exit message to log
 	 */
-	public void programExit(String exitMessage) {
-		programExit(exitMessage, null);
-	}
+	public void programExit(String exitMessage) { programExit(exitMessage, null); }
 
 	/**
-	 * Exit the program with this {@link ExitCode}'s &quot{@code exit code}&quot.
+	 * Exit the program with this {@link ExitCode}'s {@code "exit code"}.
 	 * <p>
-	 * This method is effectively equivalent to the call: <blockquote>
+	 * This method is effectively equivalent to the call:
+	 * </p>
+	 * <blockquote>
 	 * 
 	 * <pre>
 	 * System.exit(n)
 	 * </pre>
 	 * 
 	 * </blockquote>
-	 * </p>
+	 * 
 	 * 
 	 * @see #programExit(String, Throwable)
 	 */
-	public void programExit() {
-		System.exit(getCode());
-	}
+	public void programExit() { System.exit(getCode()); }
 }

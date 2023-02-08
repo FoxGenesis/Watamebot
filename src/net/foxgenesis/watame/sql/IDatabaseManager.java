@@ -9,8 +9,6 @@ public interface IDatabaseManager {
 	 * Check if the database is connected and is ready for operations.
 	 * 
 	 * @return Returns {@code true} if is connected and ready
-	 * @see #registerStatement(String, String)
-	 * @see #hasStatement(String)
 	 */
 	public boolean isConnectionValid();
 

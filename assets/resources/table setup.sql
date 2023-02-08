@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS `WatameBot`.`Guild` ( `GuildID` BIGINT UNSIGNED NOT NULL , `GuildProperties` JSON NOT NULL, PRIMARY KEY (`GuildID`)) ENGINE = InnoDB;

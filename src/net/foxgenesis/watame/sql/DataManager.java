@@ -2,14 +2,13 @@ package net.foxgenesis.watame.sql;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -26,7 +25,8 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.Event;
 import net.foxgenesis.config.KVPFile;
 import net.foxgenesis.util.MethodTimer;
-import net.foxgenesis.util.ResourceHelper;
+import net.foxgenesis.util.ResourceUtils;
+import net.foxgenesis.util.ResourceUtils.ModuleResource;
 import net.foxgenesis.watame.Constants;
 import net.foxgenesis.watame.ExitCode;
 
@@ -92,9 +92,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @throws IllegalArgumentException if folder exists and is not a directory
 	 * @see #DataManager(File)
 	 */
-	public DataManager() {
-		this(new File("repo"));
-	}
+	public DataManager() { this(new File("repo")); }
 
 	/**
 	 * Create a new instance using the specified folder as the repository folder.
@@ -143,7 +141,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @see #removeGuild(Guild)
 	 */
 	public void addGuild(@Nonnull Guild guild) {
-		Objects.nonNull(guild);
+		Objects.requireNonNull(guild);
 
 		logger.debug("Loading guild ({})[{}]", guild.getName(), guild.getIdLong());
 
@@ -164,7 +162,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @see #addGuild(Guild)
 	 */
 	public void removeGuild(@Nonnull Guild guild) {
-		Objects.nonNull(guild);
+		Objects.requireNonNull(guild);
 
 		logger.debug("Removing guild ({})[{}]", guild.getName(), guild.getIdLong());
 
@@ -186,17 +184,17 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @param jda - {@link JDA} instance to use
 	 */
 	public void retrieveDatabaseData(@Nonnull JDA jda) {
-		Objects.nonNull(jda);
 
 		// Get all guilds from database
-		//getAllGuildData();
+		// getAllGuildData();
 
 		// Insert all missing guilds to database
-//		logger.debug("Inserting missing guilds into database");
-//		jda.getGuildCache()
-//				.acceptStream(stream -> stream.filter(guild -> !data.contains(guild.getIdLong()))
-//						.peek(guild -> logger.debug("Inserting {} into database", guild.getName()))
-//						.forEach(this::insertGuildInDatabase));
+		// logger.debug("Inserting missing guilds into database");
+		// jda.getGuildCache()
+		// .acceptStream(stream -> stream.filter(guild ->
+		// !data.contains(guild.getIdLong()))
+		// .peek(guild -> logger.debug("Inserting {} into database", guild.getName()))
+		// .forEach(this::insertGuildInDatabase));
 
 		// All data has been retrieved
 		this.allDataReady = true;
@@ -242,7 +240,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @param guild - {@link Guild} to retrieve data for
 	 */
 	private void retrieveData(@Nonnull Guild guild) {
-		Objects.nonNull(guild);
+		Objects.requireNonNull(guild);
 
 		logger.trace("Retrieved guild data for {} in: " + MethodTimer.runFormatMS(() -> {
 			PreparedStatement s = this.getAndAssertStatement("guild_data_get_id");
@@ -257,7 +255,8 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 					if (id != 0 && this.data.containsKey(id))
 						this.data.get(id).setData(set);
 					else {
-						logger.warn("Guild ({})[{}] is missing in database! Attempting to insert and retrieve...", guild.getName(), guild.getIdLong());
+						logger.warn("Guild ({})[{}] is missing in database! Attempting to insert and retrieve...",
+								guild.getName(), guild.getIdLong());
 						insertGuildInDatabase(guild);
 						retrieveData(guild);
 					}
@@ -272,12 +271,12 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	@Nullable
 	public IGuildData getDataForGuild(@Nonnull Guild guild) {
 		// Ensure non null guild
-		Objects.nonNull(guild);
+		Objects.requireNonNull(guild);
 
 		// Check if database processing is finished
 		if (!isReady())
 			throw new UnsupportedOperationException("Data not ready yet");
-		
+
 		// Check and get guild data
 		if (!data.containsKey(guild.getIdLong())) {
 			// Guild data doesn't exist
@@ -297,7 +296,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @param guild - guild to insert
 	 */
 	private void insertGuildInDatabase(@Nonnull Guild guild) {
-		Objects.nonNull(guild);
+		Objects.requireNonNull(guild);
 
 		logger.trace("Inserted new row for guild {} in: " + MethodTimer.runFormatMS(() -> {
 			PreparedStatement st = this.getAndAssertStatement("guild_data_insert");
@@ -314,9 +313,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	}
 
 	@Override
-	public boolean isReady() {
-		return this.allDataReady;
-	}
+	public boolean isReady() { return this.allDataReady; }
 
 	@Override
 	public boolean isConnectionValid() {
@@ -337,7 +334,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @throws NullPointerException     if {@code folder} is null
 	 */
 	private void createDatabaseFolder(@Nonnull File folder) {
-		Objects.nonNull(folder);
+		Objects.requireNonNull(folder);
 
 		// Check if folder exists
 		if (folder.exists()) {
@@ -352,23 +349,22 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	}
 
 	/**
-	 * Setup database with SQL code from a {@link URL}.
+	 * Setup database with SQL code from a {@link ModuleResource}.
 	 * 
-	 * @param url - {@link URL} containing SQL code to run
+	 * @param resource - {@link ModuleResource} containing SQL code to run
 	 * @throws IOException                   Thrown if IO error occurs during file
 	 *                                       processing
 	 * @throws UnsupportedOperationException Thrown if not connected to database
 	 */
-	private void setupDatabase(@Nonnull URL url) throws IOException, UnsupportedOperationException {
-		Objects.nonNull(url);
-
+	private void setupDatabase(@Nonnull ModuleResource resource) throws IOException, UnsupportedOperationException {
 		// Check if we are connected to database
 		if (!isConnectionValid())
 			throw new UnsupportedOperationException("Not connected to database!");
 
 		// Read all lines in the file
 		logger.trace("Reading lines from SQL file");
-		List<String> lines = ResourceHelper.linesFromResource(url);
+		String[] lines = ResourceUtils
+				.toSplitString(Objects.requireNonNull(resource, "Resource must not be null!").openStream());
 
 		// Iterate on each line
 		for (String line : lines) {
@@ -388,17 +384,14 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * Load all database operations from a KVP (Key. Value. Pair) resource file and
 	 * map the values to {@link PreparedStatement PreparedStatements}.
 	 * 
-	 * @param url - {@link URL} path to a KVP resource
+	 * @param resource - {@link ModuleResource} containing a KVP resource
 	 * @throws IOException Thrown if an error occurs while reading the InputStream
 	 *                     of the resource
-	 * @see KVPFile#KVPFile(URL)
+	 * @see KVPFile#KVPFile(InputStream)
 	 */
-	private void initalizeOperations(@Nonnull URL url) throws IOException {
-		Objects.nonNull(url);
-
+	private void initalizeOperations(@Nonnull ModuleResource resource) throws IOException {
 		// Read and parse database operations
-		KVPFile kvp = new KVPFile(url);
-		kvp.parse();
+		KVPFile kvp = new KVPFile(Objects.requireNonNull(resource, "Resource must not be null!").openStream());
 
 		// Map all database operations to their statements
 		kvp.forEach((key, value) -> {
@@ -431,7 +424,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @see #isValid()
 	 */
 	private void registerStatement(String id, @Nonnull String statement) throws SQLException {
-		Objects.nonNull(statement);
+		Objects.requireNonNull(statement);
 
 		// Check if id is already registered
 		if (registeredStatements.containsKey(id))
@@ -458,7 +451,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @return the {@link PreparedStatement} if it is registered
 	 */
 	PreparedStatement getAndAssertStatement(@Nonnull String id) {
-		Objects.nonNull(id);
+		Objects.requireNonNull(id);
 
 		if (registeredStatements.containsKey(id))
 			return registeredStatements.get(id);

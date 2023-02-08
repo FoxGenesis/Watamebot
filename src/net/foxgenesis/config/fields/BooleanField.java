@@ -16,18 +16,12 @@ public class BooleanField extends ConfigField<Boolean> {
 	}
 
 	@Override
-	Boolean from(JSONObjectAdv config) {
-		return config.getBoolean(name);
-	}
+	Boolean from(JSONObjectAdv config, Guild guild) { return config.getBoolean(name); }
 
 	@Override
-	void set(JSONObjectAdv config, Boolean newState) {
-		config.put(name, newState);
-	}
+	void set(JSONObjectAdv config, Boolean newState) { config.put(name, newState); }
 
-	public boolean toggle(Guild guild) {
-		return toggle(getDataForGuild(guild), guild);
-	}
+	public boolean toggle(Guild guild) { return toggle(getDataForGuild(guild), guild); }
 
 	private boolean toggle(JSONObjectAdv config, Guild guild) {
 		boolean l = !optFrom(config, guild);

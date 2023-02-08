@@ -34,11 +34,9 @@ public final class SingleInstanceUtil {
 	 * @param amt - Amount of retries before failing to obtain lock
 	 * @throws SingleInstanceLockException Thrown if try count equals or exceeds
 	 *                                     {@code amt}
-	 * @see #waitAndGetLock(int, int)
+	 * @see #waitAndGetLock(File, int)
 	 */
-	public static void waitAndGetLock(int amt) {
-		waitAndGetLock(new File(".pid"), amt, 10_000);
-	}
+	public static void waitAndGetLock(int amt) { waitAndGetLock(new File(".pid"), amt, 10_000); }
 
 	/**
 	 * Attempt to obtain lock on {@code PID} with {@code amt} retries and 10 second
@@ -52,26 +50,24 @@ public final class SingleInstanceUtil {
 	 * 
 	 * </blockquote>
 	 * 
-	 * @param pid - location of PID file should attempt to lock
+	 * @param file - location of PID file should attempt to lock
 	 * @param amt - Amount of retries before failing to obtain lock
 	 * @throws SingleInstanceLockException Thrown if try count equals or exceeds
 	 *                                     {@code amt}
-	 * @see #waitAndGetLock(int, int, int)
+	 * @see #waitAndGetLock(File, int, int)
 	 */
-	public static void waitAndGetLock(File file, int amt) {
-		waitAndGetLock(file, amt, 10_000);
-	}
+	public static void waitAndGetLock(File file, int amt) { waitAndGetLock(file, amt, 10_000); }
 
 	/**
 	 * Attempt to obtain lock on PID file {@code pid}, {@code amt} times with
 	 * {@code delay} delay between retries.
 	 * 
-	 * @param pid   - location of PID file
+	 * @param file   - location of PID file
 	 * @param amt   - Amount of retries before failing to obtain lock
 	 * @param delay - Delay between retries
 	 * @throws SingleInstanceLockException Thrown if try count equals or exceeds
 	 *                                     {@code amt}
-	 * @see #waitAndGetLock(int)
+	 * @see #waitAndGetLock(File, int)
 	 */
 	public static void waitAndGetLock(File file, int amt, int delay) {
 		// Check if this program has already obtained lock
@@ -103,8 +99,7 @@ public final class SingleInstanceUtil {
 			// Wait for next retry
 			try {
 				Thread.sleep(Math.abs(delay));
-			} catch (InterruptedException e2) {
-			}
+			} catch (InterruptedException e2) {}
 
 		} while (true); // Keep going until we break or error is thrown
 
@@ -145,9 +140,7 @@ public final class SingleInstanceUtil {
 		 */
 		public PIDLock(File file) {
 			// Ensure file is non null
-			Objects.requireNonNull(file);
-
-			this.file = file;
+			this.file = Objects.requireNonNull(file);
 
 			// Ensure our file exists and is deleted on exit
 			ensureFile();
@@ -197,14 +190,10 @@ public final class SingleInstanceUtil {
 		 * @return Returns {@code true} if the PID file channel is not {@code null} and
 		 *         is open
 		 */
-		public boolean isValid() {
-			return channel != null && channel.isOpen();
-		}
+		public boolean isValid() { return channel != null && channel.isOpen(); }
 
 		@Override
-		public void close() throws IOException {
-			channel.close();
-		}
+		public void close() throws IOException { channel.close(); }
 	}
 
 	/**

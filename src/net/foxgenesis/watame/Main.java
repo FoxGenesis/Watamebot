@@ -2,16 +2,19 @@ package net.foxgenesis.watame;
 
 import java.sql.SQLException;
 
+import javax.annotation.Nullable;
+
 import org.fusesource.jansi.AnsiConsole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.foxgenesis.util.MethodTimer;
 import net.foxgenesis.util.ProgramArguments;
 import net.foxgenesis.util.SingleInstanceUtil;
 
 /**
- * Program main class
- * 
+ * Program main class.
+ *
  * @author Ashley
  */
 public class Main {
@@ -27,8 +30,8 @@ public class Main {
 	private static ProgramArguments params;
 
 	/**
-	 * Program entry point
-	 * 
+	 * Program entry point.
+	 *
 	 * @param args - program arguments
 	 * @throws SQLException
 	 */
@@ -45,7 +48,6 @@ public class Main {
 		}
 
 		System.out.println();
-		logger.info("Starting...");
 
 		try {
 			// Attempt to obtain instance lock
@@ -60,27 +62,14 @@ public class Main {
 		// First call of WatameBot class. Will cause instance creation
 		WatameBot watame = WatameBot.getInstance();
 
-		// Load needed resources for initialization
-		logger.debug("Pre-Initialization...");
-		watame.preInit();
-
-		// Initialization
-		logger.info("Initializing...");
-		watame.init();
-
-		// Post initialization
-		logger.debug("Post-Initialization...");
-		watame.postInit();
-
-		logger.info("Startup Complete!");
+		logger.info("Startup completed in " + MethodTimer.runFormatSec(watame::start));
 	}
 
 	/**
 	 * Get the {@link ProgramArguments} of this application.
-	 * 
+	 *
 	 * @return flags, arguments and parameters used to launch this application
 	 */
-	static ProgramArguments getProgramArguments() {
-		return params;
-	}
+	@Nullable
+	static ProgramArguments getProgramArguments() { return params; }
 }

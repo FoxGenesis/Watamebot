@@ -1,9 +1,0 @@
-########## GUILD DATA #########
-guild_data_insert = INSERT INTO Guild (GuildID) VALUES (?);
-guild_data_get = SELECT * FROM Guild;
-guild_data_get_id = SELECT * FROM Guild WHERE GuildID = ?;
-
-########## GUILD JSON DATA #########
-guild_json_select = SELECT JSON_EXTRACT(GuildProperties, ?) FROM Guild WHERE GuildID = ?;
-guild_json_update = UPDATE Guild SET GuildProperties = JSON_SET(GuildProperties, ?, ?) WHERE GuildID = ?;
-guild_json_remove = UPDATE Guild SET GuildProperties = JSON_REMOVE(GuildProperties, ?);

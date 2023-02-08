@@ -24,7 +24,7 @@ logger.log
 /bin/
 /target/
 /test jar/
-.settings/*
+.classpath
 /nbproject/
 .pid
 export.xml
@@ -33,4 +33,12 @@ export.xml
 lib/ffprobe
 lib/ffmpeg-i386
 /plugins/
+/doc/
+.externalToolBuilders/Ant Builder.launch
+.settings/
 test-deploy-token.txt
+*.log
+*.gz
+/test/
+assets/resources/database.properties
+/logs/
