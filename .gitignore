@@ -38,3 +38,7 @@ lib/ffmpeg-i386
 .settings/
 test-deploy-token.txt
 *.log
+*.gz
+/test/
+assets/resources/database.properties
+/logs/

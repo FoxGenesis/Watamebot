@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
  * @author Ashley
  */
 public enum ExitCode {
-	INSTANCE_ALREADY_RUNNING(1), RESOURCE_IO_ERROR(5),
+	INSTANCE_ALREADY_RUNNING(1), SETUP_ERROR(2), RESOURCE_IO_ERROR(5),
 
 	NO_TOKEN(12), INVALID_TOKEN(13),
 

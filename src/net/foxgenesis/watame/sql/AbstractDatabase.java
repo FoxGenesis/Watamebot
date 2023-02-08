@@ -157,12 +157,7 @@ public class AbstractDatabase implements AutoCloseable {
 			if (registeredStatements.containsKey(key)) {
 				logger.error("Statement '{}' already exists! Skipping...", key);
 			} else {
-				try {
-					registerStatement(key, value);
-				} catch (SQLException e) {
-					ExitCode.DATABASE_STATEMENT_ERROR.programExit(e);
-					return;
-				}
+				registerStatement(key, value);
 			}
 		});
 
@@ -174,12 +169,7 @@ public class AbstractDatabase implements AutoCloseable {
 			if (registeredCallableStatements.containsKey(key)) {
 				logger.error("Callable statement '{}' already exists! Skipping...", key);
 			} else {
-				try {
-					registerCallableStatement(key, value);
-				} catch (SQLException e) {
-					ExitCode.DATABASE_STATEMENT_ERROR.programExit(e);
-					return;
-				}
+				registerCallableStatement(key, value);
 			}
 		});
 	}
@@ -191,7 +181,7 @@ public class AbstractDatabase implements AutoCloseable {
 	 * @param statement
 	 * @throws SQLException
 	 */
-	private void registerStatement(String id, @Nonnull String statement) throws SQLException {
+	private void registerStatement(String id, @Nonnull String statement) {
 		Objects.requireNonNull(statement);
 
 		// Check if id is already registered
@@ -210,7 +200,7 @@ public class AbstractDatabase implements AutoCloseable {
 	 * @param statement
 	 * @throws SQLException
 	 */
-	private void registerCallableStatement(String id, @Nonnull String statement) throws SQLException {
+	private void registerCallableStatement(String id, @Nonnull String statement) {
 		Objects.requireNonNull(statement);
 
 		// Check if id is already registered

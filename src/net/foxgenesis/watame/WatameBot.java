@@ -60,6 +60,11 @@ public class WatameBot {
 	public static final Logger logger = LoggerFactory.getLogger(WatameBot.class);
 
 	/**
+	 * Directory for configuration files
+	 */
+	public static final File CONFIG_DIR = new File(System.getProperty("watame.config_dir", "config/"));
+
+	/**
 	 * Singleton instance of class
 	 */
 	private static WatameBot instance;
@@ -169,6 +174,10 @@ public class WatameBot {
 		// Set shutdown thread
 		logger.debug(state.marker, "Adding shutdown hook");
 		Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "WatameBot Shutdown Thread"));
+
+		if (!createConfigurationDirectory())
+			ExitCode.SETUP_ERROR.programExit(
+					"Failed to create configuration directory. Does a file with the same name already exist?");
 
 		// Load plugins
 		loader = new UntrustedPluginLoader<>(IPlugin.class);
@@ -555,5 +564,9 @@ public class WatameBot {
 		State() { marker = MarkerFactory.getMarker(this.name()); }
 	}
 
+	private static boolean createConfigurationDirectory() {
+		if (!CONFIG_DIR.exists())
+			return CONFIG_DIR.mkdirs();
+		return CONFIG_DIR.isDirectory();
 	}
 }
