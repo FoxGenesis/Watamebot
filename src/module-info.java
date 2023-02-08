@@ -17,6 +17,7 @@ module watamebot {
 	requires logback.core;
 	requires org.fusesource.jansi;
 	requires org.apache.commons.lang3;
+	requires com.zaxxer.hikari;
 
 	exports net.foxgenesis.config;
 	exports net.foxgenesis.config.fields;
