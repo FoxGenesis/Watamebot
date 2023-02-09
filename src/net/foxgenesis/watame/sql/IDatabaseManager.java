@@ -6,13 +6,6 @@ import net.dv8tion.jda.api.entities.Guild;
 
 public interface IDatabaseManager {
 	/**
-	 * Check if the database is connected and is ready for operations.
-	 * 
-	 * @return Returns {@code true} if is connected and ready
-	 */
-	public boolean isConnectionValid();
-
-	/**
 	 * Check if all guild data has been processed and is ready for use.
 	 * 
 	 * @return Returns {@code true} when all data has been loaded from the database

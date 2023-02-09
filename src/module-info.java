@@ -18,9 +18,11 @@ module watamebot {
 	requires com.zaxxer.hikari;
 	requires ch.qos.logback.classic;
 	requires ch.qos.logback.core;
+	requires org.apache.commons.configuration2;
 
 	exports net.foxgenesis.config;
 	exports net.foxgenesis.config.fields;
+	exports net.foxgenesis.database;
 	exports net.foxgenesis.property;
 	exports net.foxgenesis.log;
 	exports net.foxgenesis.watame.sql;

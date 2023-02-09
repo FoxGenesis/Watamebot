@@ -91,6 +91,6 @@ public class ConfigCommand extends ListenerAdapter {
 	}
 
 	private static JSONObjectAdv getConfig(Guild guild) {
-		return WatameBot.getInstance().getDatabase().getDataForGuild(guild).getConfig();
+		return WatameBot.getInstance().getDataForGuild(guild).getConfig();
 	}
 }

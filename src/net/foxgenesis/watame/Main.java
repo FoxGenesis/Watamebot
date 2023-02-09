@@ -22,7 +22,7 @@ public class Main {
 	/**
 	 * Global logger
 	 */
-	public static final Logger logger = LoggerFactory.getLogger(Main.class);
+	public static final Logger logger = LoggerFactory.getLogger("WatameBot Startup");
 
 	/**
 	 * Program arguments

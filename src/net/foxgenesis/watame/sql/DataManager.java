@@ -92,7 +92,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @throws IllegalArgumentException if folder exists and is not a directory
 	 * @see #DataManager(File)
 	 */
-	public DataManager() { this(new File("repo")); }
+	private DataManager() { this(new File("repo")); }
 
 	/**
 	 * Create a new instance using the specified folder as the repository folder.
@@ -103,7 +103,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	 * @throws NullPointerException     if {@code folder} is null
 	 * @see #DataManager()
 	 */
-	public DataManager(@Nonnull File folder) {
+	private DataManager(@Nonnull File folder) {
 		// Ensure repository folder is created
 		createDatabaseFolder(folder);
 
@@ -145,7 +145,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 
 		logger.debug("Loading guild ({})[{}]", guild.getName(), guild.getIdLong());
 
-		this.data.put(guild.getIdLong(), new GuildData(guild, this));
+		//this.data.put(guild.getIdLong(), new GuildData(guild, this));
 
 		// If initial data retrieval has already been completed, retrieve needed data
 		if (this.allDataReady)
@@ -315,7 +315,7 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	@Override
 	public boolean isReady() { return this.allDataReady; }
 
-	@Override
+	
 	public boolean isConnectionValid() {
 		try {
 			// Check if our connection is valid with a one second timeout

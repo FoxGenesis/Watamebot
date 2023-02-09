@@ -4,13 +4,12 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 
@@ -37,15 +36,20 @@ import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.dv8tion.jda.internal.utils.IOUtil;
+import net.foxgenesis.database.DatabaseManager;
+import net.foxgenesis.database.IDatabaseManager;
+import net.foxgenesis.database.providers.MySQLConnectionProvider;
 import net.foxgenesis.property.IPropertyProvider;
 import net.foxgenesis.util.ProgramArguments;
+import net.foxgenesis.util.ResourceUtils;
+import net.foxgenesis.util.ResourceUtils.ModuleResource;
 import net.foxgenesis.watame.plugin.IPlugin;
 import net.foxgenesis.watame.plugin.SeverePluginException;
 import net.foxgenesis.watame.plugin.UntrustedPluginLoader;
 import net.foxgenesis.watame.property.GuildPropertyProvider;
 import net.foxgenesis.watame.property.IGuildPropertyMapping;
-import net.foxgenesis.watame.sql.DataManager;
-import net.foxgenesis.watame.sql.IDatabaseManager;
+import net.foxgenesis.watame.sql.IGuildData;
+import net.foxgenesis.watame.sql.WatameBotDatabase;
 
 /**
  * Class containing WatameBot implementation
@@ -139,10 +143,12 @@ public class WatameBot {
 	 */
 	private JDA discord;
 
+	private final DatabaseManager manager;
+
 	/**
 	 * Database connection handler
 	 */
-	private final DataManager database;
+	private final WatameBotDatabase database;
 
 	/**
 	 * Property provider
@@ -162,7 +168,7 @@ public class WatameBot {
 	/**
 	 * List of all plugins
 	 */
-	private Collection<IPlugin> plugins = new ArrayList<>();
+	private ConcurrentHashMap<String, IPlugin> plugins = new ConcurrentHashMap<>();
 
 	/**
 	 * Create a new instance with a specified login {@code token}.
@@ -182,8 +188,11 @@ public class WatameBot {
 		// Load plugins
 		loader = new UntrustedPluginLoader<>(IPlugin.class);
 
+		// Create our database manager
+		manager = new DatabaseManager("WatameBot Database Manager");
+
 		// Connect to our database file
-		database = new DataManager();
+		database = new WatameBotDatabase();
 
 		// Create connection to discord through our token
 		builder = createJDA(token);
@@ -194,7 +203,7 @@ public class WatameBot {
 
 	void start() {
 		logger.info(state.marker, "Starting...");
-		plugins.addAll(loader.getPlugins());
+		loader.getPlugins().forEach(plugin -> plugins.put(plugin.getName(), plugin));
 		logger.debug(state.marker, "Found {} plugins", plugins.size());
 
 		preInit();
@@ -214,7 +223,7 @@ public class WatameBot {
 
 		// Close all plugins
 		logger.debug(state.marker, "Closing all pugins");
-		plugins.forEach(plugin -> IOUtil.silentClose(plugin));
+		plugins.values().forEach(plugin -> IOUtil.silentClose(plugin));
 
 		// Await all futures to complete
 		if (!ForkJoinPool.commonPool().awaitQuiescence(3, TimeUnit.MINUTES))
@@ -252,29 +261,22 @@ public class WatameBot {
 
 		// Pre-initialize all plugins async
 		logger.debug(state.marker, "Calling plugin pre-initialization async");
-		CompletableFuture<Void> pluginPreInit = CompletableFuture.allOf(List.copyOf(plugins).stream()
+		CompletableFuture<Void> pluginPreInit = CompletableFuture.allOf(plugins.values().stream()
 				.map(plugin -> CompletableFuture.runAsync(plugin::preInit).exceptionallyAsync(error -> {
 					pluginError(plugin, error, state.marker);
 					return null;
 				})).toArray(CompletableFuture[]::new));
 
-		// Setup and connect to the database
+		// Setup the database
 		try {
-			logger.debug(state.marker, "Connecting to database");
-			database.connect();
-			database.retrieveDatabaseData(null);
+			logger.debug(state.marker, "Adding database to database manager");
+			manager.register(database);
 		} catch (IOException e) {
 			// Some error occurred while setting up database
 			ExitCode.DATABASE_SETUP_ERROR.programExit(e);
 		} catch (IllegalArgumentException e) {
 			// Resource was null
 			ExitCode.DATABASE_INVALID_SETUP_FILE.programExit(e);
-		} catch (UnsupportedOperationException e) {
-			// Unable to connect to database
-			ExitCode.DATABASE_NOT_CONNECTED.programExit(e);
-		} catch (SQLException e) {
-			// Error while accessing database
-			ExitCode.DATABASE_ACCESS_ERROR.programExit(e);
 		}
 
 		/*
@@ -303,11 +305,22 @@ public class WatameBot {
 		// Initialize all plugins
 		logger.debug(state.marker, "Calling plugin initialization async");
 		ProtectedJDABuilder pBuilder = new ProtectedJDABuilder(builder);
-		CompletableFuture<Void> pluginInit = CompletableFuture.allOf(List.copyOf(plugins).stream()
+		CompletableFuture<Void> pluginInit = CompletableFuture.allOf(plugins.values().stream()
 				.map(plugin -> CompletableFuture.runAsync(() -> plugin.init(pBuilder)).exceptionallyAsync(error -> {
 					pluginError(plugin, error, state.marker);
 					return null;
 				})).toArray(CompletableFuture[]::new));
+
+		// Start databases
+		try {
+			logger.info(state.marker, "Starting database pool");
+			manager.start(
+					new MySQLConnectionProvider(ResourceUtils.getProperties(Path.of("config", "database.properties"),
+							new ModuleResource("watamebot", "defaults/database.properties")))).join();
+		} catch (IOException e) {
+			// Some error occurred while setting up database
+			ExitCode.DATABASE_SETUP_ERROR.programExit(e);
+		}
 
 		/*
 		 * ====== END INITIALIZATION ======
@@ -315,6 +328,7 @@ public class WatameBot {
 
 		logger.trace(state.marker, "Waiting for plugin initialization");
 		pluginInit.join();
+		
 
 		postInit();
 	}
@@ -335,18 +349,18 @@ public class WatameBot {
 
 		// Post-initialize all plugins
 		logger.debug(state.marker, "Calling plugin post-initialization async");
-		CompletableFuture<Void> pluginPostInit = CompletableFuture.allOf(List.copyOf(plugins).stream()
+		CompletableFuture<Void> pluginPostInit = CompletableFuture.allOf(plugins.values().stream()
 				.map(plugin -> CompletableFuture.runAsync(() -> plugin.postInit(this)).exceptionallyAsync(error -> {
 					pluginError(plugin, error, state.marker);
 					return null;
-				})).toArray(CompletableFuture[]::new)).thenRunAsync(() -> {
-					// Register commands
-					logger.trace(state.marker, "Collecting command data");
-					CommandListUpdateAction update = discord.updateCommands();
-					List.copyOf(plugins).stream().filter(IPlugin::providesCommands)
-							.forEach(plugin -> update.addCommands(plugin.getCommands()));
-					update.queue();
-				});
+				})).toArray(CompletableFuture[]::new));
+
+		// Register commands
+		logger.trace(state.marker, "Collecting command data");
+		CommandListUpdateAction update = discord.updateCommands();
+		plugins.values().stream().filter(IPlugin::providesCommands)
+				.forEach(plugin -> update.addCommands(plugin.getCommands()));
+		update.queue();
 
 		/*
 		 * ====== END POST-INITIALIZATION ======
@@ -373,7 +387,7 @@ public class WatameBot {
 		logger.trace("STATE = " + state);
 
 		logger.debug("Calling plugin on ready async");
-		CompletableFuture.allOf(List.copyOf(plugins).stream()
+		CompletableFuture.allOf(plugins.values().stream()
 				.map(plugin -> CompletableFuture.runAsync(() -> plugin.onReady(this)).exceptionallyAsync(error -> {
 					pluginError(plugin, error, state.marker);
 					return null;
@@ -459,7 +473,7 @@ public class WatameBot {
 	private void unloadPlugin(IPlugin plugin) {
 		logger.trace(state.marker, "Unloading {}", plugin.getClass());
 		IOUtil.silentClose(plugin);
-		plugins.remove(plugin);
+		plugins.remove(plugin.getName());
 		logger.warn(state.marker, plugin.getClass() + " unloaded");
 	}
 
@@ -504,7 +518,11 @@ public class WatameBot {
 	 *
 	 * @return
 	 */
-	public IDatabaseManager getDatabase() { return database; }
+	public IDatabaseManager getDatabaseManager() { return manager; }
+	
+	public IGuildData getDataForGuild(Guild guild) {
+		return database.getDataForGuild(guild);
+	}
 
 	/**
 	 * Get the property provider instance.

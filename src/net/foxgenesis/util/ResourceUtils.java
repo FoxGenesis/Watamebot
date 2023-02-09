@@ -5,6 +5,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -58,6 +62,18 @@ public final class ResourceUtils {
 
 		return properties;
 	}
+	
+	public static Properties getProperties(Path path, ModuleResource defaults) throws IOException {
+		// If file does not exist, create a new one and try to open it again
+		if(Files.notExists(path, LinkOption.NOFOLLOW_LINKS)) {
+			defaults.writeToFile(path);
+			return getProperties(path, defaults);
+		}
+		
+		Properties properties = new Properties();
+		properties.load(Files.newInputStream(path, StandardOpenOption.READ));
+		return properties;
+	}
 
 	public static String toString(@Nonnull InputStream input) throws IOException {
 		Objects.requireNonNull(input, "InputStream must not be null!");
@@ -77,6 +93,10 @@ public final class ResourceUtils {
 		public InputStream openStream() throws IOException {
 			logger.trace("Attempting to read resource: " + resourcePath);
 			return module.getResourceAsStream(resourcePath);
+		}
+		
+		public void writeToFile(Path path) throws IOException {
+			Files.copy(openStream(), path);
 		}
 
 		public String readToString() throws IOException { return ResourceUtils.toString(openStream()); }

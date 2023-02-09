@@ -1,6 +1,5 @@
 package net.foxgenesis.watame.sql;
 
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Objects;
@@ -13,6 +12,7 @@ import javax.annotation.Nullable;
 import net.dv8tion.jda.api.entities.Channel;
 import net.dv8tion.jda.api.entities.Guild;
 import net.foxgenesis.config.fields.JSONObjectAdv;
+import net.foxgenesis.util.function.QuadFunction;
 
 /**
  * Class used to contain guild database data.
@@ -26,7 +26,7 @@ public class GuildData implements IGuildData, AutoCloseable {
 	 * Link to parent data manager
 	 */
 	@Nonnull
-	private final DataManager dataManager;
+	private final QuadFunction<String, Object, Guild, Boolean, Integer> consumer;
 
 	/**
 	 * {@link Guild} this instance is based on
@@ -54,9 +54,9 @@ public class GuildData implements IGuildData, AutoCloseable {
 	 * @param guild       - The {@link Guild} that this instance represents
 	 * @param dataManager - the {@link DataManager} that created this instance
 	 */
-	GuildData(@Nonnull Guild guild, @Nonnull DataManager dataManager) {
-		Objects.nonNull(dataManager);
-		this.dataManager = dataManager;
+	GuildData(@Nonnull Guild guild, @Nonnull QuadFunction<String, Object, Guild, Boolean, Integer> consumer) {
+		Objects.nonNull(consumer);
+		this.consumer = consumer;
 
 		Objects.nonNull(guild);
 		this.guild = guild;
@@ -119,60 +119,11 @@ public class GuildData implements IGuildData, AutoCloseable {
 		}
 
 		// Set our current data and pass our update method
-		this.data = new JSONObjectAdv(jsonString, this::pushJSONUpdate);
+		this.data = new JSONObjectAdv(jsonString, (key, obj, remove) -> {;
+			consumer.apply(key, obj, guild, remove);
+		});
 
 		this.setup = true;
-	}
-
-	/**
-	 * Method used to either update or remove JSON data in the database.
-	 * 
-	 * @param name   - JSON name path
-	 * @param data   - data to set or {@code null} if removing
-	 * @param remove - should the data at {@code name} be removed or updated
-	 * @throws NullPointerException     if {@code name} is {@code null}
-	 * @throws IllegalArgumentException if {@code remove} is {@code true} and
-	 *                                  {@code data} is {@code null}
-	 * @see #setData(ResultSet)
-	 */
-	private void pushJSONUpdate(@Nonnull String name, @Nullable Object data, boolean remove) {
-		Objects.nonNull(name);
-
-		int result;
-
-		if (remove)
-			try (PreparedStatement removeStatement = dataManager.getAndAssertStatement("guild_json_remove")) {
-				// Set data and execute update
-				removeStatement.setString(1, "$." + name);
-
-				DataManager.sqlLogger.debug(DataManager.UPDATE_MARKER, "PushUpdate -> " + removeStatement);
-
-				result = removeStatement.executeUpdate();
-			} catch (SQLException e) {
-				DataManager.logger.error(DataManager.UPDATE_MARKER, "Error while removing guild json data", e);
-				return;
-			}
-		else {
-			// Ensure we have data passed
-			if (data == null)
-				throw new IllegalArgumentException("Data must not be null if 'remove' is 'true'!");
-
-			try (PreparedStatement updateStatement = dataManager.getAndAssertStatement("guild_json_update")) {
-				// Set data and execute update
-				updateStatement.setString(1, "$." + name);
-				updateStatement.setString(2, data.toString());
-				updateStatement.setLong(3, guild.getIdLong());
-
-				DataManager.sqlLogger.debug(DataManager.UPDATE_MARKER, "PushUpdate -> " + updateStatement);
-
-				result = updateStatement.executeUpdate();
-			} catch (SQLException e) {
-				DataManager.logger.error(DataManager.UPDATE_MARKER, "Error while updating guild json data", e);
-				return;
-			}
-		}
-
-		DataManager.sqlLogger.debug(DataManager.UPDATE_MARKER, "ExecuteUpdate <- " + result);
 	}
 
 	private void checkSetup() {
