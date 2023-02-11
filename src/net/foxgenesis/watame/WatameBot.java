@@ -18,6 +18,7 @@ import javax.security.auth.login.LoginException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
@@ -177,8 +178,11 @@ public class WatameBot {
 	 * @throws SQLException When failing to connect to the database file
 	 */
 	private WatameBot(@Nonnull String token) throws SQLException {
+		// Update our state
+		updateState();
+
 		// Set shutdown thread
-		logger.debug(state.marker, "Adding shutdown hook");
+		logger.debug("Adding shutdown hook");
 		Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "WatameBot Shutdown Thread"));
 
 		if (!createConfigurationDirectory())
@@ -202,9 +206,9 @@ public class WatameBot {
 	}
 
 	void start() {
-		logger.info(state.marker, "Starting...");
+		logger.info("Starting...");
 		loader.getPlugins().forEach(plugin -> plugins.put(plugin.getName(), plugin));
-		logger.debug(state.marker, "Found {} plugins", plugins.size());
+		logger.debug("Found {} plugins", plugins.size());
 
 		preInit();
 	}
@@ -218,33 +222,34 @@ public class WatameBot {
 	private void shutdown() {
 		// Set our state to shutdown
 		state = State.SHUTDOWN;
+		updateState();
 
-		logger.info(state.marker, "Shutting down...");
+		logger.info("Shutting down...");
 
 		// Close all plugins
-		logger.debug(state.marker, "Closing all pugins");
+		logger.debug("Closing all pugins");
 		plugins.values().forEach(plugin -> IOUtil.silentClose(plugin));
 
 		// Await all futures to complete
 		if (!ForkJoinPool.commonPool().awaitQuiescence(3, TimeUnit.MINUTES))
-			logger.warn(state.marker, "Timed out waiting for pool shutdown. Continuing shutdown...");
+			logger.warn("Timed out waiting for pool shutdown. Continuing shutdown...");
 
 		// Disconnect from discord
 		if (discord != null) {
-			logger.info(state.marker, "Shutting down JDA...");
+			logger.info("Shutting down JDA...");
 			discord.shutdown();
 		}
 
 		// Close connection to datebase
 		try {
-			logger.info(state.marker, "Closing database connection");
+			logger.info("Closing database connection");
 			if (database != null)
 				database.close();
 		} catch (Exception e) {
-			logger.error(state.marker, "Error while closing database connection!", e);
+			logger.error("Error while closing database connection!", e);
 		}
 
-		logger.info(state.marker, "Exiting...");
+		logger.info("Exiting...");
 	}
 
 	/**
@@ -254,13 +259,14 @@ public class WatameBot {
 		// Set our state to pre-init
 		state = State.PRE_INIT;
 		logger.trace("STATE = " + state);
+		updateState();
 
 		/*
 		 * ====== PRE-INITIALIZATION ======
 		 */
 
 		// Pre-initialize all plugins async
-		logger.debug(state.marker, "Calling plugin pre-initialization async");
+		logger.debug("Calling plugin pre-initialization async");
 		CompletableFuture<Void> pluginPreInit = CompletableFuture.allOf(plugins.values().stream()
 				.map(plugin -> CompletableFuture.runAsync(plugin::preInit).exceptionallyAsync(error -> {
 					pluginError(plugin, error, state.marker);
@@ -269,7 +275,7 @@ public class WatameBot {
 
 		// Setup the database
 		try {
-			logger.debug(state.marker, "Adding database to database manager");
+			logger.debug("Adding database to database manager");
 			manager.register(database);
 		} catch (IOException e) {
 			// Some error occurred while setting up database
@@ -284,7 +290,7 @@ public class WatameBot {
 		 */
 
 		// Wait for all plugins to be have pre-initialized
-		logger.trace(state.marker, "Waiting for plugin pre-initialization");
+		logger.trace("Waiting for plugin pre-initialization");
 		pluginPreInit.join();
 
 		init();
@@ -297,13 +303,14 @@ public class WatameBot {
 		// Set our state to init
 		state = State.INIT;
 		logger.trace("STATE = " + state);
+		updateState();
 
 		/*
 		 * ====== INITIALIZATION ======
 		 */
 
 		// Initialize all plugins
-		logger.debug(state.marker, "Calling plugin initialization async");
+		logger.debug("Calling plugin initialization async");
 		ProtectedJDABuilder pBuilder = new ProtectedJDABuilder(builder);
 		CompletableFuture<Void> pluginInit = CompletableFuture.allOf(plugins.values().stream()
 				.map(plugin -> CompletableFuture.runAsync(() -> plugin.init(pBuilder)).exceptionallyAsync(error -> {
@@ -313,10 +320,11 @@ public class WatameBot {
 
 		// Start databases
 		try {
-			logger.info(state.marker, "Starting database pool");
+			logger.info("Starting database pool");
 			manager.start(
 					new MySQLConnectionProvider(ResourceUtils.getProperties(Path.of("config", "database.properties"),
-							new ModuleResource("watamebot", "defaults/database.properties")))).join();
+							new ModuleResource("watamebot", "defaults/database.properties"))))
+					.join();
 		} catch (IOException e) {
 			// Some error occurred while setting up database
 			ExitCode.DATABASE_SETUP_ERROR.programExit(e);
@@ -326,9 +334,8 @@ public class WatameBot {
 		 * ====== END INITIALIZATION ======
 		 */
 
-		logger.trace(state.marker, "Waiting for plugin initialization");
+		logger.trace("Waiting for plugin initialization");
 		pluginInit.join();
-		
 
 		postInit();
 	}
@@ -340,15 +347,16 @@ public class WatameBot {
 		// Set our state to post-init
 		state = State.POST_INIT;
 		logger.trace("STATE = " + state);
+		updateState();
 
 		/*
 		 * ====== POST-INITIALIZATION ======
 		 */
-		logger.trace(state.marker, "Building discord connection");
+		logger.trace("Building discord connection");
 		discord = buildJDA();
 
 		// Post-initialize all plugins
-		logger.debug(state.marker, "Calling plugin post-initialization async");
+		logger.debug("Calling plugin post-initialization async");
 		CompletableFuture<Void> pluginPostInit = CompletableFuture.allOf(plugins.values().stream()
 				.map(plugin -> CompletableFuture.runAsync(() -> plugin.postInit(this)).exceptionallyAsync(error -> {
 					pluginError(plugin, error, state.marker);
@@ -356,7 +364,7 @@ public class WatameBot {
 				})).toArray(CompletableFuture[]::new));
 
 		// Register commands
-		logger.trace(state.marker, "Collecting command data");
+		logger.trace("Collecting command data");
 		CommandListUpdateAction update = discord.updateCommands();
 		plugins.values().stream().filter(IPlugin::providesCommands)
 				.forEach(plugin -> update.addCommands(plugin.getCommands()));
@@ -366,17 +374,17 @@ public class WatameBot {
 		 * ====== END POST-INITIALIZATION ======
 		 */
 
-		logger.trace(state.marker, "Waiting for plugin post-initialization");
+		logger.trace("Waiting for plugin post-initialization");
 		pluginPostInit.join();
 
 		// Wait for discord to be ready
 		if (discord.getStatus() != Status.CONNECTED)
 			try {
 				// Wait for JDA to be ready for use (BLOCKING!).
-				logger.info(state.marker, "Waiting for JDA to be ready...");
+				logger.info("Waiting for JDA to be ready...");
 				discord.awaitReady();
 			} catch (InterruptedException e) {}
-		logger.info(state.marker, "Connected to discord!");
+		logger.info("Connected to discord!");
 
 		ready();
 	}
@@ -385,6 +393,7 @@ public class WatameBot {
 		// Set our state to running
 		state = State.RUNNING;
 		logger.trace("STATE = " + state);
+		updateState();
 
 		logger.debug("Calling plugin on ready async");
 		CompletableFuture.allOf(plugins.values().stream()
@@ -394,7 +403,7 @@ public class WatameBot {
 				})).toArray(CompletableFuture[]::new));
 
 		// Display our game as ready
-		logger.debug(state.marker, "Setting presence to ready");
+		logger.debug("Setting presence to ready");
 		discord.getPresence().setPresence(OnlineStatus.ONLINE, Activity.playing("type <help>"));
 	}
 
@@ -408,7 +417,7 @@ public class WatameBot {
 		Objects.requireNonNull(token, "Login token must not be null");
 
 		// Setup our JDA with wanted values
-		logger.debug(state.marker, "Creating JDA");
+		logger.debug("Creating JDA");
 		JDABuilder builder = JDABuilder
 				.create(token, GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_BANS, GatewayIntent.GUILD_MESSAGES,
 						GatewayIntent.GUILD_MESSAGE_REACTIONS, GatewayIntent.DIRECT_MESSAGES,
@@ -439,14 +448,14 @@ public class WatameBot {
 		do {
 			try {
 				// Attempt to login to discord
-				logger.info(state.marker, "Attempting to login to discord");
+				logger.info("Attempting to login to discord");
 				discordTmp = builder.build();
 
 				// We connected. Stop loop.
 				built = true;
 			} catch (LoginException ex) {
 				// Failed to connect. Log error
-				logger.warn(state.marker, "Failed to connect: " + ex.getLocalizedMessage() + " retrying...", ex);
+				logger.warn("Failed to connect: " + ex.getLocalizedMessage() + " retrying...", ex);
 
 				// Sleep for one second before
 				try {
@@ -471,10 +480,10 @@ public class WatameBot {
 	 * @param plugin - the plugin to unload
 	 */
 	private void unloadPlugin(IPlugin plugin) {
-		logger.trace(state.marker, "Unloading {}", plugin.getClass());
+		logger.trace("Unloading {}", plugin.getClass());
 		IOUtil.silentClose(plugin);
 		plugins.remove(plugin.getName());
-		logger.warn(state.marker, plugin.getClass() + " unloaded");
+		logger.warn(plugin.getClass() + " unloaded");
 	}
 
 	/**
@@ -519,10 +528,8 @@ public class WatameBot {
 	 * @return
 	 */
 	public IDatabaseManager getDatabaseManager() { return manager; }
-	
-	public IGuildData getDataForGuild(Guild guild) {
-		return database.getDataForGuild(guild);
-	}
+
+	public IGuildData getDataForGuild(Guild guild) { return database.getDataForGuild(guild); }
 
 	/**
 	 * Get the property provider instance.
@@ -545,6 +552,8 @@ public class WatameBot {
 	 * @see State
 	 */
 	public State getState() { return state; }
+
+	private void updateState() { MDC.put("watame.status", state.name()); }
 
 	/**
 	 * States {@link WatameBot} goes through on startup.

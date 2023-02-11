@@ -11,11 +11,11 @@ module watamebot {
 	requires transitive org.json;
 	requires transitive org.slf4j;
 	requires transitive java.sql;
+	requires transitive com.zaxxer.hikari;
 	requires java.logging;
 	requires jsr305;
 	requires org.fusesource.jansi;
 	requires org.apache.commons.lang3;
-	requires com.zaxxer.hikari;
 	requires ch.qos.logback.classic;
 	requires ch.qos.logback.core;
 	requires org.apache.commons.configuration2;

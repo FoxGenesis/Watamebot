@@ -15,15 +15,13 @@ public class JSONObjectAdv extends JSONObject {
 
 	public JSONObjectAdv(@Nonnull String json, @Nonnull TriConsumer<String, Object, Boolean> update) {
 		super(json);
-		Objects.nonNull(update);
-		this.update = update;
+		this.update = Objects.requireNonNull(update);
 	}
 
 	@Override
 	public JSONObjectAdv put(@Nonnull String key, Object value) {
 		super.put(key, value);
-		if (this.update != null)
-			this.update.accept(key, value, false);
+		this.update.accept(key, value, false);
 		return this;
 	}
 
@@ -36,8 +34,7 @@ public class JSONObjectAdv extends JSONObject {
 	@Override
 	public JSONObjectAdv remove(@Nonnull String key) {
 		super.remove(key);
-		if (this.update != null)
-			this.update.accept(key, null, true);
+		this.update.accept(key, null, true);
 		return this;
 	}
 }
