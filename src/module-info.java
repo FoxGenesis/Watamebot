@@ -12,13 +12,13 @@ module watamebot {
 	requires transitive org.slf4j;
 	requires transitive java.sql;
 	requires transitive com.zaxxer.hikari;
-	requires java.logging;
-	requires jsr305;
+	requires transitive org.apache.commons.configuration2;
+
 	requires org.fusesource.jansi;
 	requires org.apache.commons.lang3;
-	requires ch.qos.logback.classic;
 	requires ch.qos.logback.core;
-	requires org.apache.commons.configuration2;
+	requires ch.qos.logback.classic;
+	requires jsr305;
 
 	exports net.foxgenesis.config;
 	exports net.foxgenesis.config.fields;
@@ -34,8 +34,7 @@ module watamebot {
 	exports net.foxgenesis.watame.property;
 
 	uses net.foxgenesis.watame.plugin.IPlugin;
+	uses net.foxgenesis.watame.plugin.Plugin;
 
 	provides net.foxgenesis.watame.plugin.IPlugin with net.foxgenesis.watame.command.IntegratedCommands;
-
-	opens resources;
 }

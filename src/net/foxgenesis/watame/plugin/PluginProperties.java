@@ -5,6 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+@Deprecated(forRemoval = true)
 @Target({ ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface PluginProperties {
@@ -35,5 +36,12 @@ public @interface PluginProperties {
 	 * 
 	 * @return If this plugin provides command data
 	 */
-	public boolean providesCommands();
+	public boolean providesCommands() default false;
+
+	/**
+	 * Check whether this plugin requires access to the database connection.
+	 * 
+	 * @return If this plugin uses the database
+	 */
+	public boolean requiresDatabaseAccess() default false;
 }

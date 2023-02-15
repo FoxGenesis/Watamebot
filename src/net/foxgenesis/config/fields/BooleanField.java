@@ -3,7 +3,7 @@ package net.foxgenesis.config.fields;
 import java.util.function.Function;
 
 import net.dv8tion.jda.api.entities.Guild;
-
+@Deprecated(forRemoval = true)
 public class BooleanField extends ConfigField<Boolean> {
 
 	public BooleanField(String name, Function<Guild, Boolean> defaultValue, boolean isEditable) {

@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Objects;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import net.dv8tion.jda.api.entities.Guild;
 import net.foxgenesis.property.IPropertyField;
@@ -33,7 +34,7 @@ public class GuildPropertyProvider implements IPropertyProvider<String, Guild, I
 	public int hashCode() { return Objects.hash(database, properties); }
 
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(@Nullable Object obj) {
 		if (this == obj)
 			return true;
 		if (obj == null)

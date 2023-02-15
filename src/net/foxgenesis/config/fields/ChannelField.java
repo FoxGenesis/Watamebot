@@ -6,7 +6,7 @@ import javax.annotation.CheckForNull;
 
 import net.dv8tion.jda.api.entities.Channel;
 import net.dv8tion.jda.api.entities.Guild;
-
+@Deprecated(forRemoval = true)
 public class ChannelField extends ConfigField<Channel> {
 
 	public ChannelField(String name, Function<Guild, Channel> defaultValue, boolean isEditable) {

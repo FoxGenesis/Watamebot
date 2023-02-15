@@ -2,7 +2,7 @@ package net.foxgenesis.watame;
 
 import java.sql.SQLException;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 import org.fusesource.jansi.AnsiConsole;
 import org.slf4j.Logger;
@@ -70,6 +70,6 @@ public class Main {
 	 *
 	 * @return flags, arguments and parameters used to launch this application
 	 */
-	@Nullable
+	@Nonnull
 	static ProgramArguments getProgramArguments() { return params; }
 }

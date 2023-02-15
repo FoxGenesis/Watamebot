@@ -15,6 +15,7 @@ import net.foxgenesis.watame.WatameBot;
  * @author Ashley
  *
  */
+@Deprecated(forRemoval = true)
 public interface IPlugin extends AutoCloseable {
 
 	/**
@@ -64,6 +65,7 @@ public interface IPlugin extends AutoCloseable {
 	 * @param bot
 	 */
 	public void onReady(WatameBot bot) throws SeverePluginException;
+	
 
 	public default Collection<CommandData> getCommands() { return Collections.emptyList(); }
 
@@ -95,13 +97,18 @@ public interface IPlugin extends AutoCloseable {
 	public default Version getVersion() { return Version.parse(getProperties(getClass()).version()); }
 
 	/**
-	 * 
-	 * 
 	 * Check whether this plugin provides commands/interactions.
 	 * 
 	 * @return If this plugin provides command data
 	 */
 	public default boolean providesCommands() { return getProperties(getClass()).providesCommands(); }
+
+	/**
+	 * Check whether this plugin requires access to the database connection.
+	 * 
+	 * @return If this plugin uses the database
+	 */
+	public default boolean requiresDatabaseConnection() { return getProperties(getClass()).requiresDatabaseAccess(); }
 
 	/**
 	 * Get the configuration directory of this plugin. <br>

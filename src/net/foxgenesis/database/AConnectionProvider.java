@@ -27,18 +27,18 @@ public abstract class AConnectionProvider implements AutoCloseable {
 
 		String type = properties.getProperty("databaseType", "mysql");
 		properties.remove("databaseType");
-		
+
 		String ip = properties.getProperty("ip", "localhost");
 		properties.remove("ip");
-		
+
 		String port = properties.getProperty("port", "3306");
 		properties.remove("port");
-		
+
 		String database = properties.getProperty("database", "WatameBot");
 		properties.remove("database");
-		
+
 		properties.put("jdbcUrl", "jdbc:%s://%s:%s/%s".formatted(type, ip, port, database));
-		
+
 		properties.put("poolName", name);
 	}
 

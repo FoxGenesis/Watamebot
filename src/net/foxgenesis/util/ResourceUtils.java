@@ -17,6 +17,12 @@ import java.util.Properties;
 
 import javax.annotation.Nonnull;
 
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
+import org.apache.commons.configuration2.builder.fluent.Parameters;
+import org.apache.commons.configuration2.builder.fluent.PropertiesBuilderParameters;
+import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +60,7 @@ public final class ResourceUtils {
 		}
 	}
 
-	public static Properties getPropertiesResource(URL path) throws IOException {
+	public static Properties getProperties(URL path) throws IOException {
 		logger.trace("Attempting to read resource: " + path);
 
 		Properties properties = new Properties();
@@ -65,7 +71,7 @@ public final class ResourceUtils {
 	
 	public static Properties getProperties(Path path, ModuleResource defaults) throws IOException {
 		// If file does not exist, create a new one and try to open it again
-		if(Files.notExists(path, LinkOption.NOFOLLOW_LINKS)) {
+		if(defaults != null && Files.notExists(path, LinkOption.NOFOLLOW_LINKS)) {
 			defaults.writeToFile(path);
 			return getProperties(path, defaults);
 		}
@@ -73,6 +79,35 @@ public final class ResourceUtils {
 		Properties properties = new Properties();
 		properties.load(Files.newInputStream(path, StandardOpenOption.READ));
 		return properties;
+	}
+	
+	public static PropertiesConfiguration loadConfig(ModuleResource defaults, Path dir, String output)
+			throws IOException, ConfigurationException {
+		// Create plugin configuration folder
+		if (Files.notExists(dir, LinkOption.NOFOLLOW_LINKS))
+			Files.createDirectories(dir);
+
+		Path outputPath = dir.resolve(output);
+		// Create configuration file
+		if (Files.notExists(outputPath, LinkOption.NOFOLLOW_LINKS))
+			defaults.writeToFile(outputPath);
+		else if (Files.isDirectory(outputPath, LinkOption.NOFOLLOW_LINKS))
+			throw new IllegalArgumentException(outputPath.toString() + " is not a regular file!");
+		else if (!Files.isReadable(outputPath))
+			throw new SecurityException("Unable to read " + outputPath.toString() + ". Missing permissions!");
+
+		// Load configuration file
+		PropertiesBuilderParameters propParams = new Parameters().properties();
+		propParams.setListDelimiterHandler(new DefaultListDelimiterHandler(','));
+		propParams.setBasePath(dir.toString());
+		propParams.setPath(outputPath.toString());
+
+		FileBasedConfigurationBuilder<PropertiesConfiguration> builder = new FileBasedConfigurationBuilder<PropertiesConfiguration>(
+				PropertiesConfiguration.class);
+
+		builder.configure(propParams);
+
+		return builder.getConfiguration();
 	}
 
 	public static String toString(@Nonnull InputStream input) throws IOException {

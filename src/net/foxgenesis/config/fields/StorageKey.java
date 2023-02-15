@@ -1,5 +1,5 @@
 package net.foxgenesis.config.fields;
-
+@Deprecated(forRemoval = true)
 public class StorageKey {
 	public final String name, type;
 	public final SQLDataType r;

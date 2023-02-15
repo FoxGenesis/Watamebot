@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +39,7 @@ public abstract class AbstractDatabase implements AutoCloseable {
 	@Nonnull
 	protected final Logger logger;
 
-	@Nonnull
+	@Nullable
 	private AConnectionProvider provider;
 
 	public AbstractDatabase(@Nonnull String name, @Nonnull ModuleResource operationsFile,
@@ -65,92 +66,131 @@ public abstract class AbstractDatabase implements AutoCloseable {
 		});
 
 		this.provider = provider;
-		
+
 		onReady();
 	}
-	
+
 	protected abstract void onReady();
-	
-	protected Connection openUnprotectedConnection() throws SQLException  {
-		return provider.openConnection();
+
+	protected Connection openConnection() throws SQLException {
+		if (!isReady())
+			throw new UnsupportedOperationException("Database has not been setup yet!");
+
+		if (provider != null)
+			return provider.openConnection();
+		throw new UnsupportedOperationException("Database has not been setup yet!");
 	}
 
 	protected <U> CompletableFuture<U> prepareStatementAsync(String id, Function<PreparedStatement, U> func) {
 		if (!hasStatementID(id))
 			throw new NoSuchElementException("No statement exists with id " + id);
-		CompletableFuture<PreparedStatement> future = provider.asyncConnection(conn -> {
-			try {
-				return conn.prepareStatement(getRawStatement(id));
-			} catch (SQLException e) {
-				throw new CompletionException(e);
-			}
-		});
+		else if (!isReady())
+			throw new UnsupportedOperationException("Database has not been setup yet!");
 
-		CompletableFuture<PreparedStatement> copy = future.copy();
+		if (provider != null) {
+			CompletableFuture<PreparedStatement> future = provider.asyncConnection(conn -> {
+				try {
+					return conn.prepareStatement(getRawStatement(id));
+				} catch (SQLException e) {
+					throw new CompletionException(e);
+				}
+			});
 
-		return future.thenApplyAsync(func).whenCompleteAsync((result, error) -> {
-			copy.thenAccept(IOUtil::silentClose);
-		});
+			CompletableFuture<PreparedStatement> copy = future.copy();
+
+			return future.thenApplyAsync(func)
+					.whenCompleteAsync((result, error) -> { copy.thenAccept(IOUtil::silentClose); });
+		}
+		return CompletableFuture.failedFuture(new UnsupportedOperationException("Database has not been setup yet!"));
 	}
 
 	protected <U> CompletableFuture<U> prepareCallableAsync(String id, Function<CallableStatement, U> func) {
 		if (!hasStatementID(id))
 			throw new NoSuchElementException("No statement exists with id " + id);
-		CompletableFuture<CallableStatement> future = provider.asyncConnection(conn -> {
-			try {
-				return conn.prepareCall(getRawStatement(id));
-			} catch (SQLException e) {
-				throw new CompletionException(e);
-			}
-		});
+		else if (!isReady())
+			throw new UnsupportedOperationException("Database has not been setup yet!");
 
-		CompletableFuture<CallableStatement> copy = future.copy();
+		if (provider != null) {
+			CompletableFuture<CallableStatement> future = provider.asyncConnection(conn -> {
+				try {
+					return conn.prepareCall(getRawStatement(id));
+				} catch (SQLException e) {
+					throw new CompletionException(e);
+				}
+			});
 
-		return future.thenApplyAsync(func).whenCompleteAsync((result, error) -> {
-			copy.thenAccept(IOUtil::silentClose);
-		});
+			CompletableFuture<CallableStatement> copy = future.copy();
+
+			return future.thenApplyAsync(func)
+					.whenCompleteAsync((result, error) -> { copy.thenAccept(IOUtil::silentClose); });
+		}
+		return CompletableFuture.failedFuture(new UnsupportedOperationException("Database has not been setup yet!"));
 	}
-	
+
 	protected void prepareStatement(String id, SQLConsumer<PreparedStatement> func, Consumer<Throwable> error) {
 		if (!hasStatementID(id))
 			throw new NoSuchElementException("No statement exists with id " + id);
-		provider.openAutoClosedConnection(conn -> {
-			try(PreparedStatement statement = conn.prepareStatement(getRawStatement(id))) {
-				func.accept(statement);
-				return null;
-			}
-		}, error);
+		else if (!isReady())
+			throw new UnsupportedOperationException("Database has not been setup yet!");
+
+		if (provider != null) {
+			provider.openAutoClosedConnection(conn -> {
+				try (PreparedStatement statement = conn.prepareStatement(getRawStatement(id))) {
+					func.accept(statement);
+					return null;
+				}
+			}, error);
+		} else
+			throw new UnsupportedOperationException("Database has not been setup yet!");
 	}
 
 	protected void prepareCallable(String id, SQLConsumer<CallableStatement> func, Consumer<Throwable> error) {
 		if (!hasStatementID(id))
 			throw new NoSuchElementException("No statement exists with id " + id);
-		provider.openAutoClosedConnection(conn -> {
-			try(CallableStatement statement = conn.prepareCall(getRawStatement(id))) {
-				func.accept(statement);
-				return null;
-			}
-		}, error);
+		else if (!isReady())
+			throw new UnsupportedOperationException("Database has not been setup yet!");
+
+		if (provider != null) {
+			provider.openAutoClosedConnection(conn -> {
+				try (CallableStatement statement = conn.prepareCall(getRawStatement(id))) {
+					func.accept(statement);
+					return null;
+				}
+			}, error);
+		} else
+			throw new UnsupportedOperationException("Database has not been setup yet!");
 	}
-	
+
 	protected <U> U mapStatement(String id, SQLFunction<PreparedStatement, U> func, Consumer<Throwable> error) {
 		if (!hasStatementID(id))
 			throw new NoSuchElementException("No statement exists with id " + id);
-		return provider.openAutoClosedConnection(conn -> {
-			try(PreparedStatement statement = conn.prepareStatement(getRawStatement(id))) {
-				return func.apply(statement);
-			}
-		}, error);
+		else if (!isReady())
+			throw new UnsupportedOperationException("Database has not been setup yet!");
+
+		if (provider != null) {
+			return provider.openAutoClosedConnection(conn -> {
+				try (PreparedStatement statement = conn.prepareStatement(getRawStatement(id))) {
+					return func.apply(statement);
+				}
+			}, error);
+		} else
+			throw new UnsupportedOperationException("Database has not been setup yet!");
 	}
 
 	protected <U> U mapCallable(String id, SQLFunction<CallableStatement, U> func, Consumer<Throwable> error) {
 		if (!hasStatementID(id))
 			throw new NoSuchElementException("No statement exists with id " + id);
-		return provider.openAutoClosedConnection(conn -> {
-			try(CallableStatement statement = conn.prepareCall(getRawStatement(id))) {
-				return func.apply(statement);
-			}
-		}, error);
+		else if (!isReady())
+			throw new UnsupportedOperationException("Database has not been setup yet!");
+
+		if (provider != null) {
+			return provider.openAutoClosedConnection(conn -> {
+				try (CallableStatement statement = conn.prepareCall(getRawStatement(id))) {
+					return func.apply(statement);
+				}
+			}, error);
+		} else
+			throw new UnsupportedOperationException("Database has not been setup yet!");
 	}
 
 	private void registerStatement(@Nonnull String id, @Nonnull String raw) {
@@ -177,15 +217,11 @@ public abstract class AbstractDatabase implements AutoCloseable {
 	@Nonnull
 	public final String getName() { return name; }
 
-	public final boolean isReady() { return provider != null; }
-	
+	public boolean isReady() { return provider != null; }
+
 	@FunctionalInterface
-	public interface SQLConsumer<U>{
-		void accept(U u) throws SQLException;
-	}
-	
+	public interface SQLConsumer<U> { void accept(U u) throws SQLException; }
+
 	@FunctionalInterface
-	public interface SQLFunction<U,V>{
-		V apply(U u) throws SQLException;
-	}
+	public interface SQLFunction<U, V> { V apply(U u) throws SQLException; }
 }

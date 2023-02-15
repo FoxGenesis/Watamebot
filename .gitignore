@@ -43,3 +43,4 @@ test-deploy-token.txt
 assets/resources/database.properties
 /logs/
 /config/
+/lib/

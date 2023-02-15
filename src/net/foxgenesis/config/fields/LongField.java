@@ -3,7 +3,7 @@ package net.foxgenesis.config.fields;
 import java.util.function.Function;
 
 import net.dv8tion.jda.api.entities.Guild;
-
+@Deprecated(forRemoval = true)
 public class LongField extends ConfigField<Long> {
 
 	public LongField(String name, Function<Guild, Long> defaultValue, boolean isEditable) {

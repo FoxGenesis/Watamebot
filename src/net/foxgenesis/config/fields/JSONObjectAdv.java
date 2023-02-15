@@ -7,10 +7,9 @@ import javax.annotation.Nonnull;
 import org.json.JSONObject;
 
 import net.foxgenesis.util.function.TriConsumer;
-
+@Deprecated(forRemoval = true)
 public class JSONObjectAdv extends JSONObject {
 
-	@Nonnull
 	private final TriConsumer<String, Object, Boolean> update;
 
 	public JSONObjectAdv(@Nonnull String json, @Nonnull TriConsumer<String, Object, Boolean> update) {
@@ -19,9 +18,10 @@ public class JSONObjectAdv extends JSONObject {
 	}
 
 	@Override
-	public JSONObjectAdv put(@Nonnull String key, Object value) {
+	public JSONObjectAdv put(String key, Object value) {
 		super.put(key, value);
-		this.update.accept(key, value, false);
+		if (this.update != null)
+			this.update.accept(key, value, false);
 		return this;
 	}
 
@@ -32,9 +32,10 @@ public class JSONObjectAdv extends JSONObject {
 	}
 
 	@Override
-	public JSONObjectAdv remove(@Nonnull String key) {
+	public JSONObjectAdv remove(String key) {
 		super.remove(key);
-		this.update.accept(key, null, true);
+		if (this.update != null)
+			this.update.accept(key, null, true);
 		return this;
 	}
 }

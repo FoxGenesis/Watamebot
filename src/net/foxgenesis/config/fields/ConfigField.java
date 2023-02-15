@@ -6,7 +6,7 @@ import javax.annotation.Nonnull;
 
 import net.dv8tion.jda.api.entities.Guild;
 import net.foxgenesis.watame.WatameBot;
-
+@Deprecated(forRemoval = true)
 public abstract class ConfigField<E> {
 	@Nonnull
 	public final String name;

@@ -2,6 +2,8 @@ package net.foxgenesis.database;
 
 import java.io.IOException;
 
+import javax.annotation.Nonnull;
+
 public interface IDatabaseManager extends AutoCloseable {
 	/**
 	 * Check if all guild data has been processed and is ready for use.
@@ -11,9 +13,10 @@ public interface IDatabaseManager extends AutoCloseable {
 	 */
 	public boolean isReady();
 
-	boolean register(AbstractDatabase database) throws IOException;
+	boolean register(@Nonnull AbstractDatabase database) throws IOException;
 
-	boolean isDatabaseRegistered(AbstractDatabase database);
+	boolean isDatabaseRegistered(@Nonnull AbstractDatabase database);
 	
+	@Nonnull
 	String getName();
 }

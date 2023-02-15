@@ -3,7 +3,7 @@ package net.foxgenesis.config.fields;
 import java.util.function.Function;
 
 import net.dv8tion.jda.api.entities.Guild;
-
+@Deprecated(forRemoval = true)
 public class StringField extends ConfigField<String> {
 
 	public StringField(String name, Function<Guild, String> defaultValue, boolean isEditable) {

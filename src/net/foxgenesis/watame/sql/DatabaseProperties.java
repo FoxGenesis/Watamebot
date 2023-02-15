@@ -5,7 +5,7 @@ import java.util.function.Supplier;
 import javax.sql.DataSource;
 
 import net.foxgenesis.util.ResourceUtils.ModuleResource;
-
+@Deprecated(forRemoval = true)
 public record DatabaseProperties(DataSource source, ModuleResource setupFile, ModuleResource operationsFile,
 		ModuleResource callableOperationsFile, String name) {
 	public DatabaseProperties(Supplier<DataSource> source, ModuleResource setupFile, ModuleResource operationsFile,

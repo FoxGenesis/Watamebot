@@ -54,8 +54,10 @@ public class IntegratedCommands implements IPlugin {
 				Commands.slash("config-set", "Get the configuration of the bot")
 						.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
 						.setGuildOnly(true).addOption(OptionType.STRING, "key", "Location of the variable", true, false)
-						.addOption(OptionType.STRING, "type", "The variable's type", true, true)
+						.addOptions(new OptionData(OptionType.STRING, "type", "The variable's type").setRequired(true)
+								.setAutoComplete(false).addChoices(ConfigCommand.options))
 						.addOptions(createAllOptions()));
+
 	}
 
 	private static List<OptionData> createAllOptions() {
@@ -63,7 +65,7 @@ public class IntegratedCommands implements IPlugin {
 				.filter(type -> !(type == OptionType.UNKNOWN || type == OptionType.SUB_COMMAND
 						|| type == OptionType.SUB_COMMAND_GROUP))
 				.map(type -> new OptionData(type, type.name().toLowerCase(),
-						"Value to set of type " + type.name().toLowerCase()).setAutoComplete(false).setRequired(false))
+						"Set the value as a " + type.name().toLowerCase()).setAutoComplete(false).setRequired(false))
 				.toList();
 	}
 }

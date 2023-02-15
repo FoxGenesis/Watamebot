@@ -1,6 +1,7 @@
 package net.foxgenesis.database;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -12,9 +13,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import net.foxgenesis.util.CompletableFutureUtils;
 
 public class DatabaseManager implements IDatabaseManager {
 	@Nonnull
@@ -26,6 +30,7 @@ public class DatabaseManager implements IDatabaseManager {
 	@Nonnull
 	private final String name;
 
+	@Nullable
 	private AConnectionProvider provider;
 
 	private boolean ready = false;
@@ -60,7 +65,7 @@ public class DatabaseManager implements IDatabaseManager {
 	@Override
 	public boolean isDatabaseRegistered(AbstractDatabase database) { return databases.contains(database); }
 
-	public CompletableFuture<Void> start(@Nonnull AConnectionProvider provider) {
+	public CompletableFuture<Void> start(@Nonnull AConnectionProvider provider) throws ConnectException {
 		return CompletableFuture.runAsync(() -> {
 			this.provider = Objects.requireNonNull(provider);
 			logger.info("Starting {} using provider {}", name, provider.getName());
@@ -81,27 +86,29 @@ public class DatabaseManager implements IDatabaseManager {
 					return null;
 				}, error -> logger.error("Error while setting up database tables", error));
 			}
-		}).thenComposeAsync((v) -> {
+		}).thenCompose((v) -> {
 			synchronized (databases) {
-				return CompletableFuture.allOf(databases.stream().map(database -> CompletableFuture.runAsync(() -> {
-					try {
-						database.setup(provider);
-					} catch (IOException e) {
-						throw new CompletionException(e);
-					}
-				}).exceptionally(e -> {
-					logger.error("Error while setting up " + database.getName(), e);
-					return null;
-				})).toArray(CompletableFuture[]::new));
+				return CompletableFutureUtils
+						.allOf(databases.stream().map(database -> CompletableFuture.runAsync(() -> {
+							try {
+								database.setup(provider);
+							} catch (IOException e) {
+								throw new CompletionException(e);
+							}
+						}).exceptionally(e -> {
+							logger.error("Error while setting up " + database.getName(), e);
+							return null;
+						})));
 			}
-		}).thenRun(() -> ready = true).thenComposeAsync((v) -> {
+		}).thenRun(() -> ready = true).thenCompose((v) -> {
 			synchronized (databases) {
-				return CompletableFuture.allOf(databases.stream().map(database -> CompletableFuture.runAsync(() -> {
-					database.onReady();
-				}).exceptionally(e -> {
-					logger.error("Error while setting up " + database.getName(), e);
-					return null;
-				})).toArray(CompletableFuture[]::new));
+				return CompletableFutureUtils
+						.allOf(databases.stream().map(database -> CompletableFuture.runAsync(() -> {
+							database.onReady();
+						}).exceptionally(e -> {
+							logger.error("Error while setting up " + database.getName(), e);
+							return null;
+						})));
 			}
 		});
 	}
@@ -110,6 +117,7 @@ public class DatabaseManager implements IDatabaseManager {
 	public boolean isReady() { return ready; }
 
 	@Override
+	@Nonnull
 	public String getName() { return name; }
 
 	@Override

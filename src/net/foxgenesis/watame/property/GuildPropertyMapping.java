@@ -2,7 +2,6 @@ package net.foxgenesis.watame.property;
 
 import java.util.Objects;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.json.JSONObject;
@@ -23,7 +22,7 @@ public class GuildPropertyMapping implements IGuildPropertyMapping {
 	private final JSONObject data;
 	private final Guild guild;
 
-	public <T extends JSONObject> GuildPropertyMapping(@Nonnull String key, @Nonnull T data, @Nonnull Guild guild) {
+	public <T extends JSONObject> GuildPropertyMapping(String key, T data, Guild guild) {
 		this.key = Objects.requireNonNull(key);
 		this.data = Objects.requireNonNull(data);
 		this.guild = Objects.requireNonNull(guild);
@@ -83,7 +82,7 @@ public class GuildPropertyMapping implements IGuildPropertyMapping {
 	public int hashCode() { return Objects.hash(data, guild, key); }
 
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(@Nullable Object obj) {
 		if (this == obj)
 			return true;
 		if (obj == null)

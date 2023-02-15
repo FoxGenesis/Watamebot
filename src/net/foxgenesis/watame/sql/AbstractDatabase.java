@@ -31,6 +31,7 @@ import net.foxgenesis.watame.ExitCode;
  * @author Ashley
  *
  */
+@Deprecated(forRemoval = true)
 public class AbstractDatabase implements AutoCloseable {
 
 	/**
@@ -39,7 +40,7 @@ public class AbstractDatabase implements AutoCloseable {
 	@Nonnull
 	protected final Logger logger;
 
-	@Nullable
+	@Nonnull
 	private final ModuleResource databaseSetupFile;
 
 	@Nonnull

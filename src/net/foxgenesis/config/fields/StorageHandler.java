@@ -1,7 +1,7 @@
 package net.foxgenesis.config.fields;
 
 import java.util.function.Consumer;
-
+@Deprecated(forRemoval = true)
 public class StorageHandler {
 	public Object data;
 	private final Consumer<Object> update;

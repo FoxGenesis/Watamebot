@@ -4,6 +4,7 @@ import java.util.Objects;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.json.JSONObject;
 
@@ -18,7 +19,7 @@ public class GuildProperty implements IPropertyField<String, Guild, IGuildProper
 
 	private final IDatabaseManager database;
 
-	GuildProperty(@Nonnull String key, @Nonnull IDatabaseManager database) {
+	GuildProperty(String key, IDatabaseManager database) {
 		this.key = Objects.requireNonNull(key, "Key must not be null!");
 		this.database = Objects.requireNonNull(database, "Database must not be null!");
 	}
@@ -37,7 +38,7 @@ public class GuildProperty implements IPropertyField<String, Guild, IGuildProper
 	}
 
 	@Override
-	public boolean set(Guild from, Object value) {
+	public boolean set(Guild from, @Nullable Object value) {
 		getData(from).put(key, value);
 		return true;
 	}
@@ -58,7 +59,7 @@ public class GuildProperty implements IPropertyField<String, Guild, IGuildProper
 	public int hashCode() { return Objects.hash(database, key); }
 
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(@Nullable Object obj) {
 		if (this == obj)
 			return true;
 		if (obj == null)

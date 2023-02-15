@@ -12,6 +12,7 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Deprecated(forRemoval = true)
 public class UntrustedPluginLoader<T> {
 
 	/**
@@ -36,11 +37,11 @@ public class UntrustedPluginLoader<T> {
 	 * 
 	 * @throws NullPointerException if {@code pluginClass} is {@code null}
 	 */
-	public UntrustedPluginLoader(@Nonnull Class<T> pluginClass) {
+	public UntrustedPluginLoader(Class<T> pluginClass) {
 		this.pluginClass = Objects.requireNonNull(pluginClass);
 
 		logger.trace("Creating logger of service {}", pluginClass);
-		serviceLoader = ServiceLoader.load(pluginClass);
+		serviceLoader = ServiceLoader.load(getClass().getModule().getLayer(), pluginClass);
 	}
 
 	/**
@@ -74,7 +75,7 @@ public class UntrustedPluginLoader<T> {
 	 *                                   declare that it uses service
 	 * @see #getPlugins()
 	 */
-	public Collection<T> getPlugins(@Nonnull Function<Provider<T>, T> providerMap) {
+	public Collection<T> getPlugins(Function<Provider<T>, T> providerMap) {
 		Objects.requireNonNull(providerMap, "Mapper must not be null");
 		
 		logger.trace("Searching for providers of {}", pluginClass);

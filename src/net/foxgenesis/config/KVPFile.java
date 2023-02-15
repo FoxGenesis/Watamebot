@@ -202,7 +202,7 @@ public class KVPFile {
 	 *                     of the resource
 	 */
 	public void parse(@Nonnull InputStream input) throws IOException {
-		parse(List.of(ResourceUtils.toSplitString(input)));
+		parse(List.of(ResourceUtils.toSplitString(Objects.requireNonNull(input, "InputStream must not be null!"))));
 	}
 
 	/**
@@ -220,6 +220,8 @@ public class KVPFile {
 	 * @param input - raw KVP style strings
 	 */
 	private void parse(List<String> input) {
+		if(input == null)
+			return;
 		/*
 		 * - Read all lines - Filter out ignored lines - Split line based on regex with
 		 * limit of two - Ensure split has two elements - Collect into a map

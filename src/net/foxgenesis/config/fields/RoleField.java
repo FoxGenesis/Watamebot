@@ -6,7 +6,7 @@ import javax.annotation.CheckForNull;
 
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
-
+@Deprecated(forRemoval = true)
 public class RoleField extends ConfigField<Role> {
 
 	public RoleField(String name, Function<Guild, Role> defaultValue, boolean isEditable) {

@@ -100,7 +100,7 @@ public class GuildData implements IGuildData, AutoCloseable {
 	 * @see #pushJSONUpdate(String, Object, boolean)
 	 */
 	void setData(@Nonnull ResultSet result) throws SQLException {
-		Objects.nonNull(result);
+		Objects.requireNonNull(result);
 
 		// Check if we have something to parse
 		// if (result.isBeforeFirst())
@@ -110,16 +110,16 @@ public class GuildData implements IGuildData, AutoCloseable {
 		// Get our configuration column
 		String jsonString = result.getString("GuildProperties");
 
-		DataManager.sqlLogger.debug(DataManager.SQL_MARKER, "SetData <- [{}] {}", guild.getName(), jsonString);
+		WatameBotDatabase.sqlLogger.debug(WatameBotDatabase.SQL_MARKER, "SetData <- [{}] {}", guild.getName(), jsonString);
 
 		if (jsonString == null) {
-			DataManager.logger.warn("JSON STRING IS NULL FOR " + guild.getIdLong(),
+			WatameBotDatabase.logger.warn("JSON STRING IS NULL FOR " + guild.getIdLong(),
 					new NullPointerException("JSON STRING IS NULL FOR " + guild.getIdLong()));
 			return;
 		}
 
 		// Set our current data and pass our update method
-		this.data = new JSONObjectAdv(jsonString, (key, obj, remove) -> {;
+		this.data = new JSONObjectAdv(jsonString, (key, obj, remove) -> {
 			consumer.apply(key, obj, guild, remove);
 		});
 

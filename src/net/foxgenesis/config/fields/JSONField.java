@@ -5,7 +5,7 @@ import java.util.function.Function;
 import org.json.JSONObject;
 
 import net.dv8tion.jda.api.entities.Guild;
-
+@Deprecated(forRemoval = true)
 public class JSONField extends ConfigField<JSONObject> {
 
 	public JSONField(String name, Function<Guild, JSONObject> defaultValue, boolean isEditable) {

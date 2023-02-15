@@ -36,6 +36,7 @@ import net.foxgenesis.watame.ExitCode;
  * @author Ashley
  *
  */
+@Deprecated(forRemoval = true)
 public class DataManager implements IDatabaseManager, AutoCloseable {
 	// =============================== STATIC =================================
 	static final Logger logger = LoggerFactory.getLogger("Database");

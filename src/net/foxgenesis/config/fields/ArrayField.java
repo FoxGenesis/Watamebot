@@ -5,7 +5,7 @@ import java.util.function.Function;
 import org.json.JSONArray;
 
 import net.dv8tion.jda.api.entities.Guild;
-
+@Deprecated(forRemoval = true)
 public class ArrayField extends ConfigField<JSONArray> {
 
 	public ArrayField(String name, Function<Guild, JSONArray> defaultValue, boolean isEditable) {

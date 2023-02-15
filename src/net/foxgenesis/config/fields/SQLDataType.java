@@ -1,5 +1,5 @@
 package net.foxgenesis.config.fields;
-
+@Deprecated(forRemoval = true)
 public enum SQLDataType {
 	CHAR, VARCHAR, SMALLINT, INT, DEC, NUMERIC, REAL, FLOAT, DOUBLE_PRECISION, DATE, TIME, TIMESTAMP, CLOB, BLOB, JSON;
 
