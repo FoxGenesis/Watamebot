@@ -11,15 +11,15 @@ import org.json.JSONObject;
 import net.dv8tion.jda.api.entities.Guild;
 import net.foxgenesis.config.fields.JSONObjectAdv;
 import net.foxgenesis.property.IPropertyField;
-import net.foxgenesis.watame.sql.IDatabaseManager;
+import net.foxgenesis.watame.sql.IGuildDataProvider;
 
 public class GuildProperty implements IPropertyField<String, Guild, IGuildPropertyMapping> {
 
 	private final String key;
 
-	private final IDatabaseManager database;
+	private final IGuildDataProvider database;
 
-	GuildProperty(String key, IDatabaseManager database) {
+	public GuildProperty(String key, IGuildDataProvider database) {
 		this.key = Objects.requireNonNull(key, "Key must not be null!");
 		this.database = Objects.requireNonNull(database, "Database must not be null!");
 	}
@@ -37,6 +37,7 @@ public class GuildProperty implements IPropertyField<String, Guild, IGuildProper
 		return isPresent(from) ? new GuildPropertyMapping(key, data, from) : null;
 	}
 
+	@SuppressWarnings({"removal", "deprecation" })
 	@Override
 	public boolean set(Guild from, @Nullable Object value) {
 		getData(from).put(key, value);
@@ -53,6 +54,7 @@ public class GuildProperty implements IPropertyField<String, Guild, IGuildProper
 	@Override
 	public boolean isPresent(Guild from) { return getData(from).has(key); }
 
+	@SuppressWarnings("removal")
 	private JSONObjectAdv getData(Guild from) { return database.getDataForGuild(from).getConfig(); }
 
 	@Override

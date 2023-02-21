@@ -9,6 +9,7 @@
 	</classpathentry>
 	<classpathentry excluding="**" kind="src" output="target/classes" path="assets">
 		<attributes>
+			<attribute name="ignore_optional_problems" value="true"/>
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>

@@ -4,7 +4,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.ServiceLoader;
-import java.util.ServiceLoader.Provider;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,12 +17,15 @@ import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
+import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import net.dv8tion.jda.internal.utils.IOUtil;
 import net.foxgenesis.util.CompletableFutureUtils;
+import net.foxgenesis.watame.Context;
 import net.foxgenesis.watame.ProtectedJDABuilder;
 import net.foxgenesis.watame.WatameBot;
 
@@ -69,6 +71,11 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 	@Nonnull
 	private final ForkJoinPool pluginExecutor;
 
+	@Nonnull
+	private final Context context;
+	
+	
+
 	/**
 	 * Construct a new {@link PluginHandler} with the specified {@link ModuleLayer}
 	 * and plugin {@link Class}.
@@ -76,7 +83,8 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 	 * @param layer       - layer the {@link ServiceLoader} should use
 	 * @param pluginClass - the plugin {@link Class} to load
 	 */
-	public PluginHandler(ModuleLayer layer, Class<T> pluginClass) {
+	public PluginHandler(Context context, ModuleLayer layer, Class<T> pluginClass) {
+		this.context = Objects.requireNonNull(context);
 		this.layer = Objects.requireNonNull(layer);
 		this.pluginClass = Objects.requireNonNull(pluginClass);
 
@@ -90,7 +98,7 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 	 */
 	public void loadPlugins() {
 		logger.info("Starting...");
-		loader.stream().map(Provider::get).forEach(plugin -> plugins.put(plugin.name, plugin));
+		loader.stream().map(provider -> provider.get()).forEach(plugin -> plugins.put(plugin.name, plugin));
 		logger.debug("Found {} plugins", plugins.size());
 	}
 
@@ -156,8 +164,7 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 	 */
 	@Nonnull
 	public CommandListUpdateAction updateCommands(CommandListUpdateAction action) {
-		plugins.values().stream().filter(p -> p.providesCommands)
-				.forEach(plugin -> action.addCommands(plugin.getCommands()));
+		plugins.values().stream().filter(p -> p.providesCommands).map(Plugin::getCommands).forEach(action::addCommands);
 		return action;
 	}
 
@@ -172,8 +179,8 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 	 * @return Returns a {@link CompletableFuture} that completes after all plugins
 	 *         have finished the {@code task}.
 	 */
-	private CompletableFuture<Void> forEachPlugin(Consumer<? super T> task,
-			@Nullable Predicate<Plugin> filter) {
+	@Nonnull
+	private CompletableFuture<Void> forEachPlugin(Consumer<? super T> task, @Nullable Predicate<Plugin> filter) {
 		if (filter == null)
 			filter = p -> true;
 		return CompletableFutureUtils.allOf(plugins.values().stream().filter(filter).map(
@@ -191,9 +198,13 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 	 */
 	private void unloadPlugin(T plugin) {
 		logger.trace("Unloading {}", plugin.getClass());
-		IOUtil.silentClose(plugin);
 		plugins.remove(plugin.name);
-		logger.warn(plugin.getClass() + " unloaded");
+		IOUtil.silentClose(plugin);
+		if (plugin.needsDatabase) {
+			logger.info("Unloading database connections from ", plugin.getDisplayInfo());
+			context.getDatabaseManager().unload(plugin);
+		}
+		logger.warn(plugin.getDisplayInfo() + " unloaded");
 	}
 
 	/**
@@ -205,7 +216,7 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 	 * @param marker - method marker
 	 */
 	private void pluginError(T plugin, Throwable error) {
-		Marker marker = WatameBot.getInstance().getState().marker;
+		MDC.put("watame.status", context.getState().name());
 		Throwable temp = error;
 
 		if (error instanceof CompletionException && error.getCause() instanceof SeverePluginException)
@@ -214,28 +225,30 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 		if (temp instanceof SeverePluginException) {
 			SeverePluginException pluginException = (SeverePluginException) temp;
 
-			Marker m = MarkerFactory.getDetachedMarker(pluginException.isFatal() ? "FATAL" : "SEVERE");
-			m.add(marker);
+			Marker m = MarkerFactory.getMarker(pluginException.isFatal() ? "FATAL" : "SEVERE");
 
 			logger.error(m, "Exception in " + plugin.friendlyName, pluginException);
 
 			if (pluginException.isFatal())
 				unloadPlugin(plugin);
 		} else
-			logger.error(marker, "Error in " + plugin.friendlyName, error);
+			logger.error("Error in " + plugin.getDisplayInfo(), error);
 	}
 
 	/**
-	 * Close all loaded plugins and <b>await/help</b> the termination of the plugin thread
-	 * pool.
+	 * Close all loaded plugins and <b>await/help</b> the termination of the plugin
+	 * thread pool.
 	 */
 	@Override
 	public void close() throws IOException {
 		loader.reload();
-		pluginExecutor.shutdown();
 
 		logger.debug("Closing all pugins");
+		plugins.values().stream().filter(plugin -> plugin.needsDatabase)
+				.forEach(plugin -> context.getDatabaseManager().unload(plugin));
 		plugins.values().forEach(plugin -> IOUtil.silentClose(plugin));
+
+		pluginExecutor.shutdown();
 
 		// Await all plugin futures to complete
 		if (!pluginExecutor.awaitQuiescence(30, TimeUnit.SECONDS)) {
@@ -245,6 +258,16 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 
 		plugins.clear();
 	}
+
+	/**
+	 * Check if a plugin is loaded.
+	 * 
+	 * @param identifier - plugin identifier
+	 * @return Returns {@code true} if the plugin is loaded
+	 */
+	public boolean isPluginPresent(String identifier) { return plugins.containsKey(identifier); }
+
+	public Plugin getPlugin(String identifier) { return plugins.get(identifier); }
 
 	/**
 	 * Get the class used by this instance.

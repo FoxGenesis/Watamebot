@@ -1,6 +1,7 @@
 package net.foxgenesis.watame.sql;
 
 import java.sql.ResultSet;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -13,9 +14,13 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
 import net.dv8tion.jda.api.entities.Guild;
+import net.foxgenesis.property.IPropertyField;
+import net.foxgenesis.property.IPropertyProvider;
 import net.foxgenesis.watame.Constants;
+import net.foxgenesis.watame.property.GuildProperty;
+import net.foxgenesis.watame.property.IGuildPropertyMapping;
 
-public class WatameBotDatabase extends net.foxgenesis.database.AbstractDatabase implements IDatabaseManager {
+public class WatameBotDatabase extends net.foxgenesis.database.AbstractDatabase implements IGuildDataProvider, IPropertyProvider<String, Guild, IGuildPropertyMapping> {
 	// =============================== STATIC =================================
 	static final Logger logger = LoggerFactory.getLogger("Database");
 	static final Logger sqlLogger = LoggerFactory.getLogger("SQLInfo");
@@ -36,6 +41,8 @@ public class WatameBotDatabase extends net.foxgenesis.database.AbstractDatabase 
 	 * Map of guild id to guild data object
 	 */
 	private final ConcurrentHashMap<Long, GuildData> data = new ConcurrentHashMap<>();
+	
+	private final HashMap<String, IPropertyField<String, Guild, IGuildPropertyMapping>> properties = new HashMap<>();
 
 	public WatameBotDatabase() {
 		super("WatameBot Database", Constants.DATABASE_OPERATIONS_FILE, Constants.DATABASE_SETUP_FILE);
@@ -197,6 +204,14 @@ public class WatameBotDatabase extends net.foxgenesis.database.AbstractDatabase 
 
 		return result;
 	}
+	
+	@Override
+	public IPropertyField<String, Guild, IGuildPropertyMapping> getProperty(@Nonnull String key) {
+		return properties.computeIfAbsent(key, k -> new GuildProperty(k, this));
+	}
+
+	@Override
+	public boolean isPropertyPresent(@Nonnull String key) { return properties.containsKey(key); }
 
 	@Override
 	public void close() throws Exception {}

@@ -17,6 +17,6 @@ public final class Constants {
 	public static final File PLUGINS_FOLDER = new File("plugins");
 
 	private static final ModuleResource resource(@Nonnull String path) {
-		return new ModuleResource("watamebot", "/resources/" + path);
+		return new ModuleResource("watamebot", "/META-INF/" + path);
 	}
 }

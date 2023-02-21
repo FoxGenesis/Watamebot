@@ -42,6 +42,7 @@ public class GuildData implements IGuildData, AutoCloseable {
 	/**
 	 * JSON object used to store guild settings
 	 */
+	@SuppressWarnings({"removal", "deprecation" })
 	private JSONObjectAdv data;
 
 	private boolean setup = false;
@@ -70,6 +71,7 @@ public class GuildData implements IGuildData, AutoCloseable {
 
 	@Override
 	@Nullable
+	@SuppressWarnings({"removal", "deprecation" })
 	public JSONObjectAdv getConfig() {
 		checkSetup();
 		return data;
@@ -99,6 +101,7 @@ public class GuildData implements IGuildData, AutoCloseable {
 	 * @throws NullPointerException thrown if there is no element passed
 	 * @see #pushJSONUpdate(String, Object, boolean)
 	 */
+	@SuppressWarnings({"removal", "deprecation" })
 	void setData(@Nonnull ResultSet result) throws SQLException {
 		Objects.requireNonNull(result);
 

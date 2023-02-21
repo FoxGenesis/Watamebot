@@ -4,6 +4,8 @@ import java.io.IOException;
 
 import javax.annotation.Nonnull;
 
+import net.foxgenesis.watame.plugin.Plugin;
+
 public interface IDatabaseManager extends AutoCloseable {
 	/**
 	 * Check if all guild data has been processed and is ready for use.
@@ -13,7 +15,7 @@ public interface IDatabaseManager extends AutoCloseable {
 	 */
 	public boolean isReady();
 
-	boolean register(@Nonnull AbstractDatabase database) throws IOException;
+	boolean register(@Nonnull Plugin owningPlugin, @Nonnull AbstractDatabase database) throws IOException;
 
 	boolean isDatabaseRegistered(@Nonnull AbstractDatabase database);
 	

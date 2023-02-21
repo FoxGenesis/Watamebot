@@ -19,6 +19,7 @@ module watamebot {
 	requires ch.qos.logback.core;
 	requires ch.qos.logback.classic;
 	requires jsr305;
+	requires java.desktop;
 
 	exports net.foxgenesis.config;
 	exports net.foxgenesis.config.fields;
@@ -33,8 +34,7 @@ module watamebot {
 	exports net.foxgenesis.watame.util;
 	exports net.foxgenesis.watame.property;
 
-	uses net.foxgenesis.watame.plugin.IPlugin;
 	uses net.foxgenesis.watame.plugin.Plugin;
 
-	provides net.foxgenesis.watame.plugin.IPlugin with net.foxgenesis.watame.command.IntegratedCommands;
+	provides net.foxgenesis.watame.plugin.Plugin with net.foxgenesis.watame.command.IntegratedCommands;
 }

@@ -33,7 +33,7 @@ import net.foxgenesis.watame.WatameBot;
  * @author Ashley
  *
  */
-public abstract class Plugin extends PluginStartup implements AutoCloseable {
+public abstract class Plugin implements AutoCloseable {
 	@Nonnull
 	private static final Path CONFIG_PATH = Paths.get("config");
 
@@ -46,6 +46,7 @@ public abstract class Plugin extends PluginStartup implements AutoCloseable {
 	}
 
 	// =========================================================================================================
+
 	/**
 	 * Plugin logger
 	 */
@@ -62,6 +63,9 @@ public abstract class Plugin extends PluginStartup implements AutoCloseable {
 	@Nonnull
 	private final HashMap<String, CommandData> commands = new HashMap<>();
 
+	/**
+	 * Path to the plugin's configuration folder
+	 */
 	@Nonnull
 	public final Path configurationPath;
 
@@ -110,7 +114,7 @@ public abstract class Plugin extends PluginStartup implements AutoCloseable {
 			throw new SeverePluginException("Plugin is not in a named module!");
 
 		// Load plugin properties
-		try (InputStream stream = module.getResourceAsStream("/META-INF/plugin.properties")) {
+		try (InputStream stream = module.getResourceAsStream("/plugin.properties")) {
 			Properties properties = new Properties();
 			properties.load(stream);
 
@@ -121,7 +125,7 @@ public abstract class Plugin extends PluginStartup implements AutoCloseable {
 			this.version = Runtime.Version
 					.parse(Objects.requireNonNull(properties.getProperty("version"), "version must not be null!"));
 			this.description = properties.getProperty("description", "No description provided");
-			this.providesCommands = properties.getProperty("proviesCommands", "false").equalsIgnoreCase("true");
+			this.providesCommands = properties.getProperty("providesCommands", "false").equalsIgnoreCase("true");
 			this.needsDatabase = properties.getProperty("needsDatabase", "false").equalsIgnoreCase("true");
 
 			this.configurationPath = CONFIG_PATH.resolve(this.name);
@@ -137,8 +141,9 @@ public abstract class Plugin extends PluginStartup implements AutoCloseable {
 			PluginConfiguration[] configDeclares = c.getDeclaredAnnotationsByType(PluginConfiguration.class);
 
 			for (PluginConfiguration pluginConfig : configDeclares) {
+				String id = pluginConfig.identifier();
 				// Skip over duplicate identifiers
-				if (configs.containsKey(pluginConfig.identifier()))
+				if (configs.containsKey(id))
 					continue;
 
 				try {
@@ -147,10 +152,10 @@ public abstract class Plugin extends PluginStartup implements AutoCloseable {
 							new ModuleResource(module, pluginConfig.defaultFile()), this.configurationPath,
 							pluginConfig.outputFile());
 
-					configs.put(pluginConfig.identifier(), config);
+					configs.put(id, config);
 
 					// Fire on load event
-					CompletableFuture.runAsync(() -> onConfigurationLoaded(config));
+					CompletableFuture.runAsync(() -> onConfigurationLoaded(id, config));
 				} catch (IOException | ConfigurationException e) {
 					throw new SeverePluginException(e, false);
 				}
@@ -192,9 +197,9 @@ public abstract class Plugin extends PluginStartup implements AutoCloseable {
 
 	// =========================================================================================================
 
-	protected abstract void onPropertiesLoaded(Properties properties) throws SeverePluginException;
+	protected abstract void onPropertiesLoaded(Properties properties);
 
-	protected abstract void onConfigurationLoaded(PropertiesConfiguration properties) throws SeverePluginException;
+	protected abstract void onConfigurationLoaded(String identifier, PropertiesConfiguration properties);
 
 	/**
 	 * Startup method called when resources, needed for functionality
@@ -226,7 +231,10 @@ public abstract class Plugin extends PluginStartup implements AutoCloseable {
 
 	protected abstract void onReady(WatameBot bot) throws SeverePluginException;
 
+
 	// =========================================================================================================
+
+	public String getDisplayInfo() { return this.friendlyName + " v" + version; }
 
 	@Override
 	public String toString() {

@@ -37,7 +37,7 @@ import net.foxgenesis.watame.ExitCode;
  *
  */
 @Deprecated(forRemoval = true)
-public class DataManager implements IDatabaseManager, AutoCloseable {
+public class DataManager implements IGuildDataProvider, AutoCloseable {
 	// =============================== STATIC =================================
 	static final Logger logger = LoggerFactory.getLogger("Database");
 	static final Logger sqlLogger = LoggerFactory.getLogger("SQLInfo");
@@ -501,9 +501,9 @@ public class DataManager implements IDatabaseManager, AutoCloseable {
 	}
 
 	public static class DatabaseLoadedEvent extends Event {
-		public final IDatabaseManager dataManager;
+		public final IGuildDataProvider dataManager;
 
-		public DatabaseLoadedEvent(JDA api, IDatabaseManager dataManager) {
+		public DatabaseLoadedEvent(JDA api, IGuildDataProvider dataManager) {
 			super(api);
 			this.dataManager = dataManager;
 		}

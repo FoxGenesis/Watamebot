@@ -3,6 +3,9 @@ package net.foxgenesis.watame.command;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Properties;
+
+import org.apache.commons.configuration2.PropertiesConfiguration;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
@@ -14,11 +17,9 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.foxgenesis.watame.ProtectedJDABuilder;
 import net.foxgenesis.watame.WatameBot;
-import net.foxgenesis.watame.plugin.IPlugin;
-import net.foxgenesis.watame.plugin.PluginProperties;
+import net.foxgenesis.watame.plugin.Plugin;
 
-@PluginProperties(name = "Integrated Commands", description = "A plugin that provides default commands", version = "1.0.1", providesCommands = true)
-public class IntegratedCommands implements IPlugin {
+public class IntegratedCommands extends Plugin {
 	private final ListenerAdapter[] listeners = { new ConfigCommand(), new PingCommand() };
 
 	@Override
@@ -68,4 +69,10 @@ public class IntegratedCommands implements IPlugin {
 						"Set the value as a " + type.name().toLowerCase()).setAutoComplete(false).setRequired(false))
 				.toList();
 	}
+
+	@Override
+	protected void onPropertiesLoaded(Properties properties) {}
+
+	@Override
+	protected void onConfigurationLoaded(String identifier, PropertiesConfiguration properties) {}
 }

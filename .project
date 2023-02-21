@@ -22,7 +22,7 @@
 	</natures>
 	<filteredResources>
 		<filter>
-			<id>1676348200211</id>
+			<id>1676513782912</id>
 			<name></name>
 			<type>10</type>
 			<matcher>
@@ -31,14 +31,6 @@
 					<matcher>
 						<id>org.eclipse.ui.ide.multiFilter</id>
 						<arguments>1.0-name-matches-false-false-logs</arguments>
-					</matcher>
-					<matcher>
-						<id>org.eclipse.ui.ide.multiFilter</id>
-						<arguments>1.0-name-matches-false-false-config</arguments>
-					</matcher>
-					<matcher>
-						<id>org.eclipse.ui.ide.multiFilter</id>
-						<arguments>1.0-name-matches-false-false-lib</arguments>
 					</matcher>
 					<matcher>
 						<id>org.eclipse.ui.ide.multiFilter</id>
@@ -52,7 +44,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1676348200213</id>
+			<id>1676513782914</id>
 			<name></name>
 			<type>6</type>
 			<matcher>
@@ -67,15 +59,6 @@
 						<arguments>1.0-name-matches-false-false-*.txt</arguments>
 					</matcher>
 				</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1676348200219</id>
-			<name></name>
-			<type>10</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-startupScripts</arguments>
 			</matcher>
 		</filter>
 	</filteredResources>

@@ -6,6 +6,9 @@
 	<name>WatameBot</name>
 	<url>https://foxgenesis.net/watamebot</url>
 	<description>A plugin based Discord bot written in Java.</description>
+	<properties>
+		<project.build.sourceEncoding>ASCII</project.build.sourceEncoding>
+	</properties>
 	<organization>
 		<name>FoxGenesis</name>
 		<url>https://foxgenesis.net</url>

@@ -1,6 +1,5 @@
 package net.foxgenesis.watame.plugin;
 
-import java.io.File;
 import java.lang.Runtime.Version;
 import java.util.Collection;
 import java.util.Collections;
@@ -109,18 +108,6 @@ public interface IPlugin extends AutoCloseable {
 	 * @return If this plugin uses the database
 	 */
 	public default boolean requiresDatabaseConnection() { return getProperties(getClass()).requiresDatabaseAccess(); }
-
-	/**
-	 * Get the configuration directory of this plugin. <br>
-	 * <br>
-	 * NOTE: This file may or may not exist. If you have configuration files that
-	 * you would like to deploy or read from, check if it exists / create a new
-	 * directory.
-	 * 
-	 * @return A {@link File} pointing to the directory that is to be used to store
-	 *         configuration files for this plugin
-	 */
-	public default File getPluginConfigurationDirectory() { return new File(WatameBot.CONFIG_DIR + getName()); }
 
 	/**
 	 * Get the annotated {@link PluginProperties} of a class

@@ -1,7 +1,6 @@
 package net.foxgenesis.watame;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -36,13 +35,13 @@ import net.dv8tion.jda.internal.utils.IOUtil;
 import net.foxgenesis.database.DatabaseManager;
 import net.foxgenesis.database.IDatabaseManager;
 import net.foxgenesis.database.providers.MySQLConnectionProvider;
+import net.foxgenesis.property.IPropertyField;
 import net.foxgenesis.property.IPropertyProvider;
 import net.foxgenesis.util.ProgramArguments;
 import net.foxgenesis.util.ResourceUtils;
 import net.foxgenesis.util.ResourceUtils.ModuleResource;
 import net.foxgenesis.watame.plugin.Plugin;
 import net.foxgenesis.watame.plugin.PluginHandler;
-import net.foxgenesis.watame.property.GuildPropertyProvider;
 import net.foxgenesis.watame.property.IGuildPropertyMapping;
 import net.foxgenesis.watame.sql.IGuildData;
 import net.foxgenesis.watame.sql.WatameBotDatabase;
@@ -58,11 +57,6 @@ public class WatameBot {
 	 * General purpose logger
 	 */
 	public static final Logger logger = LoggerFactory.getLogger(WatameBot.class);
-
-	/**
-	 * Directory for configuration files
-	 */
-	public static final File CONFIG_DIR = new File(System.getProperty("watame.config_dir", "config/"));
 
 	/**
 	 * Singleton instance of class
@@ -154,9 +148,9 @@ public class WatameBot {
 	private final WatameBotDatabase database;
 
 	/**
-	 * Property provider
+	 * Guild logging channel property
 	 */
-	private final GuildPropertyProvider provider;
+	private IPropertyField<String, Guild, IGuildPropertyMapping> logChannel;
 
 	/**
 	 * Current state of the bot
@@ -182,24 +176,18 @@ public class WatameBot {
 		logger.debug("Adding shutdown hook");
 		Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "WatameBot Shutdown Thread"));
 
-		if (!createConfigurationDirectory())
-			ExitCode.SETUP_ERROR.programExit(
-					"Failed to create configuration directory. Does a file with the same name already exist?");
-
 		// Create our database manager
 		manager = new DatabaseManager("WatameBot Database Manager");
 
 		// Connect to our database file
 		database = new WatameBotDatabase();
+		logChannel = database.getProperty("log-channel");
 
 		// Create connection to discord through our token
 		builder = createJDA(token);
 
-		// Create our property provider
-		provider = new GuildPropertyProvider(database);
-
 		// Create our plugin handler
-		pluginHandler = new PluginHandler<>(getClass().getModule().getLayer(), Plugin.class);
+		pluginHandler = new PluginHandler<>(new Context(this), getClass().getModule().getLayer(), Plugin.class);
 	}
 
 	void start() {
@@ -281,7 +269,7 @@ public class WatameBot {
 		// Setup the database
 		try {
 			logger.debug("Adding database to database manager");
-			manager.register(database);
+			manager.register(pluginHandler.getPlugin("integrated"), database);
 		} catch (IOException e) {
 			// Some error occurred while setting up database
 			ExitCode.DATABASE_SETUP_ERROR.programExit(e);
@@ -461,7 +449,14 @@ public class WatameBot {
 	 * 
 	 * @return The current {@link IPropertyProvider} instance
 	 */
-	public IPropertyProvider<String, Guild, IGuildPropertyMapping> getPropertyProvider() { return provider; }
+	public IPropertyProvider<String, Guild, IGuildPropertyMapping> getPropertyProvider() { return database; }
+
+	/**
+	 * Get the logging channel property for a guild.
+	 * 
+	 * @return Returns the {@link IPropertyField} pointing to the log channel
+	 */
+	public IPropertyField<String, Guild, IGuildPropertyMapping> getGuildLoggingChannel() { return logChannel; }
 
 	/**
 	 * NEED_JAVADOC
@@ -514,11 +509,5 @@ public class WatameBot {
 		public final Marker marker;
 
 		State() { marker = MarkerFactory.getMarker(this.name()); }
-	}
-
-	private static boolean createConfigurationDirectory() {
-		if (!CONFIG_DIR.exists())
-			return CONFIG_DIR.mkdirs();
-		return CONFIG_DIR.isDirectory();
 	}
 }

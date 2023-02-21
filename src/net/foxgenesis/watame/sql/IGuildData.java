@@ -42,5 +42,6 @@ public interface IGuildData {
 	 * @return An extension of a {@link JSONObject} with a set function for updates
 	 *         and removals or {@code null} if no database data has been passed
 	 */
+	@SuppressWarnings({"removal", "deprecation" })
 	public JSONObjectAdv getConfig();
 }

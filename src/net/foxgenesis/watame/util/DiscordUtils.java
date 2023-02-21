@@ -20,7 +20,10 @@ public final class DiscordUtils {
 	 * @return
 	 */
 	public static Member getBotMember(@Nonnull Guild guild) {
-		return guild.getMemberById(guild.getJDA().getSelfUser().getId());
+		return guild.getSelfMember();
 	}
 
+	public static int getBotColor(@Nonnull Guild guild) {
+		return getBotMember(guild).getColorRaw();
+	}
 }

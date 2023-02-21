@@ -51,7 +51,7 @@ public abstract class AbstractDatabase implements AutoCloseable {
 		logger = LoggerFactory.getLogger(name);
 	}
 
-	final void setup(@Nonnull AConnectionProvider provider) throws IOException {
+	synchronized final void setup(@Nonnull AConnectionProvider provider) throws IOException {
 		if (this.provider != null)
 			throw new UnsupportedOperationException("Database is already setup!");
 
@@ -68,6 +68,11 @@ public abstract class AbstractDatabase implements AutoCloseable {
 		this.provider = provider;
 
 		onReady();
+	}
+	
+	synchronized final void unload() {
+		IOUtil.silentClose(this);
+		provider = null;
 	}
 
 	protected abstract void onReady();
@@ -173,8 +178,8 @@ public abstract class AbstractDatabase implements AutoCloseable {
 					return func.apply(statement);
 				}
 			}, error);
-		} else
-			throw new UnsupportedOperationException("Database has not been setup yet!");
+		}
+		throw new UnsupportedOperationException("Database has not been setup yet!");
 	}
 
 	protected <U> U mapCallable(String id, SQLFunction<CallableStatement, U> func, Consumer<Throwable> error) {
@@ -189,8 +194,8 @@ public abstract class AbstractDatabase implements AutoCloseable {
 					return func.apply(statement);
 				}
 			}, error);
-		} else
-			throw new UnsupportedOperationException("Database has not been setup yet!");
+		}
+		throw new UnsupportedOperationException("Database has not been setup yet!");
 	}
 
 	private void registerStatement(@Nonnull String id, @Nonnull String raw) {

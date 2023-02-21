@@ -1,5 +1,6 @@
 package net.foxgenesis.watame.command;
 
+import java.awt.Color;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -11,7 +12,9 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -21,6 +24,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.foxgenesis.config.fields.JSONObjectAdv;
 import net.foxgenesis.watame.WatameBot;
+import net.foxgenesis.watame.property.IGuildPropertyMapping;
 
 /**
  * Slash command to manually configure database values
@@ -65,33 +69,16 @@ public class ConfigCommand extends ListenerAdapter {
 					logger.debug("Config-set t:{} k:{} v:{} [{}]", type, key, value, event.getOptions());
 
 					updateConfig(hook, event.getGuild(), user, key, value);
-				} else hook.editOriginal("Type is not valid!").queue();
+				} else
+					hook.editOriginal("Type is not valid!").queue();
 			}
 			}
 		}
 	}
 
-//	@Override
-//	public void onCommandAutoCompleteInteraction(CommandAutoCompleteInteractionEvent event) {
-//		switch (event.getCommandPath()) {
-//		case "config-set" -> {
-//			switch (event.getFocusedOption().getName()) {
-//			case "type" -> {
-//				// only display words that start with the user's current input
-//				List<Command.Choice> options = Stream.of(OptionType.values())
-//						.filter(word -> word.name().contains(event.getFocusedOption().getValue()))
-//						.map(word -> new Command.Choice(word.name().toLowerCase(), word.name())) // map the words to
-//																									// choices
-//						.collect(Collectors.toList());
-//				event.replyChoices(options).queue();
-//			}
-//			}
-//		}
-//		}
-//	}
-
-	private static void updateConfig(@Nonnull InteractionHook hook, Guild guild, @Nonnull User user,
-			String key, @Nullable String value) {
+	@SuppressWarnings({ "removal", "deprecation" })
+	private static void updateConfig(@Nonnull InteractionHook hook, Guild guild, @Nonnull User user, String key,
+			@Nullable String value) {
 		JSONObjectAdv config = getConfig(guild);
 
 		if (value == null) {
@@ -103,8 +90,20 @@ public class ConfigCommand extends ListenerAdapter {
 			logger.info("{}[{}] Put {} -> {} into the configuration", user.getName(), user.getId(), key, value);
 			hook.editOriginal("Put " + value + " in " + key).queue();
 		}
+
+		TextChannel channel = WatameBot.getInstance().getGuildLoggingChannel().get(guild,
+				IGuildPropertyMapping::getAsTextChannel);
+
+		if (channel != null) {
+			channel.sendMessageEmbeds(new EmbedBuilder().setColor(Color.orange).setTitle("Configuration Change")
+					.addField("User", user.getAsMention(), true).addField("Key", key, true)
+					.addField("Value", value != null ? value : "N/A", true)
+					.addField("Type", value == null ? "Remove" : "Update", false).build()).addCheck(channel::canTalk)
+					.queue();
+		}
 	}
 
+	@SuppressWarnings("removal")
 	private static JSONObjectAdv getConfig(Guild guild) {
 		return WatameBot.getInstance().getDataForGuild(guild).getConfig();
 	}

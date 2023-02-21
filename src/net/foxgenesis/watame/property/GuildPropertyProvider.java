@@ -9,15 +9,17 @@ import javax.annotation.Nullable;
 import net.dv8tion.jda.api.entities.Guild;
 import net.foxgenesis.property.IPropertyField;
 import net.foxgenesis.property.IPropertyProvider;
-import net.foxgenesis.watame.sql.IDatabaseManager;
+import net.foxgenesis.watame.sql.IGuildDataProvider;
 
+@Deprecated(forRemoval = true)
 public class GuildPropertyProvider implements IPropertyProvider<String, Guild, IGuildPropertyMapping> {
 
-	private final IDatabaseManager database;
+	private final IGuildDataProvider database;
 	private final HashMap<String, IPropertyField<String, Guild, IGuildPropertyMapping>> properties = new HashMap<>();
 
-	public GuildPropertyProvider(IDatabaseManager database) { this.database = Objects.requireNonNull(database); }
+	public GuildPropertyProvider(IGuildDataProvider database) { this.database = Objects.requireNonNull(database); }
 
+	@Override
 	public IPropertyField<String, Guild, IGuildPropertyMapping> getProperty(@Nonnull String key) {
 		return properties.computeIfAbsent(key, k -> new GuildProperty(k, database));
 	}

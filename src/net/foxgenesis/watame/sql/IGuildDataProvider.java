@@ -4,7 +4,7 @@ import javax.annotation.Nonnull;
 
 import net.dv8tion.jda.api.entities.Guild;
 
-public interface IDatabaseManager {
+public interface IGuildDataProvider {
 	/**
 	 * Check if all guild data has been processed and is ready for use.
 	 * 
