@@ -12,7 +12,7 @@ public interface Cacheable {
 	 * 
 	 * @return Returns {@code true} if this property can be stored and expire after
 	 *         a period of time
-	 * @see #getCacheTime()
+	 * @see #getExpirationTime()
 	 */
 	boolean isCacheable();
 
@@ -21,7 +21,7 @@ public interface Cacheable {
 	 * 
 	 * @return Returns the maximum period of time (in milliseconds) this property
 	 *         can be stored before it value expires.
-	 * @see #canCache()
+	 * @see #isCacheable()
 	 */
 	long getExpirationTime();
 }
