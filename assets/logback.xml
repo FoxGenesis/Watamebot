@@ -1,7 +1,9 @@
 <configuration>
-	<logger name="com.zaxxer.hikari.pool.PoolBase" level="OFF"/>
-    <logger name="com.zaxxer.hikari.pool.HikariPool" level="OFF"/>
-    <logger name="com.zaxxer.hikari.HikariDataSource" level="OFF"/>
+	<logger name="com.zaxxer.hikari.pool.PoolBase" level="OFF" />
+	<logger name="com.zaxxer.hikari.pool.HikariPool" level="OFF" />
+	<logger name="com.zaxxer.hikari.HikariDataSource" level="OFF" />
+	<logger name="org.apache.commons.beanutils.FluentPropertyBeanIntrospector" level="OFF" />
+	>
 	<!-- custom coloring conversion -->
 	<conversionRule conversionWord="colorize" converterClass="net.foxgenesis.log.CustomHighlight" />
 	<property name="LOG_DIR" value="logs" />
@@ -15,7 +17,7 @@
 		<file>${LOG_DIR}/${LOG_FILE_NAME}.log</file>
 		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
 			<fileNamePattern>${LOG_DIR}/${LOG_FILE_NAME}-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
-			<maxFileSize>10MB</maxFileSize>    
+			<maxFileSize>10MB</maxFileSize>
 			<maxHistory>30</maxHistory>
 			<totalSizeCap>100GB</totalSizeCap>
 		</rollingPolicy>
@@ -25,7 +27,7 @@
 	</appender>
 	<appender name="ASYNC_CONSOLE"
 		class="ch.qos.logback.classic.AsyncAppender">
-		<discardingThreshold>0</discardingThreshold> 
+		<discardingThreshold>0</discardingThreshold>
 		<appender-ref ref="STDOUT" />
 		<queueSize>1</queueSize>
 		<includeCallerData>false</includeCallerData>
@@ -35,11 +37,11 @@
 		class="ch.qos.logback.classic.AsyncAppender">
 		<discardingThreshold>0</discardingThreshold>
 		<appender-ref ref="FILE" />
-		<queueSize>1</queueSize> 
-		<includeCallerData>false</includeCallerData> 
+		<queueSize>1</queueSize>
+		<includeCallerData>false</includeCallerData>
 		<neverBlock>false</neverBlock>
 	</appender>
-	<root level="${LOG_LEVEL}">
+	<root level="${LOG_LEVEL}:-INFO">
 		<appender-ref ref="ASYNC_CONSOLE" />
 		<appender-ref ref="ASYNC_FILE" />
 	</root>

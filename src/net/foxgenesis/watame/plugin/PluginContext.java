@@ -4,22 +4,19 @@ import java.util.Objects;
 
 import javax.annotation.Nonnull;
 
-import net.dv8tion.jda.api.entities.Guild;
-import net.foxgenesis.property.IPropertyProvider;
 import net.foxgenesis.watame.WatameBot;
-import net.foxgenesis.watame.property.IGuildPropertyMapping;
+import net.foxgenesis.watame.property.IGuildPropertyProvider;
 
 public class PluginContext {
 
 	@Nonnull
 	private final WatameBot bot;
 	
-	PluginContext(@Nonnull WatameBot bot) {
+	PluginContext(WatameBot bot) {
 		this.bot = Objects.requireNonNull(bot);
 	}
 	
-	public IPropertyProvider<String,Guild,IGuildPropertyMapping> getPropertyProvider() {
+	public IGuildPropertyProvider getPropertyProvider() {
 		return bot.getPropertyProvider();
 	}
-	
 }

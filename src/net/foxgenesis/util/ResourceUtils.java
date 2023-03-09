@@ -11,8 +11,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Objects;
 import java.util.Properties;
 
 import javax.annotation.Nonnull;
@@ -26,6 +24,14 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.foxgenesis.util.resource.ModuleResource;
+
+/**
+ * NEED_JAVADOC
+ * 
+ * @author Ashley
+ *
+ */
 public final class ResourceUtils {
 
 	private static final Logger logger = LoggerFactory.getLogger(ResourceUtils.class);
@@ -60,27 +66,56 @@ public final class ResourceUtils {
 		}
 	}
 
+	/**
+	 * NEED_JAVADOC
+	 * 
+	 * @param path
+	 * @return
+	 * @throws IOException
+	 */
 	public static Properties getProperties(URL path) throws IOException {
 		logger.trace("Attempting to read resource: " + path);
 
 		Properties properties = new Properties();
-		properties.load(path.openStream());
+		try (InputStream in = path.openStream()) {
+			properties.load(in);
+		}
 
 		return properties;
 	}
-	
+
+	/**
+	 * NEED_JAVADOC
+	 * 
+	 * @param path
+	 * @param defaults
+	 * @return
+	 * @throws IOException
+	 */
 	public static Properties getProperties(Path path, ModuleResource defaults) throws IOException {
 		// If file does not exist, create a new one and try to open it again
-		if(defaults != null && Files.notExists(path, LinkOption.NOFOLLOW_LINKS)) {
+		if (defaults != null && Files.notExists(path, LinkOption.NOFOLLOW_LINKS)) {
 			defaults.writeToFile(path);
 			return getProperties(path, defaults);
 		}
-		
+
 		Properties properties = new Properties();
-		properties.load(Files.newInputStream(path, StandardOpenOption.READ));
+		try (InputStream in = Files.newInputStream(path, StandardOpenOption.READ)) {
+			properties.load(in);
+		}
 		return properties;
 	}
-	
+
+	/**
+	 * NEED_JAVADOC
+	 * 
+	 * @param defaults
+	 * @param dir
+	 * @param output
+	 * @return
+	 * @throws IOException
+	 * @throws ConfigurationException
+	 */
 	public static PropertiesConfiguration loadConfig(ModuleResource defaults, Path dir, String output)
 			throws IOException, ConfigurationException {
 		// Create plugin configuration folder
@@ -110,39 +145,27 @@ public final class ResourceUtils {
 		return builder.getConfiguration();
 	}
 
+	/**
+	 * NEED_JAVADOC
+	 * 
+	 * @param input
+	 * @return
+	 * @throws IOException
+	 */
 	public static String toString(@Nonnull InputStream input) throws IOException {
-		Objects.requireNonNull(input, "InputStream must not be null!");
-		return new String(input.readAllBytes());
+		try (input) {
+			return new String(input.readAllBytes());
+		}
 	}
 
+	/**
+	 * NEED_JAVADOC
+	 * 
+	 * @param input
+	 * @return
+	 * @throws IOException
+	 */
 	public static String[] toSplitString(@Nonnull InputStream input) throws IOException {
 		return toString(input).split("(\\r\\n|\\r|\\n)");
-	}
-
-	public record ModuleResource(Module module, String resourcePath) {
-		public ModuleResource(String moduleName, String resourcePath) {
-			this(ModuleLayer.boot().findModule(moduleName).orElseThrow(
-					() -> new NoSuchElementException("No module found '" + moduleName + "'")), resourcePath);
-		}
-
-		public InputStream openStream() throws IOException {
-			logger.trace("Attempting to read resource: " + resourcePath);
-			return module.getResourceAsStream(resourcePath);
-		}
-		
-		public void writeToFile(Path path) throws IOException {
-			Files.copy(openStream(), path);
-		}
-
-		public String readToString() throws IOException { return ResourceUtils.toString(openStream()); }
-
-		public String[] readAllLines() throws IOException { return ResourceUtils.toSplitString(openStream()); }
-
-		public Properties asProperties() throws IOException {
-			Properties properties = new Properties();
-			properties.load(openStream());
-
-			return properties;
-		}
 	}
 }

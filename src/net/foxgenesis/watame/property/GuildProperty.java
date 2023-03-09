@@ -10,10 +10,10 @@ import org.json.JSONObject;
 
 import net.dv8tion.jda.api.entities.Guild;
 import net.foxgenesis.config.fields.JSONObjectAdv;
-import net.foxgenesis.property.IPropertyField;
+import net.foxgenesis.property.IProperty;
 import net.foxgenesis.watame.sql.IGuildDataProvider;
 
-public class GuildProperty implements IPropertyField<String, Guild, IGuildPropertyMapping> {
+public class GuildProperty implements IProperty<String, Guild, IGuildPropertyMapping> {
 
 	private final String key;
 
@@ -33,14 +33,17 @@ public class GuildProperty implements IPropertyField<String, Guild, IGuildProper
 
 		if (data == null)
 			throw new IllegalStateException("Data has not been recieved yet!");
-		
+
 		return isPresent(from) ? new GuildPropertyMapping(key, data, from) : null;
 	}
 
-	@SuppressWarnings({"removal", "deprecation" })
+	@SuppressWarnings({ "removal", "deprecation" })
 	@Override
 	public boolean set(Guild from, @Nullable Object value) {
-		getData(from).put(key, value);
+		if (value != null)
+			getData(from).put(key, value);
+		else
+			getData(from).remove(key);
 		return true;
 	}
 
@@ -49,7 +52,7 @@ public class GuildProperty implements IPropertyField<String, Guild, IGuildProper
 	public String getKey() { return key; }
 
 	@Override
-	public boolean isEditable() { return false; }
+	public boolean isEditable() { return true; }
 
 	@Override
 	public boolean isPresent(Guild from) { return getData(from).has(key); }

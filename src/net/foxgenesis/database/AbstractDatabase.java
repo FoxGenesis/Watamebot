@@ -21,8 +21,14 @@ import org.slf4j.LoggerFactory;
 
 import net.dv8tion.jda.internal.utils.IOUtil;
 import net.foxgenesis.config.KVPFile;
-import net.foxgenesis.util.ResourceUtils.ModuleResource;
+import net.foxgenesis.util.resource.ModuleResource;
 
+/**
+ * NEED_JAVADOC
+ * 
+ * @author Ashley
+ *
+ */
 public abstract class AbstractDatabase implements AutoCloseable {
 	@Nonnull
 	private final HashMap<String, String> statements = new HashMap<>();
@@ -36,12 +42,22 @@ public abstract class AbstractDatabase implements AutoCloseable {
 	@Nonnull
 	private final String name;
 
+	/**
+	 * Logger
+	 */
 	@Nonnull
 	protected final Logger logger;
 
 	@Nullable
 	private AConnectionProvider provider;
 
+	/**
+	 * NEED_JAVADOC
+	 * 
+	 * @param name
+	 * @param operationsFile
+	 * @param setupFile
+	 */
 	public AbstractDatabase(@Nonnull String name, @Nonnull ModuleResource operationsFile,
 			@Nonnull ModuleResource setupFile) {
 		this.name = Objects.requireNonNull(name);
@@ -51,6 +67,7 @@ public abstract class AbstractDatabase implements AutoCloseable {
 		logger = LoggerFactory.getLogger(name);
 	}
 
+	@SuppressWarnings("resource")
 	synchronized final void setup(@Nonnull AConnectionProvider provider) throws IOException {
 		if (this.provider != null)
 			throw new UnsupportedOperationException("Database is already setup!");
@@ -69,14 +86,23 @@ public abstract class AbstractDatabase implements AutoCloseable {
 
 		onReady();
 	}
-	
+
 	synchronized final void unload() {
 		IOUtil.silentClose(this);
 		provider = null;
 	}
 
+	/**
+	 * NEED_JAVADOC
+	 */
 	protected abstract void onReady();
 
+	/**
+	 * NEED_JAVADOC
+	 * 
+	 * @return
+	 * @throws SQLException
+	 */
 	protected Connection openConnection() throws SQLException {
 		if (!isReady())
 			throw new UnsupportedOperationException("Database has not been setup yet!");
@@ -86,6 +112,15 @@ public abstract class AbstractDatabase implements AutoCloseable {
 		throw new UnsupportedOperationException("Database has not been setup yet!");
 	}
 
+	/**
+	 * NEED_JAVADOC
+	 * 
+	 * @param <U>
+	 * @param id
+	 * @param func
+	 * @return
+	 */
+	@Deprecated
 	protected <U> CompletableFuture<U> prepareStatementAsync(String id, Function<PreparedStatement, U> func) {
 		if (!hasStatementID(id))
 			throw new NoSuchElementException("No statement exists with id " + id);
@@ -109,6 +144,15 @@ public abstract class AbstractDatabase implements AutoCloseable {
 		return CompletableFuture.failedFuture(new UnsupportedOperationException("Database has not been setup yet!"));
 	}
 
+	/**
+	 * NEED_JAVADOC
+	 * 
+	 * @param <U>
+	 * @param id
+	 * @param func
+	 * @return
+	 */
+	@Deprecated
 	protected <U> CompletableFuture<U> prepareCallableAsync(String id, Function<CallableStatement, U> func) {
 		if (!hasStatementID(id))
 			throw new NoSuchElementException("No statement exists with id " + id);
@@ -132,6 +176,13 @@ public abstract class AbstractDatabase implements AutoCloseable {
 		return CompletableFuture.failedFuture(new UnsupportedOperationException("Database has not been setup yet!"));
 	}
 
+	/**
+	 * NEED_JAVADOC
+	 * 
+	 * @param id
+	 * @param func
+	 * @param error
+	 */
 	protected void prepareStatement(String id, SQLConsumer<PreparedStatement> func, Consumer<Throwable> error) {
 		if (!hasStatementID(id))
 			throw new NoSuchElementException("No statement exists with id " + id);
@@ -149,6 +200,13 @@ public abstract class AbstractDatabase implements AutoCloseable {
 			throw new UnsupportedOperationException("Database has not been setup yet!");
 	}
 
+	/**
+	 * NEED_JAVADOC
+	 * 
+	 * @param id
+	 * @param func
+	 * @param error
+	 */
 	protected void prepareCallable(String id, SQLConsumer<CallableStatement> func, Consumer<Throwable> error) {
 		if (!hasStatementID(id))
 			throw new NoSuchElementException("No statement exists with id " + id);
@@ -166,6 +224,15 @@ public abstract class AbstractDatabase implements AutoCloseable {
 			throw new UnsupportedOperationException("Database has not been setup yet!");
 	}
 
+	/**
+	 * NEED_JAVADOC
+	 * 
+	 * @param <U>
+	 * @param id
+	 * @param func
+	 * @param error
+	 * @return
+	 */
 	protected <U> U mapStatement(String id, SQLFunction<PreparedStatement, U> func, Consumer<Throwable> error) {
 		if (!hasStatementID(id))
 			throw new NoSuchElementException("No statement exists with id " + id);
@@ -182,6 +249,15 @@ public abstract class AbstractDatabase implements AutoCloseable {
 		throw new UnsupportedOperationException("Database has not been setup yet!");
 	}
 
+	/**
+	 * NEED_JAVADOC
+	 * 
+	 * @param <U>
+	 * @param id
+	 * @param func
+	 * @param error
+	 * @return
+	 */
 	protected <U> U mapCallable(String id, SQLFunction<CallableStatement, U> func, Consumer<Throwable> error) {
 		if (!hasStatementID(id))
 			throw new NoSuchElementException("No statement exists with id " + id);
@@ -209,8 +285,20 @@ public abstract class AbstractDatabase implements AutoCloseable {
 		statements.put(id, raw);
 	}
 
+	/**
+	 * NEED_JAVADOC
+	 * 
+	 * @param id
+	 * @return
+	 */
 	protected final boolean hasStatementID(String id) { return statements.containsKey(id); }
 
+	/**
+	 * NEED_JAVADOC
+	 * 
+	 * @param id
+	 * @return
+	 */
 	protected final String getRawStatement(String id) {
 		if (!hasStatementID(id))
 			throw new NoSuchElementException("No statement exists with id " + id);
@@ -222,11 +310,31 @@ public abstract class AbstractDatabase implements AutoCloseable {
 	@Nonnull
 	public final String getName() { return name; }
 
+	/**
+	 * NEED_JAVADOC
+	 * 
+	 * @return
+	 */
 	public boolean isReady() { return provider != null; }
 
+	/**
+	 * NEED_JAVADOC
+	 * 
+	 * @author Ashley
+	 *
+	 * @param <U>
+	 */
 	@FunctionalInterface
 	public interface SQLConsumer<U> { void accept(U u) throws SQLException; }
 
+	/**
+	 * NEED_JAVADOC
+	 * 
+	 * @author Ashley
+	 *
+	 * @param <U>
+	 * @param <V>
+	 */
 	@FunctionalInterface
 	public interface SQLFunction<U, V> { V apply(U u) throws SQLException; }
 }

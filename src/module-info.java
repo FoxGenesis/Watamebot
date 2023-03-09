@@ -24,14 +24,15 @@ module watamebot {
 	exports net.foxgenesis.config;
 	exports net.foxgenesis.config.fields;
 	exports net.foxgenesis.database;
+	exports net.foxgenesis.executor;
 	exports net.foxgenesis.property;
 	exports net.foxgenesis.log;
 	exports net.foxgenesis.watame.sql;
 	exports net.foxgenesis.watame;
 	exports net.foxgenesis.watame.plugin;
 	exports net.foxgenesis.util;
+	exports net.foxgenesis.util.resource;
 	exports net.foxgenesis.util.function;
-	exports net.foxgenesis.watame.util;
 	exports net.foxgenesis.watame.property;
 
 	uses net.foxgenesis.watame.plugin.Plugin;

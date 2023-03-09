@@ -107,7 +107,7 @@ public final class MethodTimer {
 	public static String runFormatMS(Runnable r, int n, int decimals) {
 		return String.format("%." + decimals + "f ms", run(r, n));
 	}
-	
+
 	/**
 	 * Time how long it takes to execute {@link Runnable} {@code r}. Time is
 	 * calculated in nano seconds and returned as a formatted string with two
@@ -173,5 +173,28 @@ public final class MethodTimer {
 	 */
 	public static String runFormatSec(Runnable r, int n, int decimals) {
 		return String.format("%." + decimals + "f second(s)", run(r, n) / 1000D);
+	}
+
+	/**
+	 * NEED_JAVADOC
+	 * 
+	 * @param time
+	 * @param timeOutput
+	 * @return
+	 */
+	public static String formatToSeconds(long time) {
+		return formatToSeconds(time, 2);
+	}
+
+	/**
+	 * NEED_JAVADOC
+	 * 
+	 * @param time
+	 * @param timeOutput
+	 * @param decimals
+	 * @return
+	 */
+	public static String formatToSeconds(long time, int decimals) {
+		return String.format("%,." + decimals + "f", time / 1_000_000_000D);
 	}
 }

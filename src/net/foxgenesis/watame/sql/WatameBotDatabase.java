@@ -3,6 +3,7 @@ package net.foxgenesis.watame.sql;
 import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
@@ -14,13 +15,12 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
 import net.dv8tion.jda.api.entities.Guild;
-import net.foxgenesis.property.IPropertyField;
-import net.foxgenesis.property.IPropertyProvider;
+import net.foxgenesis.database.AbstractDatabase;
 import net.foxgenesis.watame.Constants;
 import net.foxgenesis.watame.property.GuildProperty;
-import net.foxgenesis.watame.property.IGuildPropertyMapping;
+import net.foxgenesis.watame.property.IGuildPropertyProvider;
 
-public class WatameBotDatabase extends net.foxgenesis.database.AbstractDatabase implements IGuildDataProvider, IPropertyProvider<String, Guild, IGuildPropertyMapping> {
+public class WatameBotDatabase extends AbstractDatabase implements IGuildDataProvider, IGuildPropertyProvider {
 	// =============================== STATIC =================================
 	static final Logger logger = LoggerFactory.getLogger("Database");
 	static final Logger sqlLogger = LoggerFactory.getLogger("SQLInfo");
@@ -41,8 +41,8 @@ public class WatameBotDatabase extends net.foxgenesis.database.AbstractDatabase 
 	 * Map of guild id to guild data object
 	 */
 	private final ConcurrentHashMap<Long, GuildData> data = new ConcurrentHashMap<>();
-	
-	private final HashMap<String, IPropertyField<String, Guild, IGuildPropertyMapping>> properties = new HashMap<>();
+
+	private final HashMap<String, GuildProperty> properties = new HashMap<>();
 
 	public WatameBotDatabase() {
 		super("WatameBot Database", Constants.DATABASE_OPERATIONS_FILE, Constants.DATABASE_SETUP_FILE);
@@ -177,7 +177,7 @@ public class WatameBotDatabase extends net.foxgenesis.database.AbstractDatabase 
 			result = this.mapStatement("guild_json_remove", removeStatement -> {
 				// Set data and execute update
 				removeStatement.setString(1, "$." + name);
-				removeStatement.setLong(3, guild.getIdLong());
+				removeStatement.setLong(2, guild.getIdLong());
 
 				sqlLogger.debug(UPDATE_MARKER, "PushUpdate -> " + removeStatement);
 
@@ -204,9 +204,9 @@ public class WatameBotDatabase extends net.foxgenesis.database.AbstractDatabase 
 
 		return result;
 	}
-	
+
 	@Override
-	public IPropertyField<String, Guild, IGuildPropertyMapping> getProperty(@Nonnull String key) {
+	public GuildProperty getProperty(@Nonnull String key) {
 		return properties.computeIfAbsent(key, k -> new GuildProperty(k, this));
 	}
 
@@ -214,8 +214,15 @@ public class WatameBotDatabase extends net.foxgenesis.database.AbstractDatabase 
 	public boolean isPropertyPresent(@Nonnull String key) { return properties.containsKey(key); }
 
 	@Override
-	public void close() throws Exception {}
+	public void close() {
+		data.clear();
+		properties.clear();
+	}
 
 	@Override
 	protected void onReady() {}
+
+	@Override
+	@Nonnull
+	public Set<String> keySet() { return Set.copyOf(properties.keySet()); }
 }

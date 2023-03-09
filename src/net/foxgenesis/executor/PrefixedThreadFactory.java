@@ -21,6 +21,7 @@ public class PrefixedThreadFactory implements ThreadFactory {
 		this.daemon = daemon;
 	}
 
+	@Override
 	public Thread newThread(Runnable r) {
 		final Thread thread = new Thread(r, prefix + "-Worker " + count.getAndIncrement());
 		thread.setDaemon(daemon);

@@ -56,12 +56,15 @@ public enum ExitCode {
 	 * @see #programExit()
 	 * @param exitMessage - Exit message to log
 	 * @param thrown      - Throwable to log
+	 * @throws Throwable 
 	 */
-	public void programExit(String exitMessage, Throwable thrown) {
+	public void programExit(String exitMessage, Exception thrown) throws Exception {
 		// if(exitMessage != null || thrown != null)
 		LoggerFactory.getLogger(Logger.GLOBAL_LOGGER_NAME).error(exitMessage == null ? this.name() : exitMessage,
 				thrown);
 		programExit();
+		if(thrown != null)
+			throw thrown;
 	}
 
 	/**
@@ -80,8 +83,9 @@ public enum ExitCode {
 	 * 
 	 * @see #programExit(String, Throwable)
 	 * @param thrown - Throwable to log
+	 * @throws Throwable 
 	 */
-	public void programExit(Throwable thrown) { programExit(null, thrown); }
+	public void programExit(Exception thrown) throws Exception { programExit(null, thrown); }
 
 	/**
 	 * Exit the program with a specific {@code message}.
@@ -100,8 +104,9 @@ public enum ExitCode {
 	 * 
 	 * @see #programExit(String, Throwable)
 	 * @param exitMessage - Exit message to log
+	 * @throws Throwable 
 	 */
-	public void programExit(String exitMessage) { programExit(exitMessage, null); }
+	public void programExit(String exitMessage) throws Exception { programExit(exitMessage, null); }
 
 	/**
 	 * Exit the program with this {@link ExitCode}'s {@code "exit code"}.
@@ -119,5 +124,5 @@ public enum ExitCode {
 	 * 
 	 * @see #programExit(String, Throwable)
 	 */
-	public void programExit() { System.exit(getCode()); }
+	public void programExit() throws Exception { System.exit(getCode()); }
 }

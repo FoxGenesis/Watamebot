@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.foxgenesis.util.ResourceUtils;
-import net.foxgenesis.util.ResourceUtils.ModuleResource;
+import net.foxgenesis.util.resource.ModuleResource;
 import net.foxgenesis.watame.ProtectedJDABuilder;
 import net.foxgenesis.watame.WatameBot;
 
@@ -225,7 +225,7 @@ public abstract class Plugin implements AutoCloseable {
 	 */
 	protected abstract void preInit() throws SeverePluginException;
 
-	protected abstract void init(ProtectedJDABuilder builder) throws SeverePluginException;
+	protected abstract void init(IEventStore builder) throws SeverePluginException;
 
 	protected abstract void postInit(WatameBot bot) throws SeverePluginException;
 

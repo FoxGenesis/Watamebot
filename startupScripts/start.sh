@@ -1,1 +1,1 @@
-java -DLOG_LEVEL=info -p "watamebot.jar:lib:plugins" --add-modules ALL-MODULE-PATH -m watamebot/net.foxgenesis.watame.Main -token "config/token.txt"
+java -p "watamebot.jar:lib:plugins" --add-modules ALL-MODULE-PATH -m watamebot/net.foxgenesis.watame.Main

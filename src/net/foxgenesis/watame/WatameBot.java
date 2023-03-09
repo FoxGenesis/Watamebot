@@ -1,7 +1,5 @@
 package net.foxgenesis.watame;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.SQLException;
@@ -13,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import javax.security.auth.login.LoginException;
 
+import org.apache.commons.configuration2.ImmutableConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -30,19 +29,22 @@ import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
+import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.dv8tion.jda.internal.utils.IOUtil;
 import net.foxgenesis.database.DatabaseManager;
 import net.foxgenesis.database.IDatabaseManager;
 import net.foxgenesis.database.providers.MySQLConnectionProvider;
-import net.foxgenesis.property.IPropertyField;
 import net.foxgenesis.property.IPropertyProvider;
-import net.foxgenesis.util.ProgramArguments;
+import net.foxgenesis.property.ImmutableProperty;
+import net.foxgenesis.util.MethodTimer;
 import net.foxgenesis.util.ResourceUtils;
-import net.foxgenesis.util.ResourceUtils.ModuleResource;
+import net.foxgenesis.util.resource.ModuleResource;
 import net.foxgenesis.watame.plugin.Plugin;
 import net.foxgenesis.watame.plugin.PluginHandler;
+import net.foxgenesis.watame.property.GuildProperty;
 import net.foxgenesis.watame.property.IGuildPropertyMapping;
+import net.foxgenesis.watame.property.IGuildPropertyProvider;
 import net.foxgenesis.watame.sql.IGuildData;
 import net.foxgenesis.watame.sql.WatameBotDatabase;
 
@@ -61,12 +63,21 @@ public class WatameBot {
 	/**
 	 * Singleton instance of class
 	 */
-	private static WatameBot instance;
+	public static final WatameBot INSTANCE;
 
-	/**
-	 * Variable stating if instance has been created
-	 */
-	private static boolean toInit = true;
+	private static final WatameBotSettings settings;
+	private static final ImmutableConfiguration config;
+
+	static {
+		settings = Main.getSettings();
+		config = settings.getConfiguration();
+
+		// initialize the main bot object with token
+		logger.debug("Creating WatameBot instance");
+		INSTANCE = new WatameBot(settings.getToken());
+	}
+
+	static void nothing() {}
 
 	/**
 	 * Get the singleton instance of {@link WatameBot}.
@@ -77,53 +88,8 @@ public class WatameBot {
 	 *
 	 * @return Instance of {@link WatameBot}
 	 */
-	public static WatameBot getInstance() {
-		if (toInit) {
-			synchronized (WatameBot.class) {
-				if (toInit) {
-					ProgramArguments params = Main.getProgramArguments();
-					// Check if the token parameter was passed in
-					if (!params.hasParameter("token"))
-						ExitCode.NO_TOKEN.programExit("No token file specified");
-
-					// Get discord login token from file
-					String token = Objects.requireNonNull(readToken(params.getParameter("token")));
-
-					try {
-						// initialize the main bot object with token
-						logger.debug("Creating WatameBot instance");
-						instance = new WatameBot(token);
-
-						toInit = false;
-					} catch (SQLException e) {
-						ExitCode.DATABASE_NOT_CONNECTED.programExit(e);
-						return null;
-					}
-				}
-			}
-		}
-
-		return instance;
-	}
-
-	/**
-	 * NEED_JAVADOC
-	 *
-	 * @return
-	 */
-	private static String readToken(String filepath) {
-		logger.debug("Getting token from file");
-
-		// Read token from file
-		try (BufferedReader br = new BufferedReader(new FileReader(filepath))) {
-			// obtain and return the token
-			return br.readLine();
-		} catch (IOException ex) {
-			ExitCode.INVALID_TOKEN.programExit(ex);
-		}
-		// Failed to read the token
-		return null;
-	}
+	@Deprecated(forRemoval = true, since = "1.0.5")
+	public static WatameBot getInstance() { return INSTANCE; }
 
 	// ------------------------------- INSTNACE ====================
 
@@ -150,7 +116,7 @@ public class WatameBot {
 	/**
 	 * Guild logging channel property
 	 */
-	private IPropertyField<String, Guild, IGuildPropertyMapping> logChannel;
+	private final GuildProperty logChannel;
 
 	/**
 	 * Current state of the bot
@@ -161,6 +127,11 @@ public class WatameBot {
 	 * Plugin handler
 	 */
 	private final PluginHandler<Plugin> pluginHandler;
+	
+	/**
+	 * Instance context
+	 */
+	private final Context context;
 
 	/**
 	 * Create a new instance with a specified login {@code token}.
@@ -168,9 +139,9 @@ public class WatameBot {
 	 * @param token - Token used to connect to discord
 	 * @throws SQLException When failing to connect to the database file
 	 */
-	private WatameBot(@Nonnull String token) throws SQLException {
+	private WatameBot(@Nonnull String token) {
 		// Update our state
-		updateState();
+		updateState(State.CONSTRUCTING);
 
 		// Set shutdown thread
 		logger.debug("Adding shutdown hook");
@@ -181,40 +152,40 @@ public class WatameBot {
 
 		// Connect to our database file
 		database = new WatameBotDatabase();
-		logChannel = database.getProperty("log-channel");
+		logChannel = database.getProperty("log_channel");
 
 		// Create connection to discord through our token
 		builder = createJDA(token);
+		
+		// Set our instance context
+		context = new Context(this, builder);
 
 		// Create our plugin handler
-		pluginHandler = new PluginHandler<>(new Context(this), getClass().getModule().getLayer(), Plugin.class);
+		pluginHandler = new PluginHandler<>(context, getClass().getModule().getLayer(), Plugin.class);
 	}
 
-	void start() {
+	void start() throws Exception {
+		long start = System.nanoTime();
+
 		pluginHandler.loadPlugins();
 
 		// Set our state to pre-init
-		state = State.PRE_INIT;
-		logger.trace("STATE = " + state);
-		updateState();
+		updateState(State.PRE_INIT);
 		preInit();
 
 		// Set our state to init
-		state = State.INIT;
-		logger.trace("STATE = " + state);
-		updateState();
+		updateState(State.INIT);
 		init();
 
 		// Set our state to post-init
-		state = State.POST_INIT;
-		logger.trace("STATE = " + state);
-		updateState();
+		updateState(State.POST_INIT);
 		postInit();
 
+		long end = System.nanoTime();
+		logger.info("Startup completed in " + MethodTimer.formatToSeconds(end - start) + " seconds");
+
 		// Set our state to running
-		state = State.RUNNING;
-		logger.trace("STATE = " + state);
-		updateState();
+		updateState(State.RUNNING);
 		ready();
 	}
 
@@ -226,19 +197,12 @@ public class WatameBot {
 	 */
 	private void shutdown() {
 		// Set our state to shutdown
-		state = State.SHUTDOWN;
-		updateState();
+		updateState(State.SHUTDOWN);
 
 		logger.info("Shutting down...");
 
 		IOUtil.silentClose(pluginHandler);
-
-		// Disconnect from discord
-		if (discord != null) {
-			logger.info("Shutting down JDA...");
-			discord.shutdown();
-		}
-
+		
 		// Close connection to datebase
 		try {
 			logger.info("Closing database connection");
@@ -246,6 +210,12 @@ public class WatameBot {
 				database.close();
 		} catch (Exception e) {
 			logger.error("Error while closing database connection!", e);
+		}
+
+		// Disconnect from discord
+		if (discord != null) {
+			logger.info("Shutting down JDA...");
+			discord.shutdown();
 		}
 
 		// Await all futures to complete
@@ -257,8 +227,11 @@ public class WatameBot {
 
 	/**
 	 * NEED_JAVADOC
+	 * 
+	 * @throws Throwable
 	 */
-	private void preInit() {
+	@SuppressWarnings("resource")
+	private void preInit() throws Exception {
 		/*
 		 * ====== PRE-INITIALIZATION ======
 		 */
@@ -283,21 +256,23 @@ public class WatameBot {
 		 */
 
 		// Wait for all plugins to be have pre-initialized
-		logger.trace("Waiting for plugin pre-initialization");
+		logger.debug("Waiting for plugin pre-initialization");
 		pluginPreInit.join();
 	}
 
 	/**
 	 * NEED_JAVADOC
+	 * 
+	 * @throws Throwable
 	 */
-	private void init() {
+	@SuppressWarnings("resource")
+	private void init() throws Exception {
 		/*
 		 * ====== INITIALIZATION ======
 		 */
 
 		// Initialize all plugins
-		ProtectedJDABuilder pBuilder = new ProtectedJDABuilder(builder);
-		CompletableFuture<Void> pluginInit = pluginHandler.init(pBuilder);
+		CompletableFuture<Void> pluginInit = pluginHandler.init();
 
 		// Start databases
 		try {
@@ -315,19 +290,22 @@ public class WatameBot {
 		 * ====== END INITIALIZATION ======
 		 */
 
-		logger.trace("Waiting for plugin initialization");
+		logger.debug("Waiting for plugin initialization");
 		pluginInit.join();
 	}
 
 	/**
 	 * NEED_JAVADOC
+	 * 
+	 * @throws Throwable
 	 */
-	private void postInit() {
+	private void postInit() throws Exception {
 		/*
 		 * ====== POST-INITIALIZATION ======
 		 */
-		logger.trace("Building discord connection");
+		logger.info("Connecting to discord");
 		discord = buildJDA();
+		context.onJDABuilder(discord);
 
 		// Post-initialize all plugins
 		CompletableFuture<Void> pluginPostInit = pluginHandler.postInit(this);
@@ -339,7 +317,7 @@ public class WatameBot {
 		 * ====== END POST-INITIALIZATION ======
 		 */
 
-		logger.trace("Waiting for plugin post-initialization");
+		logger.debug("Waiting for plugin post-initialization");
 		pluginPostInit.join();
 
 		// Wait for discord to be ready
@@ -350,8 +328,6 @@ public class WatameBot {
 				discord.awaitReady();
 			} catch (InterruptedException e) {}
 		logger.info("Connected to discord!");
-
-		builder = null; // Free up our builder
 	}
 
 	private void ready() {
@@ -359,7 +335,8 @@ public class WatameBot {
 
 		// Display our game as ready
 		logger.debug("Setting presence to ready");
-		discord.getPresence().setPresence(OnlineStatus.ONLINE, Activity.playing("WatameBot 2"));
+		discord.getPresence().setPresence(OnlineStatus.ONLINE,
+				Activity.playing(config.getString("status.online", "Watame 2!")));
 	}
 
 	/**
@@ -378,8 +355,9 @@ public class WatameBot {
 						GatewayIntent.MESSAGE_CONTENT)
 				.disableCache(CacheFlag.ACTIVITY, CacheFlag.VOICE_STATE, CacheFlag.EMOJI, CacheFlag.STICKER,
 						CacheFlag.CLIENT_STATUS, CacheFlag.ONLINE_STATUS)
-				.setChunkingFilter(ChunkingFilter.NONE).setAutoReconnect(true)
-				.setActivity(Activity.playing("Initializing...")).setStatus(OnlineStatus.DO_NOT_DISTURB);
+				.setChunkingFilter(ChunkingFilter.ALL).setAutoReconnect(true)
+				.setActivity(Activity.playing(config.getString("status.startup", "Initalizing...")))
+				.setMemberCachePolicy(MemberCachePolicy.ALL).setStatus(OnlineStatus.DO_NOT_DISTURB);
 
 		builder.addEventListeners(new ListenerAdapter() {
 			@Override
@@ -392,7 +370,7 @@ public class WatameBot {
 		return builder;
 	}
 
-	private JDA buildJDA() {
+	private JDA buildJDA() throws Exception {
 		JDA discordTmp = null;
 		boolean built = false;
 
@@ -449,14 +427,14 @@ public class WatameBot {
 	 * 
 	 * @return The current {@link IPropertyProvider} instance
 	 */
-	public IPropertyProvider<String, Guild, IGuildPropertyMapping> getPropertyProvider() { return database; }
+	public IGuildPropertyProvider getPropertyProvider() { return database; }
 
 	/**
 	 * Get the logging channel property for a guild.
 	 * 
-	 * @return Returns the {@link IPropertyField} pointing to the log channel
+	 * @return Returns the {@link ImmutableProperty} pointing to the log channel
 	 */
-	public IPropertyField<String, Guild, IGuildPropertyMapping> getGuildLoggingChannel() { return logChannel; }
+	public ImmutableProperty<String, Guild, IGuildPropertyMapping> getGuildLoggingChannel() { return logChannel; }
 
 	/**
 	 * NEED_JAVADOC
@@ -473,7 +451,11 @@ public class WatameBot {
 	 */
 	public State getState() { return state; }
 
-	private void updateState() { MDC.put("watame.status", state.name()); }
+	private void updateState(State state) {
+		this.state = state;
+		logger.trace("STATE = " + state);
+		MDC.put("watame.status", state.name());
+	}
 
 	/**
 	 * States {@link WatameBot} goes through on startup.

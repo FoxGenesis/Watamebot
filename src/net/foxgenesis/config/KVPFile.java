@@ -16,7 +16,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import net.foxgenesis.util.ResourceUtils;
-import net.foxgenesis.util.ResourceUtils.ModuleResource;
+import net.foxgenesis.util.resource.ModuleResource;
 
 /**
  * Key Value Pair (KVP) file implementation.

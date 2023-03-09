@@ -3,6 +3,7 @@ package net.foxgenesis.util;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Objects;
 
@@ -51,7 +52,7 @@ public final class SingleInstanceUtil {
 	 * </blockquote>
 	 * 
 	 * @param file - location of PID file should attempt to lock
-	 * @param amt - Amount of retries before failing to obtain lock
+	 * @param amt  - Amount of retries before failing to obtain lock
 	 * @throws SingleInstanceLockException Thrown if try count equals or exceeds
 	 *                                     {@code amt}
 	 * @see #waitAndGetLock(File, int, int)
@@ -62,7 +63,7 @@ public final class SingleInstanceUtil {
 	 * Attempt to obtain lock on PID file {@code pid}, {@code amt} times with
 	 * {@code delay} delay between retries.
 	 * 
-	 * @param file   - location of PID file
+	 * @param file  - location of PID file
 	 * @param amt   - Amount of retries before failing to obtain lock
 	 * @param delay - Delay between retries
 	 * @throws SingleInstanceLockException Thrown if try count equals or exceeds
@@ -152,6 +153,7 @@ public final class SingleInstanceUtil {
 		 * @throws IOException Thrown if a lock could not be obtained or other
 		 *                     operations were unable to be performed
 		 */
+		@SuppressWarnings("resource")
 		public void tryLock() throws IOException {
 			// Open an output stream to our file
 			@SuppressWarnings("resource") // Stream will be closed by channel close method
@@ -162,7 +164,7 @@ public final class SingleInstanceUtil {
 
 			// attempt to obtain lock and write current process id
 			tempChannel.lock();
-			out.write(("" + ProcessHandle.current().pid()).getBytes());
+			tempChannel.write(ByteBuffer.wrap(("" + ProcessHandle.current().pid()).getBytes()));
 
 			// Lock and write complete. set current channel
 			channel = tempChannel;

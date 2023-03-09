@@ -7,7 +7,7 @@ import javax.annotation.Nonnull;
  * 
  * @author Ashley
  * @see IPropertyProvider
- * @see IPropertyField
+ * @see ImmutableProperty
  */
 public interface IPropertyMapping {
 

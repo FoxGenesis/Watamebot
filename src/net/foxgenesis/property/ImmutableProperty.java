@@ -21,7 +21,7 @@ import javax.annotation.Nullable;
  * @see IPropertyProvider
  * @see IPropertyMapping
  */
-public interface IPropertyField<K, F, M extends IPropertyMapping> {
+public interface ImmutableProperty<K, F, M extends IPropertyMapping> {
 
 	/**
 	 * Get this property's data wrapped in an {@link IPropertyMapping}.
@@ -87,33 +87,6 @@ public interface IPropertyField<K, F, M extends IPropertyMapping> {
 	 */
 	default <U> U get(@Nonnull F from, @Nonnull Function<? super M, U> resolver) {
 		return get(from, () -> null, resolver);
-	}
-
-	/**
-	 * Update/Set this property's value.
-	 * 
-	 * @param from  - property lookup data
-	 * @param value - the new value
-	 * @return Returns {@code true} if the property was updated successfully
-	 * @see #set(Object, Object, boolean)
-	 */
-	boolean set(@Nonnull F from, @Nullable Object value);
-
-	/**
-	 * Update/Set this property's value.
-	 * 
-	 * @param from       - property lookup data
-	 * @param value      - the new value
-	 * @param userEdited - was this change initiated by the end user
-	 * @return Returns {@code true} if the property was updated successfully
-	 * @throws UnmodifiablePropertyException Thrown if this property is not editable
-	 *                                       and {@code userEdited} is {@code true}
-	 * @see #set(Object, Object)
-	 */
-	default boolean set(@Nonnull F from, @Nullable Object value, boolean userEdited) {
-		if (userEdited && !isEditable())
-			throw new UnmodifiablePropertyException(this, this + " is not editable!");
-		return set(from, value);
 	}
 
 	/**

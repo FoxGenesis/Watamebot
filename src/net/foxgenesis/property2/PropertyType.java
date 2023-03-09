@@ -1,0 +1,6 @@
+package net.foxgenesis.property2;
+
+public enum PropertyType {
+	STRING, STRING_ARRAY, INT, INT_ARRAY, FLOAT, FLOAT_ARRAY, DOUBLE, DOUBLE_ARRAY, LONG, LONG_ARRAY, BOOLEAN,
+	BOOLEAN_ARRAY
+}

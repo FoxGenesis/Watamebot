@@ -1,0 +1,4 @@
+########## PROPERTIES ############
+property_insert = INSERT INTO `{{database}}`.`{{table}}` (lookup, name, property, type) VALUES (?, ?, ?, 'string') AS v ON DUPLICATE KEY UPDATE `property` = v.property;
+property_get = SELECT * FROM `{{database}}`.`{{table}}` WHERE lookup = ? AND name = ?;
+property_delete = DELETE FROM `{{database}}`.`{{table}}` WHERE lookup = ? AND name = ?;

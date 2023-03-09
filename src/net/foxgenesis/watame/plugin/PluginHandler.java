@@ -1,6 +1,5 @@
 package net.foxgenesis.watame.plugin;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.ServiceLoader;
@@ -36,7 +35,7 @@ import net.foxgenesis.watame.WatameBot;
  *
  * @param <T> - the plugin class this instance uses
  */
-public class PluginHandler<T extends Plugin> implements Closeable {
+public class PluginHandler<T extends Plugin> implements AutoCloseable {
 	/**
 	 * logger
 	 */
@@ -73,8 +72,6 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 
 	@Nonnull
 	private final Context context;
-	
-	
 
 	/**
 	 * Construct a new {@link PluginHandler} with the specified {@link ModuleLayer}
@@ -96,9 +93,14 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 	/**
 	 * Load all plugins from the service loader
 	 */
+	@SuppressWarnings("resource")
 	public void loadPlugins() {
 		logger.info("Starting...");
-		loader.stream().map(provider -> provider.get()).forEach(plugin -> plugins.put(plugin.name, plugin));
+		loader.stream().map(provider -> provider.get()).forEach(plugin -> {
+			logger.info("Loading {}", plugin.getDisplayInfo());
+			plugins.put(plugin.name, plugin);
+			context.getEventRegister().register(plugin);
+		});
 		logger.debug("Found {} plugins", plugins.size());
 	}
 
@@ -122,9 +124,9 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 	 *         have finished their {@link Plugin#init(ProtectedJDABuilder)}
 	 */
 	@Nonnull
-	public CompletableFuture<Void> init(ProtectedJDABuilder builder) {
+	public CompletableFuture<Void> init() {
 		logger.debug("Calling plugin initialization async");
-		return forEachPlugin(plugin -> plugin.init(builder), null);
+		return forEachPlugin(plugin -> plugin.init(context.getEventRegister()), null);
 	}
 
 	/**
@@ -196,9 +198,11 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 	 * 
 	 * @param plugin - the plugin to unload
 	 */
+	@SuppressWarnings("resource")
 	private void unloadPlugin(T plugin) {
 		logger.trace("Unloading {}", plugin.getClass());
 		plugins.remove(plugin.name);
+		context.getEventRegister().unregister(plugin);
 		IOUtil.silentClose(plugin);
 		if (plugin.needsDatabase) {
 			logger.info("Unloading database connections from ", plugin.getDisplayInfo());
@@ -232,7 +236,7 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 			if (pluginException.isFatal())
 				unloadPlugin(plugin);
 		} else
-			logger.error("Error in " + plugin.getDisplayInfo(), error);
+			logger.error("Error in " + plugin.friendlyName, error);
 	}
 
 	/**
