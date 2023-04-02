@@ -273,13 +273,15 @@ public final class ResourceUtils {
 	 * </p>
 	 * 
 	 * <p>
-	 * This method is effectively equivalent to: <blockquote>
+	 * This method is effectively equivalent to:
+	 * </p>
+	 * <blockquote>
 	 * 
 	 * <pre>
 	 * toString(input).split("(\\r\\n|\\r|\\n)")
-	 * </blockquote>
 	 * </pre>
-	 * </p>
+	 * 
+	 * </blockquote>
 	 * 
 	 * @param input - the input stream to read
 	 * 

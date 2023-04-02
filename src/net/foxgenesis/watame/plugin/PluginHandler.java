@@ -21,7 +21,6 @@ import org.slf4j.MDC;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import net.foxgenesis.util.CompletableFutureUtils;
 import net.foxgenesis.util.MethodTimer;
@@ -133,8 +132,6 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 
 	/**
 	 * Initialize all plugins.
-	 * 
-	 * @param builder - Protected {@link JDABuilder} used to add event listeners
 	 * 
 	 * @return Returns a {@link CompletableFuture} that completes when all plugins
 	 *         have finished their {@link Plugin#init(IEventStore)}

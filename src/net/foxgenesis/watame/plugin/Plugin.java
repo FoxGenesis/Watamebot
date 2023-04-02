@@ -254,6 +254,7 @@ public abstract class Plugin {
 	 * 
 	 * <p>
 	 * Typical resources to load here include:
+	 * </p>
 	 * <ul>
 	 * <li>Custom database registration</li>
 	 * <li>SQL compiled statements</li>
@@ -261,7 +262,6 @@ public abstract class Plugin {
 	 * <li>Files</li>
 	 * <li>Images</li>
 	 * </ul>
-	 * </p>
 	 *
 	 * @throws SeverePluginException Thrown if the plugin has encountered a
 	 *                               <em>severe</em> exception. If the exception is
@@ -285,11 +285,11 @@ public abstract class Plugin {
 	 * 
 	 * <p>
 	 * Typical methods to call here include:
+	 * </p>
 	 * <ul>
 	 * <li>Event listener registration</li>
 	 * <li>Custom database operations</li>
 	 * </ul>
-	 * </p>
 	 * 
 	 * @param builder - discord event listener register
 	 * 
@@ -341,6 +341,7 @@ public abstract class Plugin {
 	 * 
 	 * <p>
 	 * The shutdown sequence runs as followed:
+	 * </p>
 	 * <ul>
 	 * <li>Remove event listeners</li>
 	 * <li>{@link Plugin#close()}</li>

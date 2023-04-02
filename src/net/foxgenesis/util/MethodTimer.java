@@ -203,7 +203,6 @@ public final class MethodTimer {
 	 * NEED_JAVADOC
 	 * 
 	 * @param time
-	 * @param timeOutput
 	 * @return
 	 */
 	public static String formatToSeconds(long time) { return formatToSeconds(time, 2); }
@@ -212,7 +211,6 @@ public final class MethodTimer {
 	 * NEED_JAVADOC
 	 * 
 	 * @param time
-	 * @param timeOutput
 	 * @param decimals
 	 * @return
 	 */
