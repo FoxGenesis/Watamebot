@@ -11,20 +11,21 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.concurrent.CompletableFuture;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.foxgenesis.database.IDatabaseManager;
 import net.foxgenesis.util.ResourceUtils;
 import net.foxgenesis.util.resource.ModuleResource;
-import net.foxgenesis.watame.ProtectedJDABuilder;
 import net.foxgenesis.watame.WatameBot;
 
 /**
@@ -33,7 +34,7 @@ import net.foxgenesis.watame.WatameBot;
  * @author Ashley
  *
  */
-public abstract class Plugin implements AutoCloseable {
+public abstract class Plugin {
 	@Nonnull
 	private static final Path CONFIG_PATH = Paths.get("config");
 
@@ -57,11 +58,6 @@ public abstract class Plugin implements AutoCloseable {
 	 */
 	@Nonnull
 	private final HashMap<String, PropertiesConfiguration> configs = new HashMap<>();
-	/**
-	 * Commands
-	 */
-	@Nonnull
-	private final HashMap<String, CommandData> commands = new HashMap<>();
 
 	/**
 	 * Path to the plugin's configuration folder
@@ -131,8 +127,8 @@ public abstract class Plugin implements AutoCloseable {
 			this.configurationPath = CONFIG_PATH.resolve(this.name);
 
 			// Fire on load event
-			CompletableFuture.runAsync(() -> onPropertiesLoaded(properties));
-		} catch (Exception e) {
+			onPropertiesLoaded(properties);
+		} catch (IOException e) {
 			throw new SeverePluginException(e, true);
 		}
 
@@ -148,14 +144,14 @@ public abstract class Plugin implements AutoCloseable {
 
 				try {
 					logger.debug("Loading configuration for {}", pluginConfig.outputFile());
-					PropertiesConfiguration config = ResourceUtils.loadConfig(
+					PropertiesConfiguration config = ResourceUtils.loadProperties(
 							new ModuleResource(module, pluginConfig.defaultFile()), this.configurationPath,
 							pluginConfig.outputFile());
 
 					configs.put(id, config);
 
 					// Fire on load event
-					CompletableFuture.runAsync(() -> onConfigurationLoaded(id, config));
+					onConfigurationLoaded(id, config);
 				} catch (IOException | ConfigurationException e) {
 					throw new SeverePluginException(e, false);
 				}
@@ -169,16 +165,20 @@ public abstract class Plugin implements AutoCloseable {
 	 * Check if a configuration file with the specified {@code identifier} exists.
 	 * 
 	 * @param identifier - the {@link PluginConfiguration#identifier()}
+	 * 
 	 * @return Returns {@code true} if the specified {@code identifier} points to a
 	 *         valid configuration
 	 */
-	protected boolean hasConfiguration(String identifier) { return configs.containsKey(identifier); }
+	protected boolean hasConfiguration(String identifier) {
+		return configs.containsKey(identifier);
+	}
 
 	/**
 	 * Get the configuration file that is linked to an {@code identifier} or
 	 * {@code null} if not found.
 	 * 
 	 * @param identifier - the {@link PluginConfiguration#identifier()}
+	 * 
 	 * @return Returns the {@link PropertiesConfiguration} linked to the
 	 *         {@code identifier}
 	 */
@@ -187,54 +187,174 @@ public abstract class Plugin implements AutoCloseable {
 		return configs.getOrDefault(identifier, null);
 	}
 
-	protected boolean hasCommandData(String command) { return commands.containsKey(command); }
-
-	@Nullable
-	protected CommandData getCommandData(String command) { return commands.getOrDefault(command, null); }
-
+	/**
+	 * Register all {@link CommandData} that this plugin provides.
+	 * <p>
+	 * <b>** {@code providesCommands} must be set to true in
+	 * {@code plugin.properties}! **</b>
+	 * </p>
+	 * 
+	 * @return Returns a non-null {@link Collection} of {@link CommandData} that
+	 *         this {@link Plugin} provides
+	 */
 	@Nonnull
-	protected Collection<CommandData> getCommands() { return Collections.unmodifiableCollection(commands.values()); }
+	protected Collection<CommandData> getCommands() {
+		return Collections.emptyList();
+	}
+
+	/**
+	 * Register custom databases.
+	 * <p>
+	 * <b>** {@code needsDatabase} must be set to true in {@code plugin.properties}!
+	 * **</b>
+	 * </p>
+	 * 
+	 * @param manager - database manager
+	 */
+	protected void registerDatabases(IDatabaseManager manager) {}
 
 	// =========================================================================================================
 
+	/**
+	 * Startup method called during construction when the {@code plugin.properties}
+	 * file has been loaded.
+	 * <p>
+	 * <b>DO NOT BLOCK IN THIS METHOD!</b>
+	 * </p>
+	 * 
+	 * @param properties - properties loaded from {@code plugin.properties}
+	 * 
+	 * @see #onConfigurationLoaded(String, Configuration)
+	 */
 	protected abstract void onPropertiesLoaded(Properties properties);
 
-	protected abstract void onConfigurationLoaded(String identifier, PropertiesConfiguration properties);
+	/**
+	 * Startup method called during construction when a {@link Configuration}
+	 * specified by a {@link PluginConfiguration} has been loaded.
+	 * <p>
+	 * <b>DO NOT BLOCK IN THIS METHOD!</b>
+	 * </p>
+	 * 
+	 * @param identifier - the {@link PluginConfiguration#identifier()}
+	 * @param properties - the loaded {@link Configuration}
+	 * 
+	 * @see #onPropertiesLoaded(Properties)
+	 */
+	protected abstract void onConfigurationLoaded(String identifier, Configuration properties);
 
 	/**
 	 * Startup method called when resources, needed for functionality
-	 * initialization, are to be loaded. Resources that do not require connection to
-	 * Discord or the database should be loaded here.
+	 * initialization, are to be loaded. Resources that do <b>not</b> require
+	 * connection to Discord or the database should be loaded here.
 	 * <p>
-	 * <b>Database and Discord information might not be loaded at the time of this
-	 * method!</b> Use {@link #onReady(WatameBot)} for functionality that requires
-	 * valid connections.
+	 * <b>Database (guild settings) and Discord information might not be loaded at
+	 * the time of this method!</b> Use {@link #onReady(WatameBot)} for
+	 * functionality that requires valid connections.
+	 * </p>
 	 * 
 	 * <p>
 	 * Typical resources to load here include:
 	 * <ul>
+	 * <li>Custom database registration</li>
 	 * <li>SQL compiled statements</li>
 	 * <li>System Data</li>
 	 * <li>Files</li>
 	 * <li>Images</li>
 	 * </ul>
-	 * 
+	 * </p>
 	 *
-	 * @see #init(ProtectedJDABuilder)
+	 * @throws SeverePluginException Thrown if the plugin has encountered a
+	 *                               <em>severe</em> exception. If the exception is
+	 *                               <em>fatal</em>, the plugin will be unloaded
+	 * 
+	 * @see #init(IEventStore)
 	 * @see #postInit(WatameBot)
+	 * @see #onReady(WatameBot)
 	 */
 	protected abstract void preInit() throws SeverePluginException;
 
+	/**
+	 * Startup method called when methods providing functionality are to be loaded.
+	 * Methods that require connection to Discord or the database should be called
+	 * here.
+	 * <p>
+	 * <b>Database (guild settings) and Discord information might not be loaded at
+	 * the time of this method!</b> Use {@link #onReady(WatameBot)} for
+	 * functionality that requires valid connections.
+	 * </p>
+	 * 
+	 * <p>
+	 * Typical methods to call here include:
+	 * <ul>
+	 * <li>Event listener registration</li>
+	 * <li>Custom database operations</li>
+	 * </ul>
+	 * </p>
+	 * 
+	 * @param builder - discord event listener register
+	 * 
+	 * @throws SeverePluginException Thrown if the plugin has encountered a
+	 *                               <em>severe</em> exception. If the exception is
+	 *                               <em>fatal</em>, the plugin will be unloaded
+	 * 
+	 * @see #preInit()
+	 * @see #postInit(WatameBot)
+	 * @see #onReady(WatameBot)
+	 */
 	protected abstract void init(IEventStore builder) throws SeverePluginException;
 
+	/**
+	 * Startup method called when {@link JDA} is building a connection to discord
+	 * and all {@link CommandData} is being collected from {@link #getCommands()}.
+	 * <p>
+	 * <b>Database (guild settings) and Discord information might not be loaded at
+	 * the time of this method!</b> Use {@link #onReady(WatameBot)} for
+	 * functionality that requires valid connections.
+	 * </p>
+	 * 
+	 * @param bot - reference of {@link WatameBot}
+	 * 
+	 * @throws SeverePluginException Thrown if the plugin has encountered a
+	 *                               <em>severe</em> exception. If the exception is
+	 *                               <em>fatal</em>, the plugin will be unloaded
+	 */
 	protected abstract void postInit(WatameBot bot) throws SeverePluginException;
 
+	/**
+	 * Called by the {@link PluginHandler} when {@link JDA} and all {@link Plugin
+	 * Plugins} have finished startup and have finished loading.
+	 * 
+	 * @param bot - reference of {@link WatameBot}
+	 * 
+	 * @throws SeverePluginException Thrown if the plugin has encountered a
+	 *                               <em>severe</em> exception. If the exception is
+	 *                               <em>fatal</em>, the plugin will be unloaded
+	 * 
+	 * @see #preInit()
+	 * @see #init(IEventStore)
+	 * @see #postInit(WatameBot)
+	 */
 	protected abstract void onReady(WatameBot bot) throws SeverePluginException;
 
+	/**
+	 * Called when the plugin is to be unloaded.
+	 * 
+	 * <p>
+	 * The shutdown sequence runs as followed:
+	 * <ul>
+	 * <li>Remove event listeners</li>
+	 * <li>{@link Plugin#close()}</li>
+	 * <li>Close databases</li>
+	 * 
+	 * @throws Exception Thrown if an underlying exception is thrown during close
+	 */
+	protected abstract void close() throws Exception;
 
 	// =========================================================================================================
 
-	public String getDisplayInfo() { return this.friendlyName + " v" + version; }
+	public String getDisplayInfo() {
+		return this.friendlyName + " v" + version;
+	}
 
 	@Override
 	public String toString() {
@@ -244,7 +364,9 @@ public abstract class Plugin implements AutoCloseable {
 	}
 
 	@Override
-	public int hashCode() { return Objects.hash(name, version); }
+	public int hashCode() {
+		return Objects.hash(name, version);
+	}
 
 	@Override
 	public boolean equals(@Nullable Object obj) {

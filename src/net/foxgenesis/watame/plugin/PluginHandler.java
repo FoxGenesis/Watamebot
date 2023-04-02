@@ -1,13 +1,14 @@
 package net.foxgenesis.watame.plugin;
 
-import java.io.IOException;
+import java.io.Closeable;
+import java.util.List;
 import java.util.Objects;
 import java.util.ServiceLoader;
+import java.util.ServiceLoader.Provider;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -22,10 +23,9 @@ import org.slf4j.MarkerFactory;
 
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
-import net.dv8tion.jda.internal.utils.IOUtil;
 import net.foxgenesis.util.CompletableFutureUtils;
+import net.foxgenesis.util.MethodTimer;
 import net.foxgenesis.watame.Context;
-import net.foxgenesis.watame.ProtectedJDABuilder;
 import net.foxgenesis.watame.WatameBot;
 
 /**
@@ -35,7 +35,7 @@ import net.foxgenesis.watame.WatameBot;
  *
  * @param <T> - the plugin class this instance uses
  */
-public class PluginHandler<T extends Plugin> implements AutoCloseable {
+public class PluginHandler<T extends Plugin> implements Closeable {
 	/**
 	 * logger
 	 */
@@ -68,8 +68,11 @@ public class PluginHandler<T extends Plugin> implements AutoCloseable {
 	 * Thread pool for loading plugins
 	 */
 	@Nonnull
-	private final ForkJoinPool pluginExecutor;
+	private final ExecutorService pluginExecutor;
 
+	/**
+	 * Startup asynchronous executor
+	 */
 	@Nonnull
 	private final Context context;
 
@@ -86,8 +89,7 @@ public class PluginHandler<T extends Plugin> implements AutoCloseable {
 		this.pluginClass = Objects.requireNonNull(pluginClass);
 
 		loader = ServiceLoader.load(layer, pluginClass);
-
-		pluginExecutor = ForkJoinPool.commonPool();
+		pluginExecutor = context.getAsynchronousExecutor();
 	}
 
 	/**
@@ -95,13 +97,26 @@ public class PluginHandler<T extends Plugin> implements AutoCloseable {
 	 */
 	@SuppressWarnings("resource")
 	public void loadPlugins() {
-		logger.info("Starting...");
-		loader.stream().map(provider -> provider.get()).forEach(plugin -> {
-			logger.info("Loading {}", plugin.getDisplayInfo());
+		logger.info("Loading plugins...");
+
+		long time = System.nanoTime();
+
+		List<Provider<T>> list = loader.stream().toList();
+
+		logger.debug("Found {} plugins", list.size());
+
+		list.forEach(provider -> {
+			logger.debug("Loading {}", provider.type());
+
+			T plugin = provider.get();
 			plugins.put(plugin.name, plugin);
 			context.getEventRegister().register(plugin);
+
+			logger.info("Loaded {}", plugin.getDisplayInfo());
 		});
-		logger.debug("Found {} plugins", plugins.size());
+
+		time = System.nanoTime() - time;
+		logger.info("Loaded all plugins in {}ms", MethodTimer.formatToMilli(time));
 	}
 
 	/**
@@ -120,8 +135,9 @@ public class PluginHandler<T extends Plugin> implements AutoCloseable {
 	 * Initialize all plugins.
 	 * 
 	 * @param builder - Protected {@link JDABuilder} used to add event listeners
+	 * 
 	 * @return Returns a {@link CompletableFuture} that completes when all plugins
-	 *         have finished their {@link Plugin#init(ProtectedJDABuilder)}
+	 *         have finished their {@link Plugin#init(IEventStore)}
 	 */
 	@Nonnull
 	public CompletableFuture<Void> init() {
@@ -134,6 +150,7 @@ public class PluginHandler<T extends Plugin> implements AutoCloseable {
 	 * 
 	 * @param watamebot - reference to {@link WatameBot} that is passed on to the
 	 *                  plugin's {@code postInit}
+	 * 
 	 * @return Returns a {@link CompletableFuture} that completes when all plugins
 	 *         have finished their {@link Plugin#postInit(WatameBot)}
 	 */
@@ -148,6 +165,7 @@ public class PluginHandler<T extends Plugin> implements AutoCloseable {
 	 * 
 	 * @param watamebot - reference to {@link WatameBot} that is passed on to the
 	 *                  plugin's {@code onReady}o
+	 * 
 	 * @return Returns a {@link CompletableFuture} that completes when all plugins
 	 *         have finished their {@link Plugin#onReady(WatameBot)}
 	 */
@@ -162,6 +180,7 @@ public class PluginHandler<T extends Plugin> implements AutoCloseable {
 	 * loaded plugins.
 	 * 
 	 * @param action - update task to fill
+	 * 
 	 * @return Returns the action for chaining
 	 */
 	@Nonnull
@@ -178,6 +197,7 @@ public class PluginHandler<T extends Plugin> implements AutoCloseable {
 	 * @param task   - task that is executed for every plugin in the filter
 	 * @param filter - filter to select what plugins to use or {@code null} for all
 	 *               plugins
+	 * 
 	 * @return Returns a {@link CompletableFuture} that completes after all plugins
 	 *         have finished the {@code task}.
 	 */
@@ -185,11 +205,11 @@ public class PluginHandler<T extends Plugin> implements AutoCloseable {
 	private CompletableFuture<Void> forEachPlugin(Consumer<? super T> task, @Nullable Predicate<Plugin> filter) {
 		if (filter == null)
 			filter = p -> true;
-		return CompletableFutureUtils.allOf(plugins.values().stream().filter(filter).map(
-				plugin -> CompletableFuture.runAsync(() -> task.accept(plugin), pluginExecutor).exceptionally(error -> {
+		return CompletableFutureUtils.allOf(plugins.values().stream().filter(filter).map(plugin -> CompletableFuture
+				.runAsync(() -> task.accept(plugin), pluginExecutor).exceptionallyAsync(error -> {
 					pluginError(plugin, error);
 					return null;
-				})));
+				}, pluginExecutor)));
 	}
 
 	/**
@@ -200,10 +220,14 @@ public class PluginHandler<T extends Plugin> implements AutoCloseable {
 	 */
 	@SuppressWarnings("resource")
 	private void unloadPlugin(T plugin) {
-		logger.trace("Unloading {}", plugin.getClass());
+		logger.debug("Unloading {}", plugin.getClass());
 		plugins.remove(plugin.name);
 		context.getEventRegister().unregister(plugin);
-		IOUtil.silentClose(plugin);
+		try {
+			plugin.close();
+		} catch (Exception e) {
+			pluginError(plugin, new SeverePluginException(e, false));
+		}
 		if (plugin.needsDatabase) {
 			logger.info("Unloading database connections from ", plugin.getDisplayInfo());
 			context.getDatabaseManager().unload(plugin);
@@ -240,38 +264,36 @@ public class PluginHandler<T extends Plugin> implements AutoCloseable {
 	}
 
 	/**
-	 * Close all loaded plugins and <b>await/help</b> the termination of the plugin
+	 * Close all loaded plugins and <b>wait</b> for the termination of the plugin
 	 * thread pool.
 	 */
 	@Override
-	public void close() throws IOException {
-		loader.reload();
-
+	public void close() {
 		logger.debug("Closing all pugins");
-		plugins.values().stream().filter(plugin -> plugin.needsDatabase)
-				.forEach(plugin -> context.getDatabaseManager().unload(plugin));
-		plugins.values().forEach(plugin -> IOUtil.silentClose(plugin));
-
-		pluginExecutor.shutdown();
-
-		// Await all plugin futures to complete
-		if (!pluginExecutor.awaitQuiescence(30, TimeUnit.SECONDS)) {
-			logger.warn("Timed out waiting for plugin pool shutdown. Continuing shutdown...");
-			pluginExecutor.shutdownNow();
-		}
-
-		plugins.clear();
+		forEachPlugin(this::unloadPlugin, null);
 	}
 
 	/**
 	 * Check if a plugin is loaded.
 	 * 
 	 * @param identifier - plugin identifier
+	 * 
 	 * @return Returns {@code true} if the plugin is loaded
 	 */
-	public boolean isPluginPresent(String identifier) { return plugins.containsKey(identifier); }
+	public boolean isPluginPresent(String identifier) {
+		return plugins.containsKey(identifier);
+	}
 
-	public Plugin getPlugin(String identifier) { return plugins.get(identifier); }
+	/**
+	 * NEED_JAVADOC
+	 * 
+	 * @param identifier
+	 * 
+	 * @return
+	 */
+	public T getPlugin(String identifier) {
+		return plugins.get(identifier);
+	}
 
 	/**
 	 * Get the class used by this instance.
@@ -280,7 +302,9 @@ public class PluginHandler<T extends Plugin> implements AutoCloseable {
 	 *         load the plugins
 	 */
 	@Nonnull
-	public Class<T> getPluginClass() { return pluginClass; }
+	public Class<T> getPluginClass() {
+		return pluginClass;
+	}
 
 	/**
 	 * Get the module layer used by this instance.
@@ -289,5 +313,17 @@ public class PluginHandler<T extends Plugin> implements AutoCloseable {
 	 *         {@link ServiceLoader} to load the plugins
 	 */
 	@Nonnull
-	public ModuleLayer getModuleLayer() { return layer; }
+	public ModuleLayer getModuleLayer() {
+		return layer;
+	}
+
+	/**
+	 * NEED_JAVADOC
+	 * 
+	 * @return
+	 */
+	@Nonnull
+	public ExecutorService getAsynchronousExecutor() {
+		return pluginExecutor;
+	}
 }

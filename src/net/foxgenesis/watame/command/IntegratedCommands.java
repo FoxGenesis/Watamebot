@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.Configuration;
 
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
@@ -25,7 +25,7 @@ public class IntegratedCommands extends Plugin {
 	protected void onPropertiesLoaded(Properties properties) {}
 
 	@Override
-	protected void onConfigurationLoaded(String identifier, PropertiesConfiguration properties) {}
+	protected void onConfigurationLoaded(String identifier, Configuration properties) {}
 
 	@Override
 	public void preInit() {}

@@ -81,7 +81,7 @@ public class WatameBotDatabase extends AbstractDatabase implements IGuildDataPro
 		logger.debug("Removing guild ({})[{}]", guild.getName(), guild.getIdLong());
 
 		try {
-			this.data.remove(guild.getIdLong()).close();
+			this.data.remove(guild.getIdLong());
 			logger.trace("Guild REMOVED ({})[{}]", guild.getName(), guild.getIdLong());
 		} catch (Exception e) {
 			e.printStackTrace();

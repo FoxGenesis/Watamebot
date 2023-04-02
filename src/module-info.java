@@ -3,8 +3,8 @@
  * 
  * @author Ashley
  *
- * @provides net.foxgenesis.watame.plugin.IPlugin
- * @uses net.foxgenesis.watame.plugin.IPlugin
+ * @provides net.foxgenesis.watame.plugin.Plugin
+ * @uses net.foxgenesis.watame.plugin.Plugin
  */
 module watamebot {
 	requires transitive net.dv8tion.jda;

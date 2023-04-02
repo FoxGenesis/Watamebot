@@ -6,7 +6,7 @@ import javax.annotation.Nonnull;
 
 import net.foxgenesis.watame.plugin.Plugin;
 
-public interface IDatabaseManager extends AutoCloseable {
+public interface IDatabaseManager {
 	/**
 	 * Check if all guild data has been processed and is ready for use.
 	 * 

@@ -20,7 +20,7 @@ import net.foxgenesis.util.function.QuadFunction;
  * @author Ashley
  *
  */
-public class GuildData implements IGuildData, AutoCloseable {
+public class GuildData implements IGuildData {
 
 	/**
 	 * Link to parent data manager
@@ -42,7 +42,7 @@ public class GuildData implements IGuildData, AutoCloseable {
 	/**
 	 * JSON object used to store guild settings
 	 */
-	@SuppressWarnings({"removal", "deprecation" })
+	@SuppressWarnings({ "removal", "deprecation" })
 	private JSONObjectAdv data;
 
 	private boolean setup = false;
@@ -71,7 +71,7 @@ public class GuildData implements IGuildData, AutoCloseable {
 
 	@Override
 	@Nullable
-	@SuppressWarnings({"removal", "deprecation" })
+	@SuppressWarnings({ "removal", "deprecation" })
 	public JSONObjectAdv getConfig() {
 		checkSetup();
 		return data;
@@ -95,13 +95,15 @@ public class GuildData implements IGuildData, AutoCloseable {
 	 * CALLED VIA {@link DataManager}! ***</b></blockquote>
 	 * 
 	 * @param result - {@link ResultSet} to parse
+	 * 
 	 * @throws SQLException         if the columnLabel is not valid;if a database
 	 *                              access error occurs or this method is called on
 	 *                              a closed result set
 	 * @throws NullPointerException thrown if there is no element passed
+	 * 
 	 * @see #pushJSONUpdate(String, Object, boolean)
 	 */
-	@SuppressWarnings({"removal", "deprecation" })
+	@SuppressWarnings({ "removal", "deprecation" })
 	void setData(@Nonnull ResultSet result) throws SQLException {
 		Objects.requireNonNull(result);
 
@@ -113,7 +115,8 @@ public class GuildData implements IGuildData, AutoCloseable {
 		// Get our configuration column
 		String jsonString = result.getString("GuildProperties");
 
-		WatameBotDatabase.sqlLogger.debug(WatameBotDatabase.SQL_MARKER, "SetData <- [{}] {}", guild.getName(), jsonString);
+		WatameBotDatabase.sqlLogger.debug(WatameBotDatabase.SQL_MARKER, "SetData <- [{}] {}", guild.getName(),
+				jsonString);
 
 		if (jsonString == null) {
 			WatameBotDatabase.logger.warn("JSON STRING IS NULL FOR " + guild.getIdLong(),
@@ -122,20 +125,24 @@ public class GuildData implements IGuildData, AutoCloseable {
 		}
 
 		// Set our current data and pass our update method
-		this.data = new JSONObjectAdv(jsonString, (key, obj, remove) -> {
-			consumer.apply(key, obj, guild, remove);
-		});
+		this.data = new JSONObjectAdv(jsonString, (key, obj, remove) -> { consumer.apply(key, obj, guild, remove); });
 
 		this.setup = true;
 	}
 
 	private void checkSetup() {
+		if (setup)
+			return;
+
+		// XXX Had to wait a bit for data to be retrieved
+		WatameBotDatabase.logger.debug("Waiting for guild data in {}", guild.getName());
+		long start = System.currentTimeMillis();
+		while (!setup && System.currentTimeMillis() - start < 5000)
+			Thread.onSpinWait();
+
 		if (!setup)
 			throw new UnsupportedOperationException("GuildData has not been setup yet!");
 	}
-
-	@Override
-	public void close() throws Exception { temp.clear(); }
 
 	@Override
 	public String toString() {

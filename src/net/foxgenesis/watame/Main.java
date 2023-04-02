@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.sql.SQLException;
+import java.util.concurrent.ForkJoinPool;
 
 import javax.annotation.Nonnull;
 
@@ -12,12 +13,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.fusesource.jansi.AnsiConsole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.core.joran.spi.JoranException;
 import ch.qos.logback.core.util.StatusPrinter;
-import net.foxgenesis.util.ProgramArguments;
 import net.foxgenesis.util.SingleInstanceUtil;
 import net.foxgenesis.util.resource.ModuleResource;
 
@@ -29,10 +30,6 @@ import net.foxgenesis.util.resource.ModuleResource;
 public class Main {
 
 	private final static Logger logger = LoggerFactory.getLogger(Main.class);
-	/**
-	 * Program arguments
-	 */
-	private static ProgramArguments params;
 
 	private static WatameBotSettings settings;
 
@@ -40,10 +37,13 @@ public class Main {
 	 * Program entry point.
 	 *
 	 * @param args - program arguments
+	 * 
 	 * @throws Throwable
 	 * @throws SQLException
 	 */
 	public static void main(String[] args) throws Exception {
+		MDC.put("watame.status", "START-UP");
+		
 		Path configPath = Path.of("config/");
 		String logLevel = null;
 		Path tokenFile = null;
@@ -53,35 +53,32 @@ public class Main {
 			String arg = args[i];
 			switch (arg.toLowerCase()) {
 
-			case "-config" -> {
-				if (hasArg(i, length, "-config")) {
-					i++;
-					configPath = Path.of(StringUtils.strip(args[i], "\""));
+				case "-config" -> {
+					if (hasArg(i, length, "-config")) {
+						i++;
+						configPath = Path.of(StringUtils.strip(args[i], "\""));
+					}
 				}
-			}
 
-			case "-loglevel" -> {
-				if (hasArg(i, length, "-loglevel")) {
-					i++;
-					String tmp = args[i];
-					if (StringUtils.equalsAnyIgnoreCase(tmp, "info", "debug", "trace")) {
-						logLevel = tmp.toUpperCase();
-						logger.info("Setting logging level to: " + logLevel);
+				case "-loglevel" -> {
+					if (hasArg(i, length, "-loglevel")) {
+						i++;
+						String tmp = args[i];
+						if (StringUtils.equalsAnyIgnoreCase(tmp, "info", "debug", "trace")) {
+							logLevel = tmp.toUpperCase();
+							logger.info("Setting logging level to: " + logLevel);
+						}
+					}
+				}
+
+				case "-tokenfile" -> {
+					if (hasArg(i, length, "-tokenfile")) {
+						i++;
+						tokenFile = Path.of(StringUtils.strip(args[i], "\""));
 					}
 				}
 			}
-
-			case "-tokenfile" -> {
-				if (hasArg(i, length, "-tokenfile")) {
-					i++;
-					tokenFile = Path.of(StringUtils.strip(args[i], "\""));
-				}
-			}
-			}
 		}
-
-		// Parse program arguments
-		params = new ProgramArguments(args);
 
 		// Load settings
 		settings = new WatameBotSettings(configPath, tokenFile);
@@ -89,25 +86,31 @@ public class Main {
 		ImmutableConfiguration config = settings.getConfiguration();
 
 		// Enable ANSI console
-		if (config.getBoolean("ansiConsole", true)) {
+		if (config.getBoolean("Runtime.ansiConsole", true)) {
 			logger.info("Installing ANSI console");
 			AnsiConsole.systemInstall();
 		}
 
 		// Set our log level
 		if (logLevel == null)
-			logLevel = config.getString("logLevel", "info");
+			logLevel = config.getString("Logging.logLevel", "info");
 		System.setProperty("LOG_LEVEL", logLevel);
 		restartLogging();
 
 		// Attempt to obtain instance lock
-		if (config.getBoolean("singleInstance.enabled", true))
-			getLock(config.getInt("singleInstance.retries", 5));
-
-		System.out.println();
+		if (config.getBoolean("SingleInstance.enabled", true))
+			getLock(config.getInt("SingleInstance.retries", 5));
+		
+		// Print out our current multi-threading information
+		logger.info("Checking multi-threading");
+		logger.info("CPU Cores: {}  |  Parallelism: {}  |  CommonPool Common Parallelism: {}",
+				Runtime.getRuntime().availableProcessors(), ForkJoinPool.commonPool().getParallelism(),
+				ForkJoinPool.getCommonPoolParallelism());
 
 		// First call of WatameBot class. Will cause instance creation
 		WatameBot watame = WatameBot.INSTANCE;
+		
+		System.out.println();
 
 		watame.start();
 	}
@@ -153,15 +156,8 @@ public class Main {
 		StatusPrinter.printInCaseOfErrorsOrWarnings(context);
 	}
 
-	/**
-	 * Get the {@link ProgramArguments} of this application.
-	 *
-	 * @return flags, arguments and parameters used to launch this application
-	 */
 	@Nonnull
-	@Deprecated
-	static ProgramArguments getProgramArguments() { return params; }
-
-	@Nonnull
-	static WatameBotSettings getSettings() { return settings; }
+	static WatameBotSettings getSettings() {
+		return settings;
+	}
 }

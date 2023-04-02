@@ -1,7 +1,6 @@
 package net.foxgenesis.database;
 
 import java.io.IOException;
-import java.net.ConnectException;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -12,6 +11,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.Executor;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -30,7 +30,7 @@ import net.foxgenesis.watame.plugin.Plugin;
  * @author Ashley
  *
  */
-public class DatabaseManager implements IDatabaseManager {
+public class DatabaseManager implements IDatabaseManager, AutoCloseable {
 	@Nonnull
 	protected final Logger logger;
 
@@ -62,6 +62,9 @@ public class DatabaseManager implements IDatabaseManager {
 	public boolean register(@Nonnull Plugin plugin, @Nonnull AbstractDatabase database) throws IOException {
 		Objects.requireNonNull(database);
 
+		if (!plugin.needsDatabase)
+			throw new IllegalArgumentException("Plugin does not declare that it needs database connection!");
+
 		if (isDatabaseRegistered(database))
 			throw new IllegalArgumentException("Database is already registered!");
 
@@ -85,6 +88,7 @@ public class DatabaseManager implements IDatabaseManager {
 	 * NEED_JAVADOC
 	 * 
 	 * @param owner
+	 * 
 	 * @return
 	 */
 	public boolean unload(Plugin owner) {
@@ -112,14 +116,7 @@ public class DatabaseManager implements IDatabaseManager {
 		return databases.values().stream().anyMatch(set -> set.contains(database));
 	}
 
-	/**
-	 * NEED_JAVADOC
-	 * 
-	 * @param provider
-	 * @return
-	 * @throws ConnectException
-	 */
-	public synchronized CompletableFuture<Void> start(@Nonnull AConnectionProvider provider) throws ConnectException {
+	public synchronized CompletableFuture<Void> start(@Nonnull AConnectionProvider provider, Executor executor) {
 		long start = System.nanoTime();
 		return CompletableFuture.runAsync(() -> {
 			this.provider = Objects.requireNonNull(provider);
@@ -141,7 +138,7 @@ public class DatabaseManager implements IDatabaseManager {
 					return null;
 				}, error -> logger.error("Error while setting up database tables", error));
 			}
-		}).thenComposeAsync((v) -> {
+		}, executor).thenComposeAsync((v) -> {
 			synchronized (databases) {
 				return CompletableFutureUtils.allOf(databases.values().stream().flatMap(Set::stream)
 						.map(database -> CompletableFuture.runAsync(() -> {
@@ -150,33 +147,73 @@ public class DatabaseManager implements IDatabaseManager {
 							} catch (IOException e) {
 								throw new CompletionException(e);
 							}
-						}).exceptionally(e -> {
+						}, executor).exceptionally(e -> {
 							logger.error("Error while setting up " + database.getName(), e);
 							return null;
 						})));
 			}
-		}).thenComposeAsync((v) -> {
+		}, executor).thenComposeAsync((v) -> {
 			logger.debug("Calling database on ready");
 			ready = true;
 			synchronized (databases) {
 				return CompletableFutureUtils.allOf(databases.values().stream().flatMap(Set::stream)
 						.map(database -> CompletableFuture.runAsync(() -> {
 							database.onReady();
-						}).exceptionally(e -> {
+						}, executor).exceptionally(e -> {
 							logger.error("Error while setting up " + database.getName(), e);
 							return null;
 						})));
 			}
-		}).whenComplete((v, err) -> logger.debug("Startup completed in {} seconds",
+		}, executor).whenComplete((v, err) -> logger.debug("Startup completed in {} seconds",
 				MethodTimer.formatToSeconds(System.nanoTime() - start)));
 	}
 
+	public synchronized void start(@Nonnull AConnectionProvider provider) {
+		long start = System.nanoTime();
+
+		this.provider = Objects.requireNonNull(provider);
+		logger.info("Starting {} using provider {}", name, provider.getName());
+
+		synchronized (databases) {
+			logger.debug("Collecting database setup lines");
+			List<String> setupLines = collectDatabaseSetupLines();
+			
+			provider.openAutoClosedConnection(connection -> {
+				try (Statement statement = connection.createStatement()) {
+					for (String line : setupLines)
+						try {
+							statement.execute(line);
+						} catch (SQLException e) {
+							logger.error("Error executing database setup line [" + line + "]", e);
+						}
+				}
+				return null;
+			}, error -> logger.error("Error while setting up database tables", error));
+
+			databases.values().stream().flatMap(Set::stream).map(database -> {
+				try {
+					database.setup(provider);
+					return database;
+				} catch (IOException e) {
+					logger.error("Error while setting up " + database.getName(), e);
+					return null;
+				}
+			}).filter(Objects::nonNull).forEach(AbstractDatabase::onReady);
+			ready = true;
+		}
+		logger.debug("Startup completed in {} seconds", MethodTimer.formatToSeconds(System.nanoTime() - start));
+	}
+
 	@Override
-	public boolean isReady() { return ready; }
+	public boolean isReady() {
+		return ready;
+	}
 
 	@Override
 	@Nonnull
-	public String getName() { return name; }
+	public String getName() {
+		return name;
+	}
 
 	@Override
 	public void close() throws Exception {

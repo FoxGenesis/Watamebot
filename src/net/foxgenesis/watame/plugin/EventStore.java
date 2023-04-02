@@ -19,11 +19,14 @@ public class EventStore implements IEventStore {
 
 	private JDA jda;
 
-	public EventStore(JDABuilder builder) { this.builder = Objects.requireNonNull(builder); }
+	public EventStore(JDABuilder builder) {
+		this.builder = Objects.requireNonNull(builder);
+	}
 
-	public void register(Plugin plugin) { store.putIfAbsent(plugin, new HashSet<>()); }
+	public void register(Plugin plugin) {
+		store.putIfAbsent(plugin, new HashSet<>());
+	}
 
-	@SuppressWarnings("resource")
 	public void unregister(Plugin plugin) {
 		Objects.requireNonNull(plugin);
 
@@ -41,7 +44,6 @@ public class EventStore implements IEventStore {
 		}
 	}
 
-	@SuppressWarnings("resource")
 	@Override
 	public void registerListeners(Plugin plugin, Object... listener) {
 		Objects.requireNonNull(plugin);
@@ -55,8 +57,10 @@ public class EventStore implements IEventStore {
 					listeners.add(l);
 				builder.addEventListeners(listener);
 
-				if (jda != null)
+				if (jda != null) {
+					logger.debug("Adding {} listeners from {} to JDA", listener.length, plugin.friendlyName);
 					jda.addEventListener(listener);
+				}
 			}
 		} else
 			throw new IllegalArgumentException("Provided plugin is not registered!");
@@ -72,13 +76,17 @@ public class EventStore implements IEventStore {
 					listeners.remove(l);
 				builder.removeEventListeners(listener);
 
-				if (jda != null)
+				if (jda != null) {
+					logger.debug("Removing {} listeners from {} in JDA", listener.length, plugin.friendlyName);
 					jda.removeEventListener(listener);
+				}
 
 			}
 		} else
 			throw new IllegalArgumentException("Provided plugin is not registered!");
 	}
 
-	public synchronized void setJDA(JDA jda) { this.jda = jda; }
+	public synchronized void setJDA(JDA jda) {
+		this.jda = jda;
+	}
 }

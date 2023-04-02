@@ -11,8 +11,6 @@ import java.util.Properties;
 
 import javax.annotation.Nonnull;
 
-import net.foxgenesis.util.ResourceUtils;
-
 /**
  * A class that points to a resource inside a module and implements methods to
  * read from it.
@@ -37,6 +35,10 @@ public class ModuleResource {
 	 * 
 	 * @param module   - {@link Module} containing the resource
 	 * @param resource - absolute path to the resource
+	 * 
+	 * @throws NullPointerException If the module name or resource name are null
+	 * 
+	 * @see #ModuleResource(String, String)
 	 */
 	public ModuleResource(@Nonnull Module module, @Nonnull String resource) {
 		this.module = Objects.requireNonNull(module);
@@ -49,6 +51,10 @@ public class ModuleResource {
 	 * 
 	 * @param module   - name of the {@link Module} containing the resource
 	 * @param resource - absolute path to the resource
+	 * 
+	 * @throws NullPointerException If the module name or resource name are null
+	 * 
+	 * @see #ModuleResource(Module, String)
 	 */
 	public ModuleResource(@Nonnull String moduleName, @Nonnull String resourcePath) throws NoSuchElementException {
 		this(ModuleLayer.boot().findModule(moduleName)
@@ -56,25 +62,61 @@ public class ModuleResource {
 	}
 
 	/**
-	 * Open an {@link InputStream} to this resource
+	 * Open an {@link InputStream} to this resource.
 	 * 
-	 * @return A
-	 * @throws IOException
+	 * @return Returns an {@link InputStream} of this resource.
+	 * 
+	 * @throws IOException If an I/O error occurs
 	 */
-	public InputStream openStream() throws IOException { return module.getResourceAsStream(path); }
+	public InputStream openStream() throws IOException {
+		return module.getResourceAsStream(path);
+	}
 
+	/**
+	 * Copy this resource to the specified path.
+	 * 
+	 * @param path    - {@link Path} tp copy to
+	 * @param options - options specifying how the copy should be done
+	 * 
+	 * @throws IOException If an I/O error occurs when reading or writing
+	 */
 	public void writeToFile(@Nonnull Path path, CopyOption... options) throws IOException {
 		try (InputStream in = openStream()) {
 			Files.copy(in, path, options);
 		}
 	}
 
-	@SuppressWarnings("resource")
-	public String readToString() throws IOException { return ResourceUtils.toString(openStream()); }
+	/**
+	 * Read all data from this resource into a string.
+	 * 
+	 * @return All data inside the resource as a string
+	 * 
+	 * @throws IOException If an I/O error occurs
+	 */
+	public String readToString() throws IOException {
+		try (InputStream in = openStream()) {
+			return new String(in.readAllBytes());
+		}
+	}
 
-	@SuppressWarnings("resource")
-	public String[] readAllLines() throws IOException { return ResourceUtils.toSplitString(openStream()); }
+	/**
+	 * Read all lines from this resource.
+	 * 
+	 * @return All data inside the resource as an array of strings
+	 * 
+	 * @throws IOException If an I/O error occurs
+	 */
+	public String[] readAllLines() throws IOException {
+		return readToString().split("(\\r\\n|\\r|\\n)");
+	}
 
+	/**
+	 * Read this resource as a {@link Properties} file.
+	 * 
+	 * @return Returns the parsed {@link Properties}
+	 * 
+	 * @throws IOException If an I/O error occurs
+	 */
 	public Properties asProperties() throws IOException {
 		Properties properties = new Properties();
 		try (InputStream in = openStream()) {
@@ -83,7 +125,26 @@ public class ModuleResource {
 		return properties;
 	}
 
+	/**
+	 * Get the {@link Module} containing this resource.
+	 * 
+	 * @return The containing {@link Module}
+	 */
+	public Module getModule() {
+		return module;
+	}
+
+	/**
+	 * Get the path to this resource.
+	 * 
+	 * @return Returns the absolute path pointing to this resource
+	 */
+	public String getResourcePath() {
+		return path;
+	}
+
 	@Override
-	@Nonnull
-	public String toString() { return module.getName() + ":" + path; }
+	public String toString() {
+		return module.getName() + ":" + path;
+	}
 }

@@ -1,5 +1,7 @@
 package net.foxgenesis.util;
 
+import java.util.Arrays;
+
 /**
  * Utility class that check the amount of time it takes to run a method
  * 
@@ -7,6 +9,13 @@ package net.foxgenesis.util;
  *
  */
 public final class MethodTimer {
+	
+	public static double runNano(Runnable r) {
+		long n = System.nanoTime();
+		r.run();
+		n = System.nanoTime() - n;
+		return n;
+	}
 	/**
 	 * Time how long it takes to execute {@link Runnable} {@code r}. Time is
 	 * calculated in nano seconds and returned as milliseconds.
@@ -16,9 +25,7 @@ public final class MethodTimer {
 	 * @see #run(Runnable, int)
 	 */
 	public static double run(Runnable r) {
-		long n = System.nanoTime();
-		r.run();
-		return (System.nanoTime() - n) / 1_000_000D;
+		return runNano(r) / 1_000_000D;
 	}
 
 	/**
@@ -31,14 +38,14 @@ public final class MethodTimer {
 	 * @see #run(Runnable)
 	 */
 	public static double run(Runnable r, int n) {
-		long count = 0;
-		double sum = 0;
+		double[] s = new double[n];
 		for (int i = 0; i < n; i++) {
 			System.out.printf("===== Run #%s =====\n", i + 1);
-			sum += run(r);
-			count++;
+			s[i] = runNano(r);
+			System.out.printf("==== %,.2fms ====\n", s[i] / 1_000_000D);
 		}
-		return sum / count;
+		return Arrays.stream(s).reduce((a,b) -> (a + b) / 2D).orElseThrow() / 1_000_000D;
+		//return (sum / n) / 1_000_000D;
 	}
 
 	/**
@@ -179,12 +186,27 @@ public final class MethodTimer {
 	 * NEED_JAVADOC
 	 * 
 	 * @param time
+	 * @return
+	 */
+	public static String formatToMilli(long time) { return formatToMilli(time, 2); }
+
+	/**
+	 * NEED_JAVADOC
+	 * 
+	 * @param time
+	 * @param decimals
+	 * @return
+	 */
+	public static String formatToMilli(long time, int decimals) { return format(time, decimals, 1_000_000D); }
+
+	/**
+	 * NEED_JAVADOC
+	 * 
+	 * @param time
 	 * @param timeOutput
 	 * @return
 	 */
-	public static String formatToSeconds(long time) {
-		return formatToSeconds(time, 2);
-	}
+	public static String formatToSeconds(long time) { return formatToSeconds(time, 2); }
 
 	/**
 	 * NEED_JAVADOC
@@ -194,7 +216,17 @@ public final class MethodTimer {
 	 * @param decimals
 	 * @return
 	 */
-	public static String formatToSeconds(long time, int decimals) {
-		return String.format("%,." + decimals + "f", time / 1_000_000_000D);
+	public static String formatToSeconds(long time, int decimals) { return format(time, decimals, 1_000_000_000D); }
+
+	/**
+	 * NEED_JAVADOC
+	 * 
+	 * @param time
+	 * @param decimals
+	 * @param div
+	 * @return
+	 */
+	public static String format(long time, int decimals, double div) {
+		return String.format("%,." + decimals + "f", time / div);
 	}
 }
