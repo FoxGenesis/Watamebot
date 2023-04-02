@@ -81,7 +81,7 @@ public enum ExitCode {
 	 * 
 	 * </blockquote>
 	 * 
-	 * @see #programExit(String, Throwable)
+	 * @see #programExit(String, Exception)
 	 * @param thrown - Throwable to log
 	 * @throws Exception 
 	 */
@@ -102,7 +102,7 @@ public enum ExitCode {
 	 * </blockquote>
 	 * 
 	 * 
-	 * @see #programExit(String, Throwable)
+	 * @see #programExit(String, Exception)
 	 * @param exitMessage - Exit message to log
 	 * @throws Exception 
 	 */
@@ -122,7 +122,7 @@ public enum ExitCode {
 	 * </blockquote>
 	 * 
 	 * @throws Exception
-	 * @see #programExit(String, Throwable)
+	 * @see #programExit(String, Exception)
 	 */
 	public void programExit() throws Exception { System.exit(getCode()); }
 }

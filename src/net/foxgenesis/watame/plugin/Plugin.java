@@ -346,6 +346,7 @@ public abstract class Plugin {
 	 * <li>Remove event listeners</li>
 	 * <li>{@link Plugin#close()}</li>
 	 * <li>Close databases</li>
+	 * </ul>
 	 * 
 	 * @throws Exception Thrown if an underlying exception is thrown during close
 	 */

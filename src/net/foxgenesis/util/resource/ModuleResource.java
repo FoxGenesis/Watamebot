@@ -49,10 +49,11 @@ public class ModuleResource {
 	 * Create a new {@link ModuleResource} that points to a specified
 	 * {@code resource} inside a {@code module}.
 	 * 
-	 * @param module   - name of the {@link Module} containing the resource
-	 * @param resource - absolute path to the resource
+	 * @param moduleName   - name of the {@link Module} containing the resource
+	 * @param resourcePath - absolute path to the resource
 	 * 
 	 * @throws NullPointerException If the module name or resource name are null
+	 * @throws NoSuchElementException If the module was not found
 	 * 
 	 * @see #ModuleResource(Module, String)
 	 */

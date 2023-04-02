@@ -13,14 +13,15 @@ import javax.annotation.Nonnull;
  * A class that points to a resource inside a module and implements methods to
  * read from it after formatting its data.
  * <p>
- * Properties to format are specified by using a regular expression:<blockquote>
+ * Properties to format are specified by using a regular expression:
+ * </p>
+ * <blockquote>
  * 
  * <pre>
  * \{\{(.*?)}}
  * </pre>
  * 
  * </blockquote>
- * </p>
  * 
  * @author Ashley
  *

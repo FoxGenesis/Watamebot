@@ -3,7 +3,6 @@ package net.foxgenesis.watame;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.sql.SQLException;
 import java.util.concurrent.ForkJoinPool;
 
 import javax.annotation.Nonnull;
@@ -38,8 +37,7 @@ public class Main {
 	 *
 	 * @param args - program arguments
 	 * 
-	 * @throws Throwable
-	 * @throws SQLException
+	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {
 		MDC.put("watame.status", "START-UP");
