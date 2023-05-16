@@ -9,7 +9,7 @@ public class PingCommand extends ListenerAdapter {
 	public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
 		if (event.getName().equals("ping")) {
 			event.deferReply(true).flatMap(e -> e.getJDA().getRestPing())
-					.queue(time -> event.getHook().editOriginal("Pong! (" + "%,.0fms".formatted(time) + ")").queue());
+					.queue(time -> event.getHook().editOriginal("Pong! (" + "%,.0dms".formatted(time) + ")").queue());
 		}
 	}
 }
