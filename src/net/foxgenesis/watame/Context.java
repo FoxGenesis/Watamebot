@@ -3,6 +3,7 @@ package net.foxgenesis.watame;
 import java.io.Closeable;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
@@ -26,9 +27,9 @@ public class Context implements Closeable {
 
 	private final ExecutorService executor;
 
-	public Context(@Nonnull WatameBot bot, @Nonnull JDABuilder builder, @Nonnull ExecutorService executor) {
+	public Context(@Nonnull WatameBot bot, @Nonnull JDABuilder builder, @Nullable ExecutorService executor) {
 		this.bot = Objects.requireNonNull(bot);
-		this.executor = Objects.requireNonNull(executor);
+		this.executor = Objects.requireNonNullElse(executor, ForkJoinPool.commonPool());
 		this.eventStore = new EventStore(builder);
 	}
 
@@ -63,6 +64,10 @@ public class Context implements Closeable {
 
 	@Override
 	public void close() {
+		// The common pool does not need to be manually shutdown
+		if (executor == ForkJoinPool.commonPool())
+			return;
+
 		// We are finished with our executor
 		executor.shutdown();
 

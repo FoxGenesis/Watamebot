@@ -5,11 +5,9 @@ import java.sql.SQLException;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import net.dv8tion.jda.api.entities.Channel;
 import net.dv8tion.jda.api.entities.Guild;
 import net.foxgenesis.config.fields.JSONObjectAdv;
 import net.foxgenesis.util.function.QuadFunction;
@@ -26,13 +24,14 @@ public class GuildData implements IGuildData {
 	 * Link to parent data manager
 	 */
 	@Nonnull
-	private final QuadFunction<String, Object, Guild, Boolean, Integer> consumer;
+	private final QuadFunction<String, Object, Long, Boolean, Integer> consumer;
 
 	/**
 	 * {@link Guild} this instance is based on
 	 */
-	@Nonnull
-	private final Guild guild;
+
+	// private final Guild guild;
+	private final long id;
 
 	/**
 	 * Temporary storage
@@ -45,7 +44,7 @@ public class GuildData implements IGuildData {
 	@SuppressWarnings({ "removal", "deprecation" })
 	private JSONObjectAdv data;
 
-	private boolean setup = false;
+	volatile boolean setup = false;
 
 	/**
 	 * Creates a new instance of {@link GuildData} with a provided guild and the
@@ -54,45 +53,47 @@ public class GuildData implements IGuildData {
 	 * 
 	 * @param guild       - The {@link Guild} that this instance represents
 	 * @param dataManager - the {@link DataManager} that created this instance
+	 * 
+	 * @deprecated
 	 */
-	GuildData(@Nonnull Guild guild, @Nonnull QuadFunction<String, Object, Guild, Boolean, Integer> consumer) {
-		Objects.nonNull(consumer);
-		this.consumer = consumer;
+	@Deprecated(forRemoval = true)
+	GuildData(@Nonnull Guild guild, @Nonnull QuadFunction<String, Object, Long, Boolean, Integer> consumer) {
+		this(guild.getIdLong(), consumer);
+	}
 
-		Objects.nonNull(guild);
-		this.guild = guild;
+	/**
+	 * Creates a new instance of {@link GuildData} referencing the supplied guild id
+	 * and data update consumer. <blockquote><b> *** THIS SHOULD ONLY BE CALLED VIA
+	 * {@link WatameBotDatabase}! *** </blockquote></b>
+	 * 
+	 * @param id       - The guild id that this instance represents
+	 * @param consumer - guild data update consumer
+	 */
+	GuildData(long id, @Nonnull QuadFunction<String, Object, Long, Boolean, Integer> consumer) {
+		this.consumer = Objects.requireNonNull(consumer);
+		this.id = id;
 	}
 
 	@Override
-	public Guild getGuild() {
-		checkSetup();
-		return guild;
+	public long getGuildID() {
+		return id;
 	}
 
 	@Override
 	@Nullable
 	@SuppressWarnings({ "removal", "deprecation" })
 	public JSONObjectAdv getConfig() {
-		checkSetup();
 		return data;
 	}
 
 	@Override
-	@CheckForNull
-	public Channel getLogChannel() {
-		checkSetup();
-		return guild.getTextChannelById(data.optLong("guild.log_channel"));
-	}
-
-	@Override
 	public ConcurrentHashMap<String, Object> getTempData() {
-		checkSetup();
 		return temp;
 	}
 
 	/**
 	 * Sets the data for this instance. <blockquote><b>*** THIS SHOULD ONLY BE
-	 * CALLED VIA {@link DataManager}! ***</b></blockquote>
+	 * CALLED VIA {@link WatameBotDatabase}! ***</b></blockquote>
 	 * 
 	 * @param result - {@link ResultSet} to parse
 	 * 
@@ -101,51 +102,29 @@ public class GuildData implements IGuildData {
 	 *                              a closed result set
 	 * @throws NullPointerException thrown if there is no element passed
 	 * 
-	 * @see #pushJSONUpdate(String, Object, boolean)
+	 * @see WatameBotDatabase#pushJSONUpdate(String, Object, long, boolean)
 	 */
 	@SuppressWarnings({ "removal", "deprecation" })
 	void setData(@Nonnull ResultSet result) throws SQLException {
-		Objects.requireNonNull(result);
-
-		// Check if we have something to parse
-		// if (result.isBeforeFirst())
-		// if (!result.next())
-		// throw new NullPointerException("NO CONFIG IN RESULT SET!");
-
 		// Get our configuration column
 		String jsonString = result.getString("GuildProperties");
 
-		WatameBotDatabase.sqlLogger.debug(WatameBotDatabase.SQL_MARKER, "SetData <- [{}] {}", guild.getName(),
-				jsonString);
+		WatameBotDatabase.sqlLogger.debug(WatameBotDatabase.SQL_MARKER, "SetData <- [{}] {}", id, jsonString);
 
 		if (jsonString == null) {
-			WatameBotDatabase.logger.warn("JSON STRING IS NULL FOR " + guild.getIdLong(),
-					new NullPointerException("JSON STRING IS NULL FOR " + guild.getIdLong()));
+			WatameBotDatabase.logger.warn("JSON STRING IS NULL FOR " + id,
+					new NullPointerException("JSON STRING IS NULL FOR " + id));
 			return;
 		}
 
 		// Set our current data and pass our update method
-		this.data = new JSONObjectAdv(jsonString, (key, obj, remove) -> { consumer.apply(key, obj, guild, remove); });
+		this.data = new JSONObjectAdv(jsonString, (key, obj, remove) -> { consumer.apply(key, obj, id, remove); });
 
 		this.setup = true;
 	}
 
-	private void checkSetup() {
-		if (setup)
-			return;
-
-		// XXX Had to wait a bit for data to be retrieved
-		WatameBotDatabase.logger.debug("Waiting for guild data in {}", guild.getName());
-		long start = System.currentTimeMillis();
-		while (!setup && System.currentTimeMillis() - start < 5000)
-			Thread.onSpinWait();
-
-		if (!setup)
-			throw new UnsupportedOperationException("GuildData has not been setup yet!");
-	}
-
 	@Override
 	public String toString() {
-		return "GiuldData [setup=" + setup + ", guild=" + guild + ", temp=" + temp + ", config=" + data + "]";
+		return "GiuldData [setup=" + setup + ", id=" + id + ", temp=" + temp + ", config=" + data + "]";
 	}
 }

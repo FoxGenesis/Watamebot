@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinPool.ManagedBlocker;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -52,9 +54,14 @@ public class WatameBotDatabase extends AbstractDatabase implements IGuildDataPro
 	 * Register a guild to be loaded during data retrieval.
 	 * 
 	 * @param guild - {@link Guild} to be loaded
+	 * 
 	 * @throws NullPointerException if {@code guild} is {@code null}
+	 * 
 	 * @see #removeGuild(Guild)
+	 * 
+	 * @deprecated
 	 */
+	@Deprecated(forRemoval = true)
 	public void addGuild(@Nonnull Guild guild) {
 		Objects.requireNonNull(guild);
 
@@ -72,9 +79,14 @@ public class WatameBotDatabase extends AbstractDatabase implements IGuildDataPro
 	 * Remove a guild from the data manager.
 	 * 
 	 * @param guild - {@link Guild} to be removed
+	 * 
 	 * @throws NullPointerException if {@code guild} is {@code null}
+	 * 
 	 * @see #addGuild(Guild)
+	 * 
+	 * @deprecated
 	 */
+	@Deprecated(forRemoval = true)
 	public void removeGuild(@Nonnull Guild guild) {
 		Objects.requireNonNull(guild);
 
@@ -89,10 +101,129 @@ public class WatameBotDatabase extends AbstractDatabase implements IGuildDataPro
 	}
 
 	/**
+	 * Register a guild to be loaded during data retrieval.
+	 * 
+	 * <blockquote><b>NOTE:</b> This contains a
+	 * {@link ForkJoinPool.ManagedBlocker}!</blockquote>
+	 * 
+	 * @param id - guild ID to be removed
+	 * 
+	 * @throws IllegalArgumentException if {@code id} is 0
+	 * 
+	 * @see #removeGuild(long)
+	 */
+	public void addGuild(long id) {
+		if (id == 0)
+			throw new IllegalArgumentException("Invalid Guild ID");
+
+		logger.debug("Loading guild [{}]", id);
+		data.computeIfAbsent(id, ID -> new GuildData(id, WatameBotDatabase.this::pushJSONUpdate));
+
+		try {
+			ForkJoinPool.managedBlock(new ManagedBlocker() {
+
+				@Override
+				public boolean block() throws InterruptedException {
+					if (data.containsKey(id) && !data.get(id).setup)
+						return retrieveData(id, 5);
+					return false;
+				}
+
+				@Override
+				public boolean isReleasable() {
+					return data.containsKey(id) && data.get(id).setup;
+				}
+
+			});
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Remove a guild from the data manager.
+	 * 
+	 * @param id - guild ID to be removed
+	 * 
+	 * @throws IllegalArgumentException if {@code id} is 0
+	 * 
+	 * @see #addGuild(long)
+	 */
+	public void removeGuild(long id) {
+		if (id == 0)
+			throw new IllegalArgumentException("Invalid Guild ID");
+
+		logger.debug("Removing guild [{}]", id);
+		this.data.remove(id);
+	}
+
+	/**
+	 * Retrieve guild data for a specific guild.
+	 * 
+	 * @param guildID    - guild ID to retrieve data for
+	 * @param maxRetries - max amount of retries
+	 * 
+	 * @return Returns {@code true} if data was retrieved
+	 */
+	private boolean retrieveData(long guildID, int maxRetries) {
+		return retrieveData(guildID, Math.max(0, maxRetries), 0);
+	}
+
+	/**
+	 * Retrieve guild data for a specific guild.
+	 * 
+	 * @param guildID    - guild ID to retrieve data for
+	 * @param maxRetries - max amount of retries
+	 * @param retry      - current retry
+	 * 
+	 * @return Returns {@code true} if data was retrieved
+	 */
+	private boolean retrieveData(long guildID, int maxRetry, int retry) {
+		return retry > maxRetry ? false : guildID == 0 ? false : this.mapStatement("guild_data_get_id", s -> {
+			s.setLong(1, guildID);
+			sqlLogger.trace(QUERY_MARKER, s.toString());
+
+			try (ResultSet set = s.executeQuery()) {
+				if (set.next()) {
+					long id = set.getLong("GuildID");
+					if (id != 0 && this.data.containsKey(id)) {
+						this.data.get(id).setData(set);
+						return true;
+					}
+				}
+				logger.warn("Guild [{}] is missing in database! Attempting to insert and retrieve...", guildID);
+				return insertGuildInDatabase(guildID) && retrieveData(guildID, maxRetry, retry + 1);
+			}
+		}, e -> sqlLogger.error(QUERY_MARKER, "Error while reading guild", e));
+	}
+
+	/**
+	 * Insert a new row into the database for a {@link Guild}.
+	 * 
+	 * @param guild - guild id to insert
+	 * 
+	 * @return Returns {@code true} if a row was inserted into the database
+	 */
+	private boolean insertGuildInDatabase(long guild) {
+		return guild == 0 ? false : this.mapStatement("guild_data_insert", st -> {
+			st.setLong(1, guild);
+
+			sqlLogger.trace(UPDATE_MARKER, st.toString());
+
+			int result = st.executeUpdate();
+			sqlLogger.debug("Insert Result: ", result);
+			return result > 0;
+		}, e -> sqlLogger.error(QUERY_MARKER, "Error while inserting new guild", e));
+	}
+
+	/**
 	 * Insert a new row into the database for a {@link Guild}.
 	 * 
 	 * @param guild - guild to insert
+	 * 
+	 * @deprecated
 	 */
+	@Deprecated(forRemoval = true)
 	private void insertGuildInDatabase(@Nonnull Guild guild) {
 		Objects.requireNonNull(guild);
 
@@ -109,10 +240,12 @@ public class WatameBotDatabase extends AbstractDatabase implements IGuildDataPro
 	 * Retrieve guild data for a specific guild.
 	 * 
 	 * @param guild - {@link Guild} to retrieve data for
+	 * 
+	 * @deprecated
 	 */
+	@Deprecated(forRemoval = true)
 	private void retrieveData(@Nonnull Guild guild) {
 		Objects.requireNonNull(guild);
-
 		this.prepareStatement("guild_data_get_id", s -> {
 			s.setLong(1, guild.getIdLong());
 			sqlLogger.trace(QUERY_MARKER, s.toString());
@@ -142,16 +275,8 @@ public class WatameBotDatabase extends AbstractDatabase implements IGuildDataPro
 		// Check if database processing is finished
 		if (!isReady())
 			throw new UnsupportedOperationException("Data not ready yet");
-
-		// Check and get guild data
-		if (!data.containsKey(guild.getIdLong())) {
-			// Guild data doesn't exist
-			logger.warn("Attempted to get non existant data for guild {}. Attempting to insert and retrieve data",
-					guild.getId());
-
-			insertGuildInDatabase(guild);
-			retrieveData(guild);
-		}
+		else if (!data.containsKey(guild.getIdLong()))
+			throw new NullPointerException("Data has not been retrieved for guild!");
 
 		return data.get(guild.getIdLong());
 	}
@@ -161,23 +286,29 @@ public class WatameBotDatabase extends AbstractDatabase implements IGuildDataPro
 	 * 
 	 * @param name   - JSON name path
 	 * @param data   - data to set or {@code null} if removing
+	 * @param guild  - guild id
 	 * @param remove - should the data at {@code name} be removed or updated
-	 * @return
+	 * 
+	 * @return Returns the amount of rows changed by this update
+	 * 
 	 * @throws NullPointerException     if {@code name} is {@code null}
 	 * @throws IllegalArgumentException if {@code remove} is {@code true} and
-	 *                                  {@code data} is {@code null}
-	 * @see #setData(ResultSet)
+	 *                                  {@code data} is {@code null} <b>or</b>
+	 *                                  {@code guild} is 0
+	 * 
+	 * @see GuildData#setData(ResultSet)
 	 */
-	private Integer pushJSONUpdate(@Nonnull String name, @Nullable Object data, @Nonnull Guild guild, boolean remove) {
+	private Integer pushJSONUpdate(@Nonnull String name, @Nullable Object data, long guild, boolean remove) {
 		Objects.requireNonNull(name);
-		Objects.requireNonNull(guild);
+		if (guild == 0)
+			throw new IllegalArgumentException("Invalid guild ID");
 
 		int result;
 		if (remove) {
 			result = this.mapStatement("guild_json_remove", removeStatement -> {
 				// Set data and execute update
 				removeStatement.setString(1, "$." + name);
-				removeStatement.setLong(2, guild.getIdLong());
+				removeStatement.setLong(2, guild);
 
 				sqlLogger.debug(UPDATE_MARKER, "PushUpdate -> " + removeStatement);
 
@@ -193,7 +324,7 @@ public class WatameBotDatabase extends AbstractDatabase implements IGuildDataPro
 				// Set data and execute update
 				updateStatement.setString(1, "$." + name);
 				updateStatement.setString(2, data.toString());
-				updateStatement.setLong(3, guild.getIdLong());
+				updateStatement.setLong(3, guild);
 
 				sqlLogger.debug(UPDATE_MARKER, "PushUpdate -> " + updateStatement);
 
@@ -211,7 +342,9 @@ public class WatameBotDatabase extends AbstractDatabase implements IGuildDataPro
 	}
 
 	@Override
-	public boolean isPropertyPresent(@Nonnull String key) { return properties.containsKey(key); }
+	public boolean isPropertyPresent(@Nonnull String key) {
+		return properties.containsKey(key);
+	}
 
 	@Override
 	public void close() {
@@ -224,5 +357,7 @@ public class WatameBotDatabase extends AbstractDatabase implements IGuildDataPro
 
 	@Override
 	@Nonnull
-	public Set<String> keySet() { return Set.copyOf(properties.keySet()); }
+	public Set<String> keySet() {
+		return Set.copyOf(properties.keySet());
+	}
 }

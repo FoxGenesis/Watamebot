@@ -19,7 +19,6 @@ import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.core.joran.spi.JoranException;
 import ch.qos.logback.core.util.StatusPrinter;
 import net.foxgenesis.util.SingleInstanceUtil;
-import net.foxgenesis.util.resource.ModuleResource;
 
 /**
  * Program main class.
@@ -41,7 +40,7 @@ public class Main {
 	 */
 	public static void main(String[] args) throws Exception {
 		MDC.put("watame.status", "START-UP");
-		
+
 		Path configPath = Path.of("config/");
 		String logLevel = null;
 		Path tokenFile = null;
@@ -98,7 +97,7 @@ public class Main {
 		// Attempt to obtain instance lock
 		if (config.getBoolean("SingleInstance.enabled", true))
 			getLock(config.getInt("SingleInstance.retries", 5));
-		
+
 		// Print out our current multi-threading information
 		logger.info("Checking multi-threading");
 		logger.info("CPU Cores: {}  |  Parallelism: {}  |  CommonPool Common Parallelism: {}",
@@ -107,7 +106,7 @@ public class Main {
 
 		// First call of WatameBot class. Will cause instance creation
 		WatameBot watame = WatameBot.INSTANCE;
-		
+
 		System.out.println();
 
 		watame.start();
@@ -144,7 +143,7 @@ public class Main {
 			// Call context.reset() to clear any previous configuration, e.g. default
 			// configuration. For multi-step configuration, omit calling context.reset().
 			context.reset();
-			try (InputStream in = new ModuleResource("watamebot", "/logback.xml").openStream()) {
+			try (InputStream in = Constants.LOGGING_SETTINGS.openStream()) {
 				configurator.doConfigure(in);
 			}
 		} catch (IOException | JoranException e) {

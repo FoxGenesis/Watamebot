@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -117,6 +118,7 @@ public class DatabaseManager implements IDatabaseManager, AutoCloseable {
 	}
 
 	public synchronized CompletableFuture<Void> start(@Nonnull AConnectionProvider provider, Executor executor) {
+		final Executor ex = executor == null? ForkJoinPool.commonPool() : executor;
 		long start = System.nanoTime();
 		return CompletableFuture.runAsync(() -> {
 			this.provider = Objects.requireNonNull(provider);
@@ -138,7 +140,7 @@ public class DatabaseManager implements IDatabaseManager, AutoCloseable {
 					return null;
 				}, error -> logger.error("Error while setting up database tables", error));
 			}
-		}, executor).thenComposeAsync((v) -> {
+		}, ex).thenComposeAsync((v) -> {
 			synchronized (databases) {
 				return CompletableFutureUtils.allOf(databases.values().stream().flatMap(Set::stream)
 						.map(database -> CompletableFuture.runAsync(() -> {
@@ -147,24 +149,24 @@ public class DatabaseManager implements IDatabaseManager, AutoCloseable {
 							} catch (IOException e) {
 								throw new CompletionException(e);
 							}
-						}, executor).exceptionally(e -> {
+						}, ex).exceptionally(e -> {
 							logger.error("Error while setting up " + database.getName(), e);
 							return null;
 						})));
 			}
-		}, executor).thenComposeAsync((v) -> {
+		}, ex).thenComposeAsync((v) -> {
 			logger.debug("Calling database on ready");
 			ready = true;
 			synchronized (databases) {
 				return CompletableFutureUtils.allOf(databases.values().stream().flatMap(Set::stream)
 						.map(database -> CompletableFuture.runAsync(() -> {
 							database.onReady();
-						}, executor).exceptionally(e -> {
+						}, ex).exceptionally(e -> {
 							logger.error("Error while setting up " + database.getName(), e);
 							return null;
 						})));
 			}
-		}, executor).whenComplete((v, err) -> logger.debug("Startup completed in {} seconds",
+		}, ex).whenComplete((v, err) -> logger.debug("Startup completed in {} seconds",
 				MethodTimer.formatToSeconds(System.nanoTime() - start)));
 	}
 
@@ -177,7 +179,7 @@ public class DatabaseManager implements IDatabaseManager, AutoCloseable {
 		synchronized (databases) {
 			logger.debug("Collecting database setup lines");
 			List<String> setupLines = collectDatabaseSetupLines();
-			
+
 			provider.openAutoClosedConnection(connection -> {
 				try (Statement statement = connection.createStatement()) {
 					for (String line : setupLines)

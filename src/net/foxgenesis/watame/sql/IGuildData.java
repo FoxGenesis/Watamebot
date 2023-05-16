@@ -4,8 +4,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.json.JSONObject;
 
-import net.dv8tion.jda.api.entities.Channel;
-import net.dv8tion.jda.api.entities.Guild;
 import net.foxgenesis.config.fields.JSONObjectAdv;
 
 /**
@@ -23,18 +21,11 @@ public interface IGuildData {
 	public ConcurrentHashMap<String, Object> getTempData();
 
 	/**
-	 * Get the channel designated as the log channel.
+	 * Get the guild id this instance represents
 	 * 
-	 * @return A {@link Channel} as designated or {@code null} if none was set
+	 * @return Returns the guld id as a long
 	 */
-	public Channel getLogChannel();
-
-	/**
-	 * Get the {@link Guild} represented by this instance.
-	 * 
-	 * @return The guild used
-	 */
-	public Guild getGuild();
+	public long getGuildID();
 
 	/**
 	 * Get the guild JSON configuration.
@@ -42,6 +33,6 @@ public interface IGuildData {
 	 * @return An extension of a {@link JSONObject} with a set function for updates
 	 *         and removals or {@code null} if no database data has been passed
 	 */
-	@SuppressWarnings({"removal", "deprecation" })
+	@SuppressWarnings({ "removal", "deprecation" })
 	public JSONObjectAdv getConfig();
 }
