@@ -8,9 +8,8 @@ public class PingCommand extends ListenerAdapter {
 	@Override
 	public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
 		if (event.getName().equals("ping")) {
-			event.deferReply(true).queue();
-			event.getJDA().getRestPing()
-					.map(time -> event.getHook().editOriginal("Pong! (" + "%,.0fms".formatted(time) + ")")).queue();
+			event.deferReply(true).flatMap(e -> e.getJDA().getRestPing())
+					.queue(time -> event.getHook().editOriginal("Pong! (" + "%,.0fms".formatted(time) + ")").queue());
 		}
 	}
 }
