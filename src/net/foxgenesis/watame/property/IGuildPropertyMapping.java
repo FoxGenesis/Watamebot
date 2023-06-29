@@ -4,6 +4,7 @@ import org.jetbrains.annotations.Nullable;
 
 import net.dv8tion.jda.api.entities.Category;
 import net.dv8tion.jda.api.entities.Channel;
+import net.dv8tion.jda.api.entities.GuildMessageChannel;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.NewsChannel;
 import net.dv8tion.jda.api.entities.Role;
@@ -19,7 +20,10 @@ public interface IGuildPropertyMapping extends IPropertyMapping {
 
 	@Nullable
 	public Channel getAsChannel();
-	
+
+	@Nullable
+	public GuildMessageChannel getAsMessageChannel();
+
 	@Nullable
 	public TextChannel getAsTextChannel();
 

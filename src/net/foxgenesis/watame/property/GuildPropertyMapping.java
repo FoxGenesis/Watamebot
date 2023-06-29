@@ -8,6 +8,7 @@ import org.json.JSONObject;
 import net.dv8tion.jda.api.entities.Category;
 import net.dv8tion.jda.api.entities.Channel;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.GuildMessageChannel;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.NewsChannel;
 import net.dv8tion.jda.api.entities.Role;
@@ -95,7 +96,9 @@ public class GuildPropertyMapping implements IGuildPropertyMapping {
 
 	@Override
 	@Nullable
-	public NewsChannel getAsNewsChannel() { return guild.getNewsChannelById(getAsLong()); }
+	public GuildMessageChannel getAsMessageChannel() {
+		return guild.getChannelById(GuildMessageChannel.class, getAsLong());
+	}
 
 	@Override
 	@Nullable
