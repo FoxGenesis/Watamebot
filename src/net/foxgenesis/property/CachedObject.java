@@ -6,24 +6,30 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class CachedObject<T> {
 	private final AtomicLong lastUpdated = new AtomicLong();
 	private final long duration;
-	
+
 	private final Supplier<T> supplier;
+
+	@Nullable
 	private T lastObject = null;
 
-	public CachedObject(@Nonnull Supplier<T> supplier, long duration) { this(supplier, duration, false); }
+	public CachedObject(@NotNull Supplier<T> supplier, long duration) {
+		this(supplier, duration, false);
+	}
 
-	public CachedObject(@Nonnull Supplier<T> supplier, long duration, boolean getNow) {
+	public CachedObject(@NotNull Supplier<T> supplier, long duration, boolean getNow) {
 		this.supplier = Objects.requireNonNull(supplier);
 		this.duration = Math.min(0, duration);
 		if (getNow)
 			get();
 	}
 
+	@Nullable
 	public T get() {
 		if (System.currentTimeMillis() - lastUpdated.get() > duration) {
 			T n = supplier.get();
@@ -33,7 +39,8 @@ public class CachedObject<T> {
 		return lastObject;
 	}
 
-	@Nonnull
+	@SuppressWarnings("null")
+	@NotNull
 	public CompletableFuture<T> getAsync() {
 		CompletableFuture<T> cf = new CompletableFuture<>();
 		if (System.currentTimeMillis() - lastUpdated.get() > duration)
@@ -51,8 +58,12 @@ public class CachedObject<T> {
 		lastObject = value;
 	}
 
-	public void invalidate() { lastUpdated.set(0); }
+	public void invalidate() {
+		lastUpdated.set(0);
+	}
 
-	@Nonnull
-	public Duration getExpirationTime() { return Duration.ofMillis(duration); }
+	@NotNull
+	public Duration getExpirationTime() {
+		return Duration.ofMillis(duration);
+	}
 }

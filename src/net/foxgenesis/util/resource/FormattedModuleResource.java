@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A class that points to a resource inside a module and implements methods to
@@ -51,8 +51,8 @@ public class FormattedModuleResource extends ModuleResource {
 	 * @throws NullPointerException If the module name, resource name or mappings
 	 *                              are null
 	 */
-	public FormattedModuleResource(@Nonnull String module, @Nonnull String resource,
-			@Nonnull Map<String, String> mappings) {
+	public FormattedModuleResource(@NotNull String module, @NotNull String resource,
+			@NotNull Map<String, String> mappings) {
 		super(module, resource);
 		this.mappings = Objects.requireNonNull(mappings);
 	}

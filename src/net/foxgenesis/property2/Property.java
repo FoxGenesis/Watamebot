@@ -1,32 +1,32 @@
 package net.foxgenesis.property2;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 public interface Property<L> extends ImmutableProperty<L> {
 
-	public boolean putString(@Nonnull L lookup, @Nonnull String value);
+	public boolean putString(@NotNull L lookup, @NotNull String value);
 
-	public boolean putBoolean(@Nonnull L lookup, boolean value);
+	public boolean putBoolean(@NotNull L lookup, boolean value);
 
-	public boolean putInt(@Nonnull L lookup, int value);
+	public boolean putInt(@NotNull L lookup, int value);
 
-	public boolean putFloat(@Nonnull L lookup, float value);
+	public boolean putFloat(@NotNull L lookup, float value);
 
-	public boolean putDouble(@Nonnull L lookup, double value);
+	public boolean putDouble(@NotNull L lookup, double value);
 
-	public boolean putLong(@Nonnull L lookup, long value);
+	public boolean putLong(@NotNull L lookup, long value);
 
-	public boolean putStringArray(@Nonnull L lookup, @Nonnull String[] arr);
+	public boolean putStringArray(@NotNull L lookup, @NotNull String[] arr);
 
-	public boolean putBooleanArray(@Nonnull L lookup, @Nonnull boolean[] arr);
+	public boolean putBooleanArray(@NotNull L lookup, boolean[] arr);
 
-	public boolean putIntArray(@Nonnull L lookup, @Nonnull int[] arr);
+	public boolean putIntArray(@NotNull L lookup, int[] arr);
 
-	public boolean putFloatArray(@Nonnull L lookup, @Nonnull float[] arr);
+	public boolean putFloatArray(@NotNull L lookup, float[] arr);
 
-	public boolean putDoubleArray(@Nonnull L lookup, @Nonnull double[] arr);
+	public boolean putDoubleArray(@NotNull L lookup, double[] arr);
 
-	public boolean putLongArray(@Nonnull L lookup, @Nonnull long[] arr);
+	public boolean putLongArray(@NotNull L lookup, long[] arr);
 
-	public boolean remove(@Nonnull L lookup);
+	public boolean remove(@NotNull L lookup);
 }

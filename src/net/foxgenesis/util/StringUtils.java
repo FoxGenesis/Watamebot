@@ -2,15 +2,14 @@ package net.foxgenesis.util;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Utility class for Strings
@@ -57,12 +56,13 @@ public final class StringUtils {
 	 * Find all URLs within a String and split its components into groups.
 	 * 
 	 * @param str - String to check
+	 * 
 	 * @return A {@link Stream} of {@link MatchResult MatchResults} containing URL
 	 *         groups: {@code protocol}({@code 1}), {@code domain}({@code 2}) and
 	 *         {@code path}({@code 3})
 	 */
-	@Nonnull
-	public static Stream<MatchResult> findURLWithGroups(@Nonnull String str) {
+	@NotNull
+	public static Stream<MatchResult> findURLWithGroups(@NotNull String str) {
 		return PATTERN_URL_WITH_GROUPING.matcher(str).results();
 	}
 
@@ -70,10 +70,13 @@ public final class StringUtils {
 	 * Find all occurrences of a {@link URL} in the given string.
 	 * 
 	 * @param str - string to check
+	 * 
 	 * @return Returns a {@link Stream} of {@link URL URLs}
 	 */
-	@Nonnull
-	public static Stream<URL> findURLs(@Nonnull String str) { return findURLs(str, null); }
+	@NotNull
+	public static Stream<URL> findURLs(@NotNull String str) {
+		return findURLs(str, null);
+	}
 
 	/**
 	 * Find all occurrences of a {@link URL} in the given string. All
@@ -82,19 +85,22 @@ public final class StringUtils {
 	 * 
 	 * @param str          - string to check
 	 * @param errorHandler - possibly {@code null} error handler
+	 * 
 	 * @return Returns a {@link Stream} of {@link URL URLs}
 	 */
-	@Nonnull
-	public static Stream<URL> findURLs(@Nonnull String str, @Nullable Consumer<Exception> errorHandler) {
-		return PATTERN_URL.matcher(str).results().map(result -> result.group()).filter(s -> !s.isBlank()).map(t -> {
-			try {
-				return new URL(t);
-			} catch (MalformedURLException e) {
-				if (errorHandler != null)
-					errorHandler.accept(e);
-				return null;
-			}
-		}).filter(Objects::nonNull);
+	@NotNull
+	public static Stream<URL> findURLs(@NotNull String str, @Nullable Consumer<Exception> errorHandler) {
+		Stream<@Nullable URL> stream = PATTERN_URL.matcher(str).results().map(result -> result.group())
+				.filter(s -> !s.isBlank()).map(t -> {
+					try {
+						return new URL(t);
+					} catch (MalformedURLException e) {
+						if (errorHandler != null)
+							errorHandler.accept(e);
+						return null;
+					}
+				});
+		return stream.filter(url -> url != null);
 	}
 
 	// ================================= MISC =====================================
@@ -104,6 +110,7 @@ public final class StringUtils {
 	 * 
 	 * @param str    - string to limit
 	 * @param length - length limit
+	 * 
 	 * @return Returns a {@link String} that does not exceed the given
 	 *         {@code length}
 	 */

@@ -2,10 +2,8 @@ package net.foxgenesis.watame.property;
 
 import java.util.Objects;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
 import net.dv8tion.jda.api.entities.Guild;
@@ -25,8 +23,8 @@ public class GuildProperty implements IProperty<String, Guild, IGuildPropertyMap
 	}
 
 	@Override
-	@CheckForNull
-	public IGuildPropertyMapping get(@Nonnull Guild from) {
+	@Nullable
+	public IGuildPropertyMapping get(@NotNull Guild from) {
 		Objects.requireNonNull(from);
 
 		JSONObject data = getData(from);
@@ -48,20 +46,30 @@ public class GuildProperty implements IProperty<String, Guild, IGuildPropertyMap
 	}
 
 	@Override
-	@Nonnull
-	public String getKey() { return key; }
+	@NotNull
+	public String getKey() {
+		return key;
+	}
 
 	@Override
-	public boolean isEditable() { return true; }
+	public boolean isEditable() {
+		return true;
+	}
 
 	@Override
-	public boolean isPresent(Guild from) { return getData(from).has(key); }
+	public boolean isPresent(Guild from) {
+		return getData(from).has(key);
+	}
 
 	@SuppressWarnings("removal")
-	private JSONObjectAdv getData(Guild from) { return database.getDataForGuild(from).getConfig(); }
+	private JSONObjectAdv getData(Guild from) {
+		return database.getDataForGuild(from).getConfig();
+	}
 
 	@Override
-	public int hashCode() { return Objects.hash(database, key); }
+	public int hashCode() {
+		return Objects.hash(database, key);
+	}
 
 	@Override
 	public boolean equals(@Nullable Object obj) {
@@ -76,5 +84,7 @@ public class GuildProperty implements IProperty<String, Guild, IGuildPropertyMap
 	}
 
 	@Override
-	public String toString() { return "GuildProperty [key=" + key + ", database=" + database + "]"; }
+	public String toString() {
+		return "GuildProperty [key=" + key + ", database=" + database + "]";
+	}
 }

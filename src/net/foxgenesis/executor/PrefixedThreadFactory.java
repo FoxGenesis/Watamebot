@@ -4,19 +4,20 @@ import java.util.Objects;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 public class PrefixedThreadFactory implements ThreadFactory {
 	private final AtomicLong count = new AtomicLong(1);
 
-	@Nonnull
+	@NotNull
 	private final String prefix;
 	
 	private final boolean daemon;
 
-	public PrefixedThreadFactory(@Nonnull String prefix) { this(prefix, true); }
+	public PrefixedThreadFactory(@NotNull String prefix) { this(prefix, true); }
 
-	public PrefixedThreadFactory(@Nonnull String prefix, boolean daemon) {
+	@SuppressWarnings("null")
+	public PrefixedThreadFactory(@NotNull String prefix, boolean daemon) {
 		this.prefix = Objects.requireNonNull(prefix);
 		this.daemon = daemon;
 	}
@@ -28,7 +29,7 @@ public class PrefixedThreadFactory implements ThreadFactory {
 		return thread;
 	}
 
-	@Nonnull
+	@NotNull
 	public String getPrefix() { return prefix; }
 
 	public boolean isDaemon() { return daemon; }

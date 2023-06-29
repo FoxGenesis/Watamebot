@@ -3,16 +3,15 @@ package net.foxgenesis.executor;
 import java.util.Objects;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
-
-import javax.annotation.Nonnull;
-
 import java.util.concurrent.ForkJoinWorkerThread;
 
+import org.jetbrains.annotations.NotNull;
+
 public class PrefixedForkJoinPoolFactory implements ForkJoinWorkerThreadFactory {
-	@Nonnull
+	@NotNull
 	private final String prefix;
 
-	public PrefixedForkJoinPoolFactory(@Nonnull String prefix) {
+	public PrefixedForkJoinPoolFactory(@NotNull String prefix) {
 		this.prefix = Objects.requireNonNull(prefix);
 	}
 
@@ -23,7 +22,7 @@ public class PrefixedForkJoinPoolFactory implements ForkJoinWorkerThreadFactory 
 		return worker;
 	}
 
-	@Nonnull
+	@NotNull
 	public String getPrefix() {
 		return prefix;
 	}

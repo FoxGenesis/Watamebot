@@ -9,7 +9,7 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Properties;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A class that points to a resource inside a module and implements methods to
@@ -40,7 +40,7 @@ public class ModuleResource {
 	 * 
 	 * @see #ModuleResource(String, String)
 	 */
-	public ModuleResource(@Nonnull Module module, @Nonnull String resource) {
+	public ModuleResource(@NotNull Module module, @NotNull String resource) {
 		this.module = Objects.requireNonNull(module);
 		this.path = Objects.requireNonNull(resource);
 	}
@@ -52,12 +52,12 @@ public class ModuleResource {
 	 * @param moduleName   - name of the {@link Module} containing the resource
 	 * @param resourcePath - absolute path to the resource
 	 * 
-	 * @throws NullPointerException If the module name or resource name are null
+	 * @throws NullPointerException   If the module name or resource name are null
 	 * @throws NoSuchElementException If the module was not found
 	 * 
 	 * @see #ModuleResource(Module, String)
 	 */
-	public ModuleResource(@Nonnull String moduleName, @Nonnull String resourcePath) throws NoSuchElementException {
+	public ModuleResource(@NotNull String moduleName, @NotNull String resourcePath) throws NoSuchElementException {
 		this(ModuleLayer.boot().findModule(moduleName)
 				.orElseThrow(() -> new NoSuchElementException("No module found '" + moduleName + "'")), resourcePath);
 	}
@@ -81,7 +81,7 @@ public class ModuleResource {
 	 * 
 	 * @throws IOException If an I/O error occurs when reading or writing
 	 */
-	public void writeToFile(@Nonnull Path path, CopyOption... options) throws IOException {
+	public void writeToFile(@NotNull Path path, CopyOption... options) throws IOException {
 		try (InputStream in = openStream()) {
 			Files.copy(in, path, options);
 		}

@@ -11,10 +11,9 @@ import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import org.apache.commons.lang3.ArrayUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import net.foxgenesis.database.AbstractDatabase;
 import net.foxgenesis.property2.PropertyType;
@@ -56,7 +55,7 @@ public abstract class ConfigurationDatabase<L> extends AbstractDatabase implemen
 	 * @param table
 	 * @param service
 	 */
-	public ConfigurationDatabase(@Nonnull String name, @Nonnull String database, @Nonnull String table,
+	public ConfigurationDatabase(@NotNull String name, @NotNull String database, @NotNull String table,
 			@Nullable ExecutorService service) {
 		super(name,
 				new FormattedModuleResource("watamebot", "/META-INF/configDatabase/statements.kvp",
@@ -75,7 +74,7 @@ public abstract class ConfigurationDatabase<L> extends AbstractDatabase implemen
 	 * @param database
 	 * @param table
 	 */
-	public ConfigurationDatabase(@Nonnull String name, @Nonnull String database, @Nonnull String table) {
+	public ConfigurationDatabase(@NotNull String name, @NotNull String database, @NotNull String table) {
 		this(name, database, table, null);
 	}
 
@@ -87,13 +86,15 @@ public abstract class ConfigurationDatabase<L> extends AbstractDatabase implemen
 	 * @param lookup  - property lookup
 	 * @param key     - property key
 	 * @param service - executor service
+	 * 
 	 * @return Returns a future that, upon completion, will return {@code true} if
 	 *         the property was successfully removed from the database
+	 * 
 	 * @see #putInternalAsync(Object, String, String, ExecutorService)
 	 * @see #getInternalAsync(Object, String, ExecutorService)
 	 */
-	@Nonnull
-	protected CompletableFuture<Boolean> removeInternalAsync(@Nonnull L lookup, @Nonnull String key,
+	@NotNull
+	protected CompletableFuture<Boolean> removeInternalAsync(@NotNull L lookup, @NotNull String key,
 			@Nullable ExecutorService service) {
 		return CompletableFuture.supplyAsync(() -> removeInternal(lookup, key), screenExecutor(service));
 	}
@@ -105,13 +106,15 @@ public abstract class ConfigurationDatabase<L> extends AbstractDatabase implemen
 	 * @param key     - property key
 	 * @param value   - value to insert
 	 * @param service - executor service
+	 * 
 	 * @return Returns a future that, upon completion, will return {@code true} if
 	 *         the property was successfully added/updated in the database
+	 * 
 	 * @see #removeInternalAsync(Object, String, ExecutorService)
 	 * @see #getInternalAsync(Object, String, ExecutorService)
 	 */
-	@Nonnull
-	protected CompletableFuture<Boolean> putInternalAsync(@Nonnull L lookup, @Nonnull String key, @Nonnull String value,
+	@NotNull
+	protected CompletableFuture<Boolean> putInternalAsync(@NotNull L lookup, @NotNull String key, @NotNull String value,
 			@Nullable ExecutorService service) {
 		return CompletableFuture.supplyAsync(() -> putInternal(lookup, key, value), screenExecutor(service));
 	}
@@ -126,13 +129,15 @@ public abstract class ConfigurationDatabase<L> extends AbstractDatabase implemen
 	 * @param key     - property key
 	 * @param value   - value supplier
 	 * @param service - executor service
+	 * 
 	 * @return Returns the same as
 	 *         {@link #putInternalAsync(Object, String, String, ExecutorService)}
+	 * 
 	 * @see #putInternalAsync(Object, String, String, ExecutorService)
 	 */
-	@Nonnull
-	private CompletableFuture<Boolean> putInternalAsync(@Nonnull L lookup, @Nonnull String key,
-			@Nonnull Supplier<String> value, @Nullable ExecutorService service) {
+	@NotNull
+	private CompletableFuture<Boolean> putInternalAsync(@NotNull L lookup, @NotNull String key,
+			@NotNull Supplier<String> value, @Nullable ExecutorService service) {
 		return CompletableFuture.supplyAsync(value, screenExecutor(service))
 				.thenCompose(v -> putInternalAsync(lookup, key, v, service));
 	}
@@ -143,12 +148,14 @@ public abstract class ConfigurationDatabase<L> extends AbstractDatabase implemen
 	 * @param lookup  - property lookup
 	 * @param key     - property key
 	 * @param service - executor service
+	 * 
 	 * @return Returns a future {@link Optional} containing raw value data
+	 * 
 	 * @see #removeInternalAsync(Object, String, ExecutorService)
 	 * @see #putInternalAsync(Object, String, String, ExecutorService)
 	 */
-	@Nonnull
-	protected CompletableFuture<Optional<String>> getInternalAsync(@Nonnull L lookup, @Nonnull String key,
+	@NotNull
+	protected CompletableFuture<Optional<String>> getInternalAsync(@NotNull L lookup, @NotNull String key,
 			@Nullable ExecutorService service) {
 		return CompletableFuture.supplyAsync(() -> getInternal(lookup, key), screenExecutor(service));
 	}
@@ -162,13 +169,15 @@ public abstract class ConfigurationDatabase<L> extends AbstractDatabase implemen
 	 * @param delimeter - delimiter used to separate values in the array
 	 * @param arr       - array to insert
 	 * @param service   - executor service
+	 * 
 	 * @return Returns {@code true} if array was successfully inserted inside the
 	 *         database
+	 * 
 	 * @see #getArrayInternal(Long, String, String, Function, IntFunction)
 	 */
-	@Nonnull
-	protected <T> CompletableFuture<Boolean> putArrayInternalAsync(@Nonnull L lookup, @Nonnull String key,
-			@Nonnull String delimeter, @Nonnull T[] arr, @Nullable ExecutorService service) {
+	@NotNull
+	protected <T> CompletableFuture<Boolean> putArrayInternalAsync(@NotNull L lookup, @NotNull String key,
+			@NotNull String delimeter, @NotNull T[] arr, @Nullable ExecutorService service) {
 		if (arr.length == 0)
 			return CompletableFuture.failedFuture(new IllegalArgumentException("Array must not be empty!"));
 
@@ -186,195 +195,197 @@ public abstract class ConfigurationDatabase<L> extends AbstractDatabase implemen
 	 * @param map     - function to map array entries to array data type
 	 * @param arr     - function used to generate a new array
 	 * @param service - executor service
+	 * 
 	 * @return Returns an {@link Optional} containing a <b>nullable</b> array of
 	 *         values
+	 * 
 	 * @see #putArrayInternal(Long, String, String, Object[])
 	 */
-	@Nonnull
-	protected <T> CompletableFuture<Optional<T[]>> getArrayInternalAsync(@Nonnull L lookup, @Nonnull String key,
-			@Nonnull String regex, @Nonnull Function<String, T> map, @Nonnull IntFunction<T[]> arr,
+	@NotNull
+	protected <T> CompletableFuture<Optional<T[]>> getArrayInternalAsync(@NotNull L lookup, @NotNull String key,
+			@NotNull String regex, @NotNull Function<String, T> map, @NotNull IntFunction<T[]> arr,
 			@Nullable ExecutorService service) {
 		return getInternalAsync(lookup, key, service).thenApplyAsync(
 				o -> o.map(str -> Arrays.stream(str.split(regex)).map(map).toArray(arr)), screenExecutor(service));
 	}
 
 	@Override
-	@Nonnull
-	public CompletableFuture<Optional<String>> getStringAsync(@Nonnull L lookup, @Nonnull String key,
+	@NotNull
+	public CompletableFuture<Optional<String>> getStringAsync(@NotNull L lookup, @NotNull String key,
 			@Nullable ExecutorService service) {
 		return getInternalAsync(lookup, key, service);
 	}
 
 	@Override
-	@Nonnull
-	public CompletableFuture<Optional<Boolean>> getBooleanAsync(@Nonnull L lookup, @Nonnull String key,
+	@NotNull
+	public CompletableFuture<Optional<Boolean>> getBooleanAsync(@NotNull L lookup, @NotNull String key,
 			@Nullable ExecutorService service) {
 		return getInternalAsync(lookup, key, service).thenApply(o -> o.map(Boolean::parseBoolean));
 	}
 
 	@Override
-	@Nonnull
-	public CompletableFuture<Optional<Integer>> getIntAsync(@Nonnull L lookup, @Nonnull String key,
+	@NotNull
+	public CompletableFuture<Optional<Integer>> getIntAsync(@NotNull L lookup, @NotNull String key,
 			@Nullable ExecutorService service) {
 		return getInternalAsync(lookup, key, service).thenApply(o -> o.map(Integer::parseInt));
 	}
 
 	@Override
-	@Nonnull
-	public CompletableFuture<Optional<Float>> getFloatAsync(@Nonnull L lookup, @Nonnull String key,
+	@NotNull
+	public CompletableFuture<Optional<Float>> getFloatAsync(@NotNull L lookup, @NotNull String key,
 			@Nullable ExecutorService service) {
 		return getInternalAsync(lookup, key, service).thenApply(o -> o.map(Float::parseFloat));
 	}
 
 	@Override
-	@Nonnull
-	public CompletableFuture<Optional<Double>> getDoubleAsync(@Nonnull L lookup, @Nonnull String key,
+	@NotNull
+	public CompletableFuture<Optional<Double>> getDoubleAsync(@NotNull L lookup, @NotNull String key,
 			@Nullable ExecutorService service) {
 		return getInternalAsync(lookup, key, service).thenApply(o -> o.map(Double::parseDouble));
 	}
 
 	@Override
-	@Nonnull
-	public CompletableFuture<Optional<Long>> getLongAsync(@Nonnull L lookup, @Nonnull String key,
+	@NotNull
+	public CompletableFuture<Optional<Long>> getLongAsync(@NotNull L lookup, @NotNull String key,
 			@Nullable ExecutorService service) {
 		return getInternalAsync(lookup, key, service).thenApply(o -> o.map(Long::parseLong));
 	}
 
 	@Override
-	@Nonnull
-	public CompletableFuture<Optional<String[]>> getStringArrayAsync(@Nonnull L lookup, @Nonnull String key,
-			@Nonnull String regex, @Nullable ExecutorService service) {
+	@NotNull
+	public CompletableFuture<Optional<String[]>> getStringArrayAsync(@NotNull L lookup, @NotNull String key,
+			@NotNull String regex, @Nullable ExecutorService service) {
 		return getArrayInternalAsync(lookup, key, regex, Function.identity(), String[]::new, service);
 	}
 
 	@Override
-	@Nonnull
-	public CompletableFuture<Optional<Boolean[]>> getBooleanArrayAsync(@Nonnull L lookup, @Nonnull String key,
-			@Nonnull String regex, @Nullable ExecutorService service) {
+	@NotNull
+	public CompletableFuture<Optional<Boolean[]>> getBooleanArrayAsync(@NotNull L lookup, @NotNull String key,
+			@NotNull String regex, @Nullable ExecutorService service) {
 		return getArrayInternalAsync(lookup, key, regex, Boolean::parseBoolean, Boolean[]::new, service);
 	}
 
 	@Override
-	@Nonnull
-	public CompletableFuture<Optional<Integer[]>> getIntArrayAsync(@Nonnull L lookup, @Nonnull String key,
-			@Nonnull String regex, @Nullable ExecutorService service) {
+	@NotNull
+	public CompletableFuture<Optional<Integer[]>> getIntArrayAsync(@NotNull L lookup, @NotNull String key,
+			@NotNull String regex, @Nullable ExecutorService service) {
 		return getArrayInternalAsync(lookup, key, regex, Integer::parseInt, Integer[]::new, service);
 	}
 
 	@Override
-	@Nonnull
-	public CompletableFuture<Optional<Float[]>> getFloatArrayAsync(@Nonnull L lookup, @Nonnull String key,
-			@Nonnull String regex, @Nullable ExecutorService service) {
+	@NotNull
+	public CompletableFuture<Optional<Float[]>> getFloatArrayAsync(@NotNull L lookup, @NotNull String key,
+			@NotNull String regex, @Nullable ExecutorService service) {
 		return getArrayInternalAsync(lookup, key, regex, Float::parseFloat, Float[]::new, service);
 	}
 
 	@Override
-	@Nonnull
-	public CompletableFuture<Optional<Double[]>> getDoubleArrayAsync(@Nonnull L lookup, @Nonnull String key,
-			@Nonnull String regex, @Nullable ExecutorService service) {
+	@NotNull
+	public CompletableFuture<Optional<Double[]>> getDoubleArrayAsync(@NotNull L lookup, @NotNull String key,
+			@NotNull String regex, @Nullable ExecutorService service) {
 		return getArrayInternalAsync(lookup, key, regex, Double::parseDouble, Double[]::new, service);
 	}
 
 	@Override
-	@Nonnull
-	public CompletableFuture<Optional<Long[]>> getLongArrayAsync(@Nonnull L lookup, @Nonnull String key,
-			@Nonnull String regex, @Nullable ExecutorService service) {
+	@NotNull
+	public CompletableFuture<Optional<Long[]>> getLongArrayAsync(@NotNull L lookup, @NotNull String key,
+			@NotNull String regex, @Nullable ExecutorService service) {
 		return getArrayInternalAsync(lookup, key, regex, Long::parseLong, Long[]::new, service);
 	}
 
 	@Override
-	@Nonnull
-	public CompletableFuture<Boolean> putStringAsync(@Nonnull L lookup, @Nonnull String key, @Nonnull String value,
+	@NotNull
+	public CompletableFuture<Boolean> putStringAsync(@NotNull L lookup, @NotNull String key, @NotNull String value,
 			@Nullable ExecutorService service) {
 		return putInternalAsync(lookup, key, value, service);
 	}
 
 	@Override
-	@Nonnull
-	public CompletableFuture<Boolean> putBooleanAsync(@Nonnull L lookup, @Nonnull String key, boolean value,
+	@NotNull
+	public CompletableFuture<Boolean> putBooleanAsync(@NotNull L lookup, @NotNull String key, boolean value,
 			@Nullable ExecutorService service) {
 		return putInternalAsync(lookup, key, "" + value, service);
 	}
 
 	@Override
-	@Nonnull
-	public CompletableFuture<Boolean> putIntAsync(@Nonnull L lookup, @Nonnull String key, int value,
+	@NotNull
+	public CompletableFuture<Boolean> putIntAsync(@NotNull L lookup, @NotNull String key, int value,
 			@Nullable ExecutorService service) {
 		return putInternalAsync(lookup, key, "" + value, service);
 	}
 
 	@Override
-	@Nonnull
-	public CompletableFuture<Boolean> putFloatAsync(@Nonnull L lookup, @Nonnull String key, float value,
+	@NotNull
+	public CompletableFuture<Boolean> putFloatAsync(@NotNull L lookup, @NotNull String key, float value,
 			@Nullable ExecutorService service) {
 		return putInternalAsync(lookup, key, "" + value, service);
 	}
 
 	@Override
-	@Nonnull
-	public CompletableFuture<Boolean> putDoubleAsync(@Nonnull L lookup, @Nonnull String key, double value,
+	@NotNull
+	public CompletableFuture<Boolean> putDoubleAsync(@NotNull L lookup, @NotNull String key, double value,
 			@Nullable ExecutorService service) {
 		return putInternalAsync(lookup, key, "" + value, service);
 	}
 
 	@Override
-	@Nonnull
-	public CompletableFuture<Boolean> putLongAsync(@Nonnull L lookup, @Nonnull String key, long value,
+	@NotNull
+	public CompletableFuture<Boolean> putLongAsync(@NotNull L lookup, @NotNull String key, long value,
 			@Nullable ExecutorService service) {
 		return putInternalAsync(lookup, key, "" + value, service);
 	}
 
 	@Override
-	@Nonnull
-	public CompletableFuture<Boolean> putStringArrayAsync(@Nonnull L lookup, @Nonnull String key,
-			@Nonnull String delimeter, @Nonnull String[] arr, @Nullable ExecutorService service) {
+	@NotNull
+	public CompletableFuture<Boolean> putStringArrayAsync(@NotNull L lookup, @NotNull String key,
+			@NotNull String delimeter, @NotNull String[] arr, @Nullable ExecutorService service) {
 		return putArrayInternalAsync(lookup, key, delimeter, arr, service);
 	}
 
 	@Override
-	@Nonnull
-	public CompletableFuture<Boolean> putBooleanArrayAsync(@Nonnull L lookup, @Nonnull String key,
-			@Nonnull String delimeter, @Nonnull boolean[] arr, @Nullable ExecutorService service) {
+	@NotNull
+	public CompletableFuture<Boolean> putBooleanArrayAsync(@NotNull L lookup, @NotNull String key,
+			@NotNull String delimeter, boolean[] arr, @Nullable ExecutorService service) {
 		return putArrayInternalAsync(lookup, key, delimeter, ArrayUtils.toObject(arr), service);
 	}
 
 	@Override
-	@Nonnull
-	public CompletableFuture<Boolean> putIntArrayAsync(@Nonnull L lookup, @Nonnull String key,
-			@Nonnull String delimeter, @Nonnull int[] arr, @Nullable ExecutorService service) {
+	@NotNull
+	public CompletableFuture<Boolean> putIntArrayAsync(@NotNull L lookup, @NotNull String key,
+			@NotNull String delimeter, int[] arr, @Nullable ExecutorService service) {
 		return putArrayInternalAsync(lookup, key, delimeter, ArrayUtils.toObject(arr), service);
 	}
 
 	@Override
-	@Nonnull
-	public CompletableFuture<Boolean> putFloatArrayAsync(@Nonnull L lookup, @Nonnull String key,
-			@Nonnull String delimeter, @Nonnull float[] arr, @Nullable ExecutorService service) {
+	@NotNull
+	public CompletableFuture<Boolean> putFloatArrayAsync(@NotNull L lookup, @NotNull String key,
+			@NotNull String delimeter, float[] arr, @Nullable ExecutorService service) {
 		return putArrayInternalAsync(lookup, key, delimeter, ArrayUtils.toObject(arr), service);
 	}
 
 	@Override
-	@Nonnull
-	public CompletableFuture<Boolean> putDoubleArrayAsync(@Nonnull L lookup, @Nonnull String key,
-			@Nonnull String delimeter, @Nonnull double[] arr, @Nullable ExecutorService service) {
+	@NotNull
+	public CompletableFuture<Boolean> putDoubleArrayAsync(@NotNull L lookup, @NotNull String key,
+			@NotNull String delimeter, double[] arr, @Nullable ExecutorService service) {
 		return putArrayInternalAsync(lookup, key, delimeter, ArrayUtils.toObject(arr), service);
 	}
 
 	@Override
-	@Nonnull
-	public CompletableFuture<Boolean> putLongArrayAsync(@Nonnull L lookup, @Nonnull String key,
-			@Nonnull String delimeter, @Nonnull long[] arr, @Nullable ExecutorService service) {
+	@NotNull
+	public CompletableFuture<Boolean> putLongArrayAsync(@NotNull L lookup, @NotNull String key,
+			@NotNull String delimeter, long[] arr, @Nullable ExecutorService service) {
 		return putArrayInternalAsync(lookup, key, delimeter, ArrayUtils.toObject(arr), service);
 	}
 
 	@Override
-	@Nonnull
-	public CompletableFuture<Boolean> removeAsync(@Nonnull L lookup, @Nonnull String key,
+	@NotNull
+	public CompletableFuture<Boolean> removeAsync(@NotNull L lookup, @NotNull String key,
 			@Nullable ExecutorService service) {
 		return removeInternalAsync(lookup, key, service);
 	}
 
 	@Override
-	@Nonnull
+	@NotNull
 	public CompletableFuture<PropertyType> typeOfAsync(L lookup, String key, ExecutorService service) {
 		return CompletableFuture.completedFuture(PropertyType.STRING);
 	}
@@ -386,12 +397,14 @@ public abstract class ConfigurationDatabase<L> extends AbstractDatabase implemen
 	 * 
 	 * @param lookup - property lookup
 	 * @param key    - property key
+	 * 
 	 * @return Returns {@code true} if the property was successfully removed from
 	 *         the database
+	 * 
 	 * @see #putInternal(long, String, String)
 	 * @see #getInternal(long, String)
 	 */
-	protected abstract boolean removeInternal(@Nonnull L lookup, @Nonnull String key);
+	protected abstract boolean removeInternal(@NotNull L lookup, @NotNull String key);
 
 	/**
 	 * Put/Update an internal property inside the database.
@@ -399,24 +412,28 @@ public abstract class ConfigurationDatabase<L> extends AbstractDatabase implemen
 	 * @param lookup - property lookup
 	 * @param key    - property key
 	 * @param value  - value to insert
+	 * 
 	 * @return Returns {@code true} if the property was successfully added/updated
 	 *         in the database
+	 * 
 	 * @see #removeInternal(long, String)
 	 * @see #getInternal(long, String)
 	 */
-	protected abstract boolean putInternal(@Nonnull L lookup, @Nonnull String key, @Nonnull String value);
+	protected abstract boolean putInternal(@NotNull L lookup, @NotNull String key, @NotNull String value);
 
 	/**
 	 * Get an internal property inside the database.
 	 * 
 	 * @param lookup - property lookup
 	 * @param key    - property key
+	 * 
 	 * @return Returns an {@link Optional} containing raw value data
+	 * 
 	 * @see #removeInternal(long, String)
 	 * @see #putInternal(long, String, String)
 	 */
-	@Nonnull
-	protected abstract Optional<String> getInternal(@Nonnull L lookup, @Nonnull String key);
+	@NotNull
+	protected abstract Optional<String> getInternal(@NotNull L lookup, @NotNull String key);
 
 	/**
 	 * Put an array inside the database.
@@ -426,12 +443,14 @@ public abstract class ConfigurationDatabase<L> extends AbstractDatabase implemen
 	 * @param key       - property key
 	 * @param delimeter - delimiter used to separate values in the array
 	 * @param arr       - array to insert
+	 * 
 	 * @return Returns {@code true} if array was successfully inserted inside the
 	 *         database
+	 * 
 	 * @see #getArrayInternal(Long, String, String, Function, IntFunction)
 	 */
-	protected <T> boolean putArrayInternal(@Nonnull L lookup, @Nonnull String key, @Nonnull String delimeter,
-			@Nonnull T[] arr) {
+	protected <T> boolean putArrayInternal(@NotNull L lookup, @NotNull String key, @NotNull String delimeter,
+			@NotNull T[] arr) {
 		if (arr.length == 0)
 			throw new IllegalArgumentException("Array must not be empty!");
 
@@ -448,157 +467,161 @@ public abstract class ConfigurationDatabase<L> extends AbstractDatabase implemen
 	 * @param regex  - delimiter used to separate values
 	 * @param map    - function to map array entries to array data type
 	 * @param arr    - function used to generate a new array
+	 * 
 	 * @return Returns an {@link Optional} containing a <b>nullable</b> array of
 	 *         values
+	 * 
 	 * @see #putArrayInternal(Long, String, String, Object[])
 	 */
-	@Nonnull
-	protected <T> Optional<T[]> getArrayInternal(@Nonnull L lookup, @Nonnull String key, @Nonnull String regex,
-			@Nonnull Function<String, T> map, @Nonnull IntFunction<T[]> arr) {
+	@NotNull
+	protected <T> Optional<T[]> getArrayInternal(@NotNull L lookup, @NotNull String key, @NotNull String regex,
+			@NotNull Function<String, T> map, @NotNull IntFunction<T[]> arr) {
 		return getInternal(lookup, key).map(str -> Arrays.stream(str.split(regex)).map(map).toArray(arr));
 	}
 
 	@Override
-	@Nonnull
-	public Optional<String> getString(L lookup, String key) { return getInternal(lookup, key); }
+	@NotNull
+	public Optional<String> getString(L lookup, String key) {
+		return getInternal(lookup, key);
+	}
 
 	@Override
-	@Nonnull
+	@NotNull
 	public Optional<Boolean> getBoolean(L lookup, String key) {
 		return getInternal(lookup, key).map(Boolean::parseBoolean);
 	}
 
 	@Override
-	@Nonnull
-	public Optional<Integer> getInt(@Nonnull L lookup, @Nonnull String key) {
+	@NotNull
+	public Optional<Integer> getInt(@NotNull L lookup, @NotNull String key) {
 		return getInternal(lookup, key).map(Integer::parseInt);
 	}
 
 	@Override
-	@Nonnull
-	public Optional<Float> getFloat(@Nonnull L lookup, @Nonnull String key) {
+	@NotNull
+	public Optional<Float> getFloat(@NotNull L lookup, @NotNull String key) {
 		return getInternal(lookup, key).map(Float::parseFloat);
 	}
 
 	@Override
-	@Nonnull
-	public Optional<Double> getDouble(@Nonnull L lookup, @Nonnull String key) {
+	@NotNull
+	public Optional<Double> getDouble(@NotNull L lookup, @NotNull String key) {
 		return getInternal(lookup, key).map(Double::parseDouble);
 	}
 
 	@Override
-	@Nonnull
-	public Optional<Long> getLong(@Nonnull L lookup, @Nonnull String key) {
+	@NotNull
+	public Optional<Long> getLong(@NotNull L lookup, @NotNull String key) {
 		return getInternal(lookup, key).map(Long::parseLong);
 	}
 
 	@Override
-	@Nonnull
-	public Optional<String[]> getStringArray(@Nonnull L lookup, @Nonnull String key, @Nonnull String regex) {
+	@NotNull
+	public Optional<String[]> getStringArray(@NotNull L lookup, @NotNull String key, @NotNull String regex) {
 		return getArrayInternal(lookup, key, regex, Function.identity(), String[]::new);
 	}
 
 	@Override
-	@Nonnull
-	public Optional<Boolean[]> getBooleanArray(@Nonnull L lookup, @Nonnull String key, @Nonnull String regex) {
+	@NotNull
+	public Optional<Boolean[]> getBooleanArray(@NotNull L lookup, @NotNull String key, @NotNull String regex) {
 		return getArrayInternal(lookup, key, regex, Boolean::parseBoolean, Boolean[]::new);
 	}
 
 	@Override
-	@Nonnull
-	public Optional<Integer[]> getIntArray(@Nonnull L lookup, @Nonnull String key, @Nonnull String regex) {
+	@NotNull
+	public Optional<Integer[]> getIntArray(@NotNull L lookup, @NotNull String key, @NotNull String regex) {
 		return getArrayInternal(lookup, key, regex, Integer::parseInt, Integer[]::new);
 	}
 
 	@Override
-	@Nonnull
-	public Optional<Float[]> getFloatArray(@Nonnull L lookup, @Nonnull String key, @Nonnull String regex) {
+	@NotNull
+	public Optional<Float[]> getFloatArray(@NotNull L lookup, @NotNull String key, @NotNull String regex) {
 		return getArrayInternal(lookup, key, regex, Float::parseFloat, Float[]::new);
 	}
 
 	@Override
-	@Nonnull
-	public Optional<Double[]> getDoubleArray(@Nonnull L lookup, @Nonnull String key, @Nonnull String regex) {
+	@NotNull
+	public Optional<Double[]> getDoubleArray(@NotNull L lookup, @NotNull String key, @NotNull String regex) {
 		return getArrayInternal(lookup, key, regex, Double::parseDouble, Double[]::new);
 	}
 
 	@Override
-	@Nonnull
-	public Optional<Long[]> getLongArray(@Nonnull L lookup, @Nonnull String key, @Nonnull String regex) {
+	@NotNull
+	public Optional<Long[]> getLongArray(@NotNull L lookup, @NotNull String key, @NotNull String regex) {
 		return getArrayInternal(lookup, key, regex, Long::parseLong, Long[]::new);
 	}
 
 	@Override
-	public boolean putString(@Nonnull L lookup, @Nonnull String key, @Nonnull String value) {
+	public boolean putString(@NotNull L lookup, @NotNull String key, @NotNull String value) {
 		return putInternal(lookup, key, value);
 	}
 
 	@Override
-	public boolean putBoolean(@Nonnull L lookup, @Nonnull String key, boolean value) {
+	public boolean putBoolean(@NotNull L lookup, @NotNull String key, boolean value) {
 		return putInternal(lookup, key, "" + value);
 	}
 
 	@Override
-	public boolean putInt(@Nonnull L lookup, @Nonnull String key, int value) {
+	public boolean putInt(@NotNull L lookup, @NotNull String key, int value) {
 		return putInternal(lookup, key, "" + value);
 	}
 
 	@Override
-	public boolean putFloat(@Nonnull L lookup, @Nonnull String key, float value) {
+	public boolean putFloat(@NotNull L lookup, @NotNull String key, float value) {
 		return putInternal(lookup, key, "" + value);
 	}
 
 	@Override
-	public boolean putDouble(@Nonnull L lookup, @Nonnull String key, double value) {
+	public boolean putDouble(@NotNull L lookup, @NotNull String key, double value) {
 		return putInternal(lookup, key, "" + value);
 	}
 
 	@Override
-	public boolean putLong(@Nonnull L lookup, @Nonnull String key, long value) {
+	public boolean putLong(@NotNull L lookup, @NotNull String key, long value) {
 		return putInternal(lookup, key, "" + value);
 	}
 
 	@Override
-	public boolean putStringArray(@Nonnull L lookup, @Nonnull String key, @Nonnull String delimeter,
-			@Nonnull String[] arr) {
+	public boolean putStringArray(@NotNull L lookup, @NotNull String key, @NotNull String delimeter,
+			@NotNull String[] arr) {
 		return putArrayInternal(lookup, key, delimeter, arr);
 	}
 
 	@Override
-	public boolean putBooleanArray(@Nonnull L lookup, @Nonnull String key, @Nonnull String delimeter,
-			@Nonnull boolean[] arr) {
+	public boolean putBooleanArray(@NotNull L lookup, @NotNull String key, @NotNull String delimeter, boolean[] arr) {
 		return putArrayInternal(lookup, key, delimeter, ArrayUtils.toObject(arr));
 	}
 
 	@Override
-	public boolean putIntArray(@Nonnull L lookup, @Nonnull String key, @Nonnull String delimeter, @Nonnull int[] arr) {
+	public boolean putIntArray(@NotNull L lookup, @NotNull String key, @NotNull String delimeter, int[] arr) {
 		return putArrayInternal(lookup, key, delimeter, ArrayUtils.toObject(arr));
 	}
 
 	@Override
-	public boolean putFloatArray(@Nonnull L lookup, @Nonnull String key, @Nonnull String delimeter,
-			@Nonnull float[] arr) {
+	public boolean putFloatArray(@NotNull L lookup, @NotNull String key, @NotNull String delimeter, float[] arr) {
 		return putArrayInternal(lookup, key, delimeter, ArrayUtils.toObject(arr));
 	}
 
 	@Override
-	public boolean putDoubleArray(@Nonnull L lookup, @Nonnull String key, @Nonnull String delimeter,
-			@Nonnull double[] arr) {
+	public boolean putDoubleArray(@NotNull L lookup, @NotNull String key, @NotNull String delimeter, double[] arr) {
 		return putArrayInternal(lookup, key, delimeter, ArrayUtils.toObject(arr));
 	}
 
 	@Override
-	public boolean putLongArray(@Nonnull L lookup, @Nonnull String key, @Nonnull String delimeter,
-			@Nonnull long[] arr) {
+	public boolean putLongArray(@NotNull L lookup, @NotNull String key, @NotNull String delimeter, long[] arr) {
 		return putArrayInternal(lookup, key, delimeter, ArrayUtils.toObject(arr));
 	}
 
 	@Override
-	public boolean remove(@Nonnull L lookup, @Nonnull String key) { return removeInternal(lookup, key); }
+	public boolean remove(@NotNull L lookup, @NotNull String key) {
+		return removeInternal(lookup, key);
+	}
 
 	@Override
-	@Nonnull
-	public PropertyType typeOf(L lookup, String key) { return PropertyType.STRING; }
+	@NotNull
+	public PropertyType typeOf(L lookup, String key) {
+		return PropertyType.STRING;
+	}
 
 	// ===============================================================================================================
 
@@ -607,26 +630,31 @@ public abstract class ConfigurationDatabase<L> extends AbstractDatabase implemen
 	 * 
 	 * @return Returns the database name
 	 */
-	@Nonnull
-	public String getDatabase() { return database; }
+	@NotNull
+	public String getDatabase() {
+		return database;
+	}
 
 	/**
 	 * Get the database table name.
 	 * 
 	 * @return Returns the table name inside the database
 	 */
-	@Nonnull
-	public String getTable() { return table; }
+	@NotNull
+	public String getTable() {
+		return table;
+	}
 
 	/**
 	 * Check if provided {@link ExecutorService} is valid for asynchronous
 	 * processing.
 	 * 
 	 * @param service - executor service to use for processing
+	 * 
 	 * @return Returns the provided service if it is valid for use. Otherwise will
 	 *         return the default executor ({@link #COMMON_POOL})
 	 */
-	@Nonnull
+	@NotNull
 	private ExecutorService screenExecutor(@Nullable ExecutorService service) {
 		return service != null ? service : defaultExecutor;
 	}

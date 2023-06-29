@@ -10,10 +10,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.Nonnull;
 import javax.security.auth.login.LoginException;
 
 import org.apache.commons.configuration2.ImmutableConfiguration;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -118,7 +118,7 @@ public class WatameBot {
 	/**
 	 * Plugin handler
 	 */
-	private final PluginHandler<Plugin> pluginHandler;
+	private final PluginHandler<@NotNull Plugin> pluginHandler;
 
 	/**
 	 * Instance context
@@ -137,7 +137,7 @@ public class WatameBot {
 	 * 
 	 * @throws SQLException When failing to connect to the database file
 	 */
-	private WatameBot(@Nonnull String token) {
+	private WatameBot(@NotNull String token) {
 		// Set the MDC context
 		MDC.setContextMap(mdcContext);
 
@@ -185,7 +185,7 @@ public class WatameBot {
 		// Set our state to post-init
 		updateState(State.POST_INIT);
 		postInit();
-		
+
 		long end = System.nanoTime();
 
 		// Set our state to running

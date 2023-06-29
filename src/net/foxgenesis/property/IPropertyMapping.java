@@ -1,6 +1,6 @@
 package net.foxgenesis.property;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Interface used to map a property's raw data into a usable one.
@@ -16,7 +16,7 @@ public interface IPropertyMapping {
 	 * 
 	 * @return The property's string value
 	 */
-	@Nonnull
+	@NotNull
 	public String getAsString();
 
 	/**

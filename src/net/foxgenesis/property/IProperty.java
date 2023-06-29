@@ -2,8 +2,9 @@ package net.foxgenesis.property;
 
 import java.util.function.Consumer;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 
 public interface IProperty<K, L, M extends IPropertyMapping> extends ImmutableProperty<K, L, M> {
 
@@ -16,7 +17,7 @@ public interface IProperty<K, L, M extends IPropertyMapping> extends ImmutablePr
 	 * @see #set(Object, Object, boolean)
 	 * @see #set(Object, Object, boolean, Consumer, Consumer)
 	 */
-	boolean set(@Nonnull L from, @Nullable Object value);
+	boolean set(@NotNull L from, @Nullable Object value);
 
 	/**
 	 * Update/Set this property's value.
@@ -30,7 +31,7 @@ public interface IProperty<K, L, M extends IPropertyMapping> extends ImmutablePr
 	 * @see #set(Object, Object)
 	 * @see #set(Object, Object, boolean, Consumer, Consumer)
 	 */
-	default boolean set(@Nonnull L from, @Nullable Object value, boolean userEdited) {
+	default boolean set(@NotNull L from, @Nullable Object value, boolean userEdited) {
 		if (userEdited && !isEditable())
 			throw new UnmodifiablePropertyException(this, this + " is not editable!");
 		return set(from, value);
@@ -47,7 +48,7 @@ public interface IProperty<K, L, M extends IPropertyMapping> extends ImmutablePr
 	 * @see #set(Object, Object)
 	 * @see #set(Object, Object, boolean)
 	 */
-	default void set(@Nonnull L from, @Nullable Object value, boolean userEdited, @Nonnull Consumer<Boolean> onSet,
+	default void set(@NotNull L from, @Nullable Object value, boolean userEdited, @NotNull Consumer<Boolean> onSet,
 			@Nullable Consumer<Throwable> errorHandler) {
 		try {
 			boolean wasSet = set(from, value, userEdited);

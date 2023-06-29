@@ -13,9 +13,8 @@ import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,22 +29,22 @@ import net.foxgenesis.util.resource.ModuleResource;
  *
  */
 public abstract class AbstractDatabase implements AutoCloseable {
-	@Nonnull
+	@NotNull
 	private final HashMap<String, String> statements = new HashMap<>();
 
-	@Nonnull
+	@NotNull
 	private final ModuleResource operationsFile;
 
-	@Nonnull
+	@NotNull
 	private final ModuleResource setupFile;
 
-	@Nonnull
+	@NotNull
 	private final String name;
 
 	/**
 	 * Logger
 	 */
-	@Nonnull
+	@NotNull
 	protected final Logger logger;
 
 	@Nullable
@@ -58,8 +57,8 @@ public abstract class AbstractDatabase implements AutoCloseable {
 	 * @param operationsFile
 	 * @param setupFile
 	 */
-	public AbstractDatabase(@Nonnull String name, @Nonnull ModuleResource operationsFile,
-			@Nonnull ModuleResource setupFile) {
+	public AbstractDatabase(@NotNull String name, @NotNull ModuleResource operationsFile,
+			@NotNull ModuleResource setupFile) {
 		this.name = Objects.requireNonNull(name);
 		this.operationsFile = Objects.requireNonNull(operationsFile);
 		this.setupFile = Objects.requireNonNull(setupFile);
@@ -68,7 +67,7 @@ public abstract class AbstractDatabase implements AutoCloseable {
 	}
 
 	@SuppressWarnings("resource")
-	synchronized final void setup(@Nonnull AConnectionProvider provider) throws IOException {
+	synchronized final void setup(@NotNull AConnectionProvider provider) throws IOException {
 		if (this.provider != null)
 			throw new UnsupportedOperationException("Database is already setup!");
 
@@ -274,7 +273,7 @@ public abstract class AbstractDatabase implements AutoCloseable {
 		throw new UnsupportedOperationException("Database has not been setup yet!");
 	}
 
-	private void registerStatement(@Nonnull String id, @Nonnull String raw) {
+	private void registerStatement(@NotNull String id, @NotNull String raw) {
 		Objects.requireNonNull(id);
 		Objects.requireNonNull(raw);
 
@@ -307,7 +306,7 @@ public abstract class AbstractDatabase implements AutoCloseable {
 
 	final String[] getSetupLines() throws IOException { return setupFile.readAllLines(); }
 
-	@Nonnull
+	@NotNull
 	public final String getName() { return name; }
 
 	/**

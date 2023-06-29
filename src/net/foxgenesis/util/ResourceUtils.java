@@ -15,8 +15,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.function.Function;
 
-import javax.annotation.Nonnull;
-
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.FileBasedConfiguration;
 import org.apache.commons.configuration2.INIConfiguration;
@@ -27,6 +25,7 @@ import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.builder.fluent.PropertiesBuilderParameters;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -259,7 +258,7 @@ public final class ResourceUtils {
 	 * 
 	 * @throws IOException If an I/O error occurs
 	 */
-	public static String toString(@Nonnull InputStream input) throws IOException {
+	public static String toString(@NotNull InputStream input) throws IOException {
 		try (input) {
 			return new String(input.readAllBytes());
 		}
@@ -290,7 +289,7 @@ public final class ResourceUtils {
 	 * 
 	 * @throws IOException If an I/O error occurs
 	 */
-	public static String[] toSplitString(@Nonnull InputStream input) throws IOException {
+	public static String[] toSplitString(@NotNull InputStream input) throws IOException {
 		return toString(input).split("(\\r\\n|\\r|\\n)");
 	}
 }

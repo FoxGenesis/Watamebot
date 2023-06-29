@@ -11,6 +11,7 @@
 		<attributes>
 			<attribute name="ignore_optional_problems" value="true"/>
 			<attribute name="maven.pomderived" value="true"/>
+			<attribute name="optional" value="true"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry including="**/*.java" kind="src" output="target/test-classes" path="test">

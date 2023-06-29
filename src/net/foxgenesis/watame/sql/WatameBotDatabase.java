@@ -8,9 +8,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ManagedBlocker;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -62,7 +61,7 @@ public class WatameBotDatabase extends AbstractDatabase implements IGuildDataPro
 	 * @deprecated
 	 */
 	@Deprecated(forRemoval = true)
-	public void addGuild(@Nonnull Guild guild) {
+	public void addGuild(@NotNull Guild guild) {
 		Objects.requireNonNull(guild);
 
 		logger.debug("Loading guild ({})[{}]", guild.getName(), guild.getIdLong());
@@ -87,7 +86,7 @@ public class WatameBotDatabase extends AbstractDatabase implements IGuildDataPro
 	 * @deprecated
 	 */
 	@Deprecated(forRemoval = true)
-	public void removeGuild(@Nonnull Guild guild) {
+	public void removeGuild(@NotNull Guild guild) {
 		Objects.requireNonNull(guild);
 
 		logger.debug("Removing guild ({})[{}]", guild.getName(), guild.getIdLong());
@@ -224,7 +223,7 @@ public class WatameBotDatabase extends AbstractDatabase implements IGuildDataPro
 	 * @deprecated
 	 */
 	@Deprecated(forRemoval = true)
-	private void insertGuildInDatabase(@Nonnull Guild guild) {
+	private void insertGuildInDatabase(@NotNull Guild guild) {
 		Objects.requireNonNull(guild);
 
 		this.prepareStatement("guild_data_insert", st -> {
@@ -244,7 +243,7 @@ public class WatameBotDatabase extends AbstractDatabase implements IGuildDataPro
 	 * @deprecated
 	 */
 	@Deprecated(forRemoval = true)
-	private void retrieveData(@Nonnull Guild guild) {
+	private void retrieveData(@NotNull Guild guild) {
 		Objects.requireNonNull(guild);
 		this.prepareStatement("guild_data_get_id", s -> {
 			s.setLong(1, guild.getIdLong());
@@ -268,7 +267,7 @@ public class WatameBotDatabase extends AbstractDatabase implements IGuildDataPro
 
 	@Override
 	@Nullable
-	public IGuildData getDataForGuild(@Nonnull Guild guild) {
+	public IGuildData getDataForGuild(@NotNull Guild guild) {
 		// Ensure non null guild
 		Objects.requireNonNull(guild);
 
@@ -298,7 +297,7 @@ public class WatameBotDatabase extends AbstractDatabase implements IGuildDataPro
 	 * 
 	 * @see GuildData#setData(ResultSet)
 	 */
-	private Integer pushJSONUpdate(@Nonnull String name, @Nullable Object data, long guild, boolean remove) {
+	private Integer pushJSONUpdate(@NotNull String name, @Nullable Object data, long guild, boolean remove) {
 		Objects.requireNonNull(name);
 		if (guild == 0)
 			throw new IllegalArgumentException("Invalid guild ID");
@@ -337,12 +336,12 @@ public class WatameBotDatabase extends AbstractDatabase implements IGuildDataPro
 	}
 
 	@Override
-	public GuildProperty getProperty(@Nonnull String key) {
+	public GuildProperty getProperty(@NotNull String key) {
 		return properties.computeIfAbsent(key, k -> new GuildProperty(k, this));
 	}
 
 	@Override
-	public boolean isPropertyPresent(@Nonnull String key) {
+	public boolean isPropertyPresent(@NotNull String key) {
 		return properties.containsKey(key);
 	}
 
@@ -356,7 +355,7 @@ public class WatameBotDatabase extends AbstractDatabase implements IGuildDataPro
 	protected void onReady() {}
 
 	@Override
-	@Nonnull
+	@NotNull
 	public Set<String> keySet() {
 		return Set.copyOf(properties.keySet());
 	}

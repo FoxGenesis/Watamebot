@@ -6,9 +6,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,23 +26,23 @@ public class Context implements Closeable {
 
 	private final ExecutorService executor;
 
-	public Context(@Nonnull WatameBot bot, @Nonnull JDABuilder builder, @Nullable ExecutorService executor) {
+	public Context(@NotNull WatameBot bot, @NotNull JDABuilder builder, @Nullable ExecutorService executor) {
 		this.bot = Objects.requireNonNull(bot);
 		this.executor = Objects.requireNonNullElse(executor, ForkJoinPool.commonPool());
 		this.eventStore = new EventStore(builder);
 	}
 
-	@Nonnull
+	@NotNull
 	public DatabaseManager getDatabaseManager() {
 		return (DatabaseManager) bot.getDatabaseManager();
 	}
 
-	@Nonnull
+	@NotNull
 	public EventStore getEventRegister() {
 		return eventStore;
 	}
 
-	@Nonnull
+	@NotNull
 	public ExecutorService getAsynchronousExecutor() {
 		return executor;
 	}
@@ -53,7 +52,7 @@ public class Context implements Closeable {
 		return bot.getJDA();
 	}
 
-	@Nonnull
+	@NotNull
 	public State getState() {
 		return bot.getState();
 	}

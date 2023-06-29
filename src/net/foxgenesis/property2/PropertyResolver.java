@@ -2,76 +2,73 @@ package net.foxgenesis.property2;
 
 import java.util.Optional;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 public interface PropertyResolver<L> {
 
-	@Nonnull
-	public Optional<String> getString(@Nonnull L lookup, @Nonnull String key);
+	@NotNull
+	public Optional<String> getString(@NotNull L lookup, @NotNull String key);
 
-	@Nonnull
-	public Optional<Boolean> getBoolean(@Nonnull L lookup, @Nonnull String key);
+	@NotNull
+	public Optional<Boolean> getBoolean(@NotNull L lookup, @NotNull String key);
 
-	@Nonnull
-	public Optional<Integer> getInt(@Nonnull L lookup, @Nonnull String key);
+	@NotNull
+	public Optional<Integer> getInt(@NotNull L lookup, @NotNull String key);
 
-	@Nonnull
-	public Optional<Float> getFloat(@Nonnull L lookup, @Nonnull String key);
+	@NotNull
+	public Optional<Float> getFloat(@NotNull L lookup, @NotNull String key);
 
-	@Nonnull
-	public Optional<Double> getDouble(@Nonnull L lookup, @Nonnull String key);
+	@NotNull
+	public Optional<Double> getDouble(@NotNull L lookup, @NotNull String key);
 
-	@Nonnull
-	public Optional<Long> getLong(@Nonnull L lookup, @Nonnull String key);
+	@NotNull
+	public Optional<Long> getLong(@NotNull L lookup, @NotNull String key);
 
-	@Nonnull
-	public Optional<String[]> getStringArray(@Nonnull L lookup, @Nonnull String key, @Nonnull String regex);
+	@NotNull
+	public Optional<String[]> getStringArray(@NotNull L lookup, @NotNull String key, @NotNull String regex);
 
-	@Nonnull
-	public Optional<Boolean[]> getBooleanArray(@Nonnull L lookup, @Nonnull String key, @Nonnull String regex);
+	@NotNull
+	public Optional<Boolean[]> getBooleanArray(@NotNull L lookup, @NotNull String key, @NotNull String regex);
 
-	@Nonnull
-	public Optional<Integer[]> getIntArray(@Nonnull L lookup, @Nonnull String key, @Nonnull String regex);
+	@NotNull
+	public Optional<Integer[]> getIntArray(@NotNull L lookup, @NotNull String key, @NotNull String regex);
 
-	@Nonnull
-	public Optional<Float[]> getFloatArray(@Nonnull L lookup, @Nonnull String key, @Nonnull String regex);
+	@NotNull
+	public Optional<Float[]> getFloatArray(@NotNull L lookup, @NotNull String key, @NotNull String regex);
 
-	@Nonnull
-	public Optional<Double[]> getDoubleArray(@Nonnull L lookup, @Nonnull String key, @Nonnull String regex);
+	@NotNull
+	public Optional<Double[]> getDoubleArray(@NotNull L lookup, @NotNull String key, @NotNull String regex);
 
-	@Nonnull
-	public Optional<Long[]> getLongArray(@Nonnull L lookup, @Nonnull String key, @Nonnull String regex);
+	@NotNull
+	public Optional<Long[]> getLongArray(@NotNull L lookup, @NotNull String key, @NotNull String regex);
 
-	public boolean putString(@Nonnull L lookup, @Nonnull String key, @Nonnull String value);
+	public boolean putString(@NotNull L lookup, @NotNull String key, @NotNull String value);
 
-	public boolean putBoolean(@Nonnull L lookup, @Nonnull String key, boolean value);
+	public boolean putBoolean(@NotNull L lookup, @NotNull String key, boolean value);
 
-	public boolean putInt(@Nonnull L lookup, @Nonnull String key, int value);
+	public boolean putInt(@NotNull L lookup, @NotNull String key, int value);
 
-	public boolean putFloat(@Nonnull L lookup, @Nonnull String key, float value);
+	public boolean putFloat(@NotNull L lookup, @NotNull String key, float value);
 
-	public boolean putDouble(@Nonnull L lookup, @Nonnull String key, double value);
+	public boolean putDouble(@NotNull L lookup, @NotNull String key, double value);
 
-	public boolean putLong(@Nonnull L lookup, @Nonnull String key, long value);
+	public boolean putLong(@NotNull L lookup, @NotNull String key, long value);
 
-	public boolean putStringArray(@Nonnull L lookup, @Nonnull String key, @Nonnull String delimeter,
-			@Nonnull String[] arr);
+	public boolean putStringArray(@NotNull L lookup, @NotNull String key, @NotNull String delimeter,
+			@NotNull String[] arr);
 
-	public boolean putBooleanArray(@Nonnull L lookup, @Nonnull String key, @Nonnull String delimeter,
-			@Nonnull boolean[] arr);
+	public boolean putBooleanArray(@NotNull L lookup, @NotNull String key, @NotNull String delimeter, boolean[] arr);
 
-	public boolean putIntArray(@Nonnull L lookup, @Nonnull String key, @Nonnull String delimeter, @Nonnull int[] arr);
+	public boolean putIntArray(@NotNull L lookup, @NotNull String key, @NotNull String delimeter, int[] arr);
 
-	public boolean putFloatArray(@Nonnull L lookup, @Nonnull String key, @Nonnull String delimeter,
-			@Nonnull float[] arr);
+	public boolean putFloatArray(@NotNull L lookup, @NotNull String key, @NotNull String delimeter, float[] arr);
 
-	public boolean putDoubleArray(@Nonnull L lookup, @Nonnull String key, @Nonnull String delimeter,
-			@Nonnull double[] arr);
+	public boolean putDoubleArray(@NotNull L lookup, @NotNull String key, @NotNull String delimeter, double[] arr);
 
-	public boolean putLongArray(@Nonnull L lookup, @Nonnull String key, @Nonnull String delimeter, @Nonnull long[] arr);
+	public boolean putLongArray(@NotNull L lookup, @NotNull String key, @NotNull String delimeter, long[] arr);
 
-	public boolean remove(@Nonnull L lookup, @Nonnull String key);
+	public boolean remove(@NotNull L lookup, @NotNull String key);
 
-	@Nonnull
-	public PropertyType typeOf(@Nonnull L lookup, @Nonnull String key);
+	@NotNull
+	public PropertyType typeOf(@NotNull L lookup, @NotNull String key);
 }

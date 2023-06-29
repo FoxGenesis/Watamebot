@@ -2,8 +2,7 @@ package net.foxgenesis.watame.property;
 
 import java.util.Objects;
 
-import javax.annotation.Nullable;
-
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
 import net.dv8tion.jda.api.entities.Category;
@@ -29,42 +28,70 @@ public class GuildPropertyMapping implements IGuildPropertyMapping {
 	}
 
 	@Override
-	public String getAsString() { return data.getString(key); }
+	public String getAsString() {
+		return data.getString(key);
+	}
 
 	@Override
-	public long getAsLong() { return data.getLong(key); }
+	public long getAsLong() {
+		return data.getLong(key);
+	}
 
 	@Override
-	public double getAsDouble() { return data.getDouble(key); }
+	public double getAsDouble() {
+		return data.getDouble(key);
+	}
 
 	@Override
-	public float getAsFloat() { return data.getFloat(key); }
+	public float getAsFloat() {
+		return data.getFloat(key);
+	}
 
 	@Override
-	public int getAsInt() { return data.getInt(key); }
+	public int getAsInt() {
+		return data.getInt(key);
+	}
 
 	@Override
-	public boolean getAsBoolean() { return data.getBoolean(key); }
-
-	@Override
-	@Nullable
-	public Category getAsCategory() { return guild.getCategoryById(getAsLong()); }
-
-	@Override
-	@Nullable
-	public Channel getAsChannel() { return guild.getGuildChannelById(getAsLong()); }
-
-	@Override
-	@Nullable
-	public TextChannel getAsTextChannel() { return guild.getTextChannelById(getAsLong()); }
-
-	@Override
-	@Nullable
-	public VoiceChannel getAsVoiceChannel() { return guild.getVoiceChannelById(getAsLong()); }
+	public boolean getAsBoolean() {
+		return data.getBoolean(key);
+	}
 
 	@Override
 	@Nullable
-	public StageChannel getAsStageChannel() { return guild.getStageChannelById(getAsLong()); }
+	public Category getAsCategory() {
+		return guild.getCategoryById(getAsLong());
+	}
+
+	@Override
+	@Nullable
+	public Channel getAsChannel() {
+		return guild.getGuildChannelById(getAsLong());
+	}
+
+	@Override
+	@Nullable
+	public TextChannel getAsTextChannel() {
+		return guild.getTextChannelById(getAsLong());
+	}
+
+	@Override
+	@Nullable
+	public VoiceChannel getAsVoiceChannel() {
+		return guild.getVoiceChannelById(getAsLong());
+	}
+
+	@Override
+	@Nullable
+	public StageChannel getAsStageChannel() {
+		return guild.getStageChannelById(getAsLong());
+	}
+
+	@Override
+	@Nullable
+	public NewsChannel getAsNewsChannel() {
+		return guild.getNewsChannelById(getAsLong());
+	}
 
 	@Override
 	@Nullable
@@ -72,14 +99,20 @@ public class GuildPropertyMapping implements IGuildPropertyMapping {
 
 	@Override
 	@Nullable
-	public Role getAsRole() { return guild.getRoleById(getAsLong()); }
+	public Role getAsRole() {
+		return guild.getRoleById(getAsLong());
+	}
 
 	@Override
 	@Nullable
-	public Member getAsMember() { return guild.getMemberById(getAsLong()); }
+	public Member getAsMember() {
+		return guild.getMemberById(getAsLong());
+	}
 
 	@Override
-	public int hashCode() { return Objects.hash(data, guild, key); }
+	public int hashCode() {
+		return Objects.hash(data, guild, key);
+	}
 
 	@Override
 	public boolean equals(@Nullable Object obj) {

@@ -1,6 +1,6 @@
 package net.foxgenesis.watame.sql;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 import net.dv8tion.jda.api.entities.Guild;
 
@@ -16,8 +16,10 @@ public interface IGuildDataProvider {
 	 * NEED_JAVADOC
 	 * 
 	 * @param guild
+	 * 
 	 * @return
+	 * 
 	 * @throws NullPointerException if {@code guild} is null
 	 */
-	public IGuildData getDataForGuild(@Nonnull Guild guild);
+	public IGuildData getDataForGuild(@NotNull Guild guild);
 }

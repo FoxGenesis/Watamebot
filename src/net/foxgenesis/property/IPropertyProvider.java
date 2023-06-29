@@ -2,7 +2,7 @@ package net.foxgenesis.property;
 
 import java.util.Set;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * An interface containing methods used for constructing/providing
@@ -24,8 +24,8 @@ public interface IPropertyProvider<K, L, M extends IPropertyMapping> {
 	 * @param key - the property's key
 	 * @return Returns an {@link ImmutableProperty} pointing to the specified key
 	 */
-	@Nonnull
-	IProperty<K, L, M> getProperty(@Nonnull K key);
+	@NotNull
+	IProperty<K, L, M> getProperty(@NotNull K key);
 
 	/**
 	 * Check if the property associated with the specified key has already been
@@ -35,13 +35,13 @@ public interface IPropertyProvider<K, L, M extends IPropertyMapping> {
 	 * @return Returns {@code true} if the property's key has already been
 	 *         registered/constructed.
 	 */
-	boolean isPropertyPresent(@Nonnull K key);
+	boolean isPropertyPresent(@NotNull K key);
 
 	/**
 	 * Get a set of all registered keys this provider has constructed.
 	 * 
 	 * @return Returns a {@link Set} of {@link K}
 	 */
-	@Nonnull
+	@NotNull
 	Set<K> keySet();
 }

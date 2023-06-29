@@ -11,9 +11,8 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +43,7 @@ import net.foxgenesis.watame.property.IGuildPropertyMapping;
  */
 public class ConfigCommand extends ListenerAdapter {
 	private static final Logger logger = LoggerFactory.getLogger("Configuration Command");
-	
+
 	private static final String DEFAULT = "Default";
 	private static final String CONFIG_VALUE_FORMAT = "%s = `%s`";
 
@@ -52,7 +51,7 @@ public class ConfigCommand extends ListenerAdapter {
 	public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
 		if (event.isFromGuild()) {
 			switch (event.getName()) {
-			case "options" -> handleOptions(event);
+				case "options" -> handleOptions(event);
 			}
 		}
 	}
@@ -80,7 +79,7 @@ public class ConfigCommand extends ListenerAdapter {
 	private static void handleOptions(SlashCommandInteractionEvent event) {
 		String group = Objects.requireNonNull(event.getSubcommandGroup());
 		switch (group) {
-		case "configuration" -> handleConfiguration(event);
+			case "configuration" -> handleConfiguration(event);
 		}
 	}
 
@@ -90,19 +89,20 @@ public class ConfigCommand extends ListenerAdapter {
 	 * @param event - slash command event
 	 */
 	private static void handleConfiguration(SlashCommandInteractionEvent event) {
-		IPropertyProvider<String, Guild, IGuildPropertyMapping> provider = WatameBot.INSTANCE
-				.getPropertyProvider();
+		IPropertyProvider<String, Guild, IGuildPropertyMapping> provider = WatameBot.INSTANCE.getPropertyProvider();
 		String sub = Objects.requireNonNull(event.getSubcommandName());
 		InteractionHook hook = event.getHook();
 
 		int tmp = sub.indexOf('-');
-		if (tmp != -1) { sub = sub.substring(0, tmp); }
+		if (tmp != -1) {
+			sub = sub.substring(0, tmp);
+		}
 
 		switch (sub) {
-		case "get" -> getConfigurationSetting(event, provider, hook);
-		case "set" -> setConfigurationSetting(event, provider, hook);
-		case "remove" -> removeConfigurationSetting(event, provider, hook);
-		case "list" -> listAllConfigurationSettings(event, provider, hook);
+			case "get" -> getConfigurationSetting(event, provider, hook);
+			case "set" -> setConfigurationSetting(event, provider, hook);
+			case "remove" -> removeConfigurationSetting(event, provider, hook);
+			case "list" -> listAllConfigurationSettings(event, provider, hook);
 		}
 	}
 
@@ -233,12 +233,13 @@ public class ConfigCommand extends ListenerAdapter {
 	 * @param key      - key to check
 	 * @param provider - property provider
 	 * @param hook     - event hook
+	 * 
 	 * @return Returns {@code true} if the key is not null and the property is
 	 *         present in the provider
 	 */
-	private static void ensureKey(String key,
-			IPropertyProvider<String, Guild, IGuildPropertyMapping> provider, InteractionHook hook,
-			@Nonnull BiConsumer<String, IProperty<String, Guild, IGuildPropertyMapping>> consumer) {
+	private static void ensureKey(String key, IPropertyProvider<String, Guild, IGuildPropertyMapping> provider,
+			InteractionHook hook,
+			@NotNull BiConsumer<String, IProperty<String, Guild, IGuildPropertyMapping>> consumer) {
 		if (key != null)
 			if (provider.isPropertyPresent(key))
 				consumer.accept(key, provider.getProperty(key));
@@ -255,8 +256,8 @@ public class ConfigCommand extends ListenerAdapter {
 	 * @param hook     - interaction hook
 	 * @param consumer - found value option
 	 */
-	private static void ensureValue(@Nonnull List<OptionMapping> mappings, @Nonnull InteractionHook hook,
-			@Nonnull Consumer<String> consumer) {
+	private static void ensureValue(@NotNull List<OptionMapping> mappings, @NotNull InteractionHook hook,
+			@NotNull Consumer<String> consumer) {
 		for (OptionMapping m : mappings)
 			if (!m.getName().equals("key")) {
 				consumer.accept(m.getAsString());
@@ -271,9 +272,10 @@ public class ConfigCommand extends ListenerAdapter {
 	 * @param color - embed color
 	 * @param title - embed title
 	 * @param desc  - embed description
+	 * 
 	 * @return Returns the created {@link MessageEmbed}
 	 */
-	private static MessageEmbed response(int color, @Nonnull String title, @Nullable String desc) {
+	private static MessageEmbed response(int color, @NotNull String title, @Nullable String desc) {
 		return new EmbedBuilder().setColor(color).setTitle(title).setDescription(desc).build();
 	}
 

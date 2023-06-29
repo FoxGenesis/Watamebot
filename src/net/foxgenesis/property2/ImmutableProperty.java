@@ -2,45 +2,45 @@ package net.foxgenesis.property2;
 
 import java.util.Optional;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 public interface ImmutableProperty<L> {
-	@Nonnull
-	public Optional<String> getString(@Nonnull L lookup);
+	@NotNull
+	public Optional<String> getString(@NotNull L lookup);
 
-	@Nonnull
-	public Optional<Boolean> getBoolean(@Nonnull L lookup);
+	@NotNull
+	public Optional<Boolean> getBoolean(@NotNull L lookup);
 
-	@Nonnull
-	public Optional<Integer> getInt(@Nonnull L lookup);
+	@NotNull
+	public Optional<Integer> getInt(@NotNull L lookup);
 
-	@Nonnull
-	public Optional<Float> getFloat(@Nonnull L lookup);
+	@NotNull
+	public Optional<Float> getFloat(@NotNull L lookup);
 
-	@Nonnull
-	public Optional<Double> getDouble(@Nonnull L lookup);
+	@NotNull
+	public Optional<Double> getDouble(@NotNull L lookup);
 
-	@Nonnull
-	public Optional<Long> getLong(@Nonnull L lookup);
+	@NotNull
+	public Optional<Long> getLong(@NotNull L lookup);
 
-	@Nonnull
-	public Optional<String[]> getStringArray(@Nonnull L lookup);
+	@NotNull
+	public Optional<String[]> getStringArray(@NotNull L lookup);
 
-	@Nonnull
-	public Optional<Boolean[]> getBooleanArray(@Nonnull L lookup);
+	@NotNull
+	public Optional<Boolean[]> getBooleanArray(@NotNull L lookup);
 
-	@Nonnull
-	public Optional<Integer[]> getIntArray(@Nonnull L lookup);
+	@NotNull
+	public Optional<Integer[]> getIntArray(@NotNull L lookup);
 
-	@Nonnull
-	public Optional<Float[]> getFloatArray(@Nonnull L lookup);
+	@NotNull
+	public Optional<Float[]> getFloatArray(@NotNull L lookup);
 
-	@Nonnull
-	public Optional<Double[]> getDoubleArray(@Nonnull L lookup);
+	@NotNull
+	public Optional<Double[]> getDoubleArray(@NotNull L lookup);
 
-	@Nonnull
-	public Optional<Long[]> getLongArray(@Nonnull L lookup);
+	@NotNull
+	public Optional<Long[]> getLongArray(@NotNull L lookup);
 
-	@Nonnull
-	public PropertyType getType(@Nonnull L lookup);
+	@NotNull
+	public PropertyType getType(@NotNull L lookup);
 }

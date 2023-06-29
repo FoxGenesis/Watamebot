@@ -5,8 +5,8 @@ import java.sql.SQLException;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import net.dv8tion.jda.api.entities.Guild;
 import net.foxgenesis.config.fields.JSONObjectAdv;
@@ -23,7 +23,7 @@ public class GuildData implements IGuildData {
 	/**
 	 * Link to parent data manager
 	 */
-	@Nonnull
+	@NotNull
 	private final QuadFunction<String, Object, Long, Boolean, Integer> consumer;
 
 	/**
@@ -57,7 +57,7 @@ public class GuildData implements IGuildData {
 	 * @deprecated
 	 */
 	@Deprecated(forRemoval = true)
-	GuildData(@Nonnull Guild guild, @Nonnull QuadFunction<String, Object, Long, Boolean, Integer> consumer) {
+	GuildData(@NotNull Guild guild, @NotNull QuadFunction<String, Object, Long, Boolean, Integer> consumer) {
 		this(guild.getIdLong(), consumer);
 	}
 
@@ -69,7 +69,7 @@ public class GuildData implements IGuildData {
 	 * @param id       - The guild id that this instance represents
 	 * @param consumer - guild data update consumer
 	 */
-	GuildData(long id, @Nonnull QuadFunction<String, Object, Long, Boolean, Integer> consumer) {
+	GuildData(long id, @NotNull QuadFunction<String, Object, Long, Boolean, Integer> consumer) {
 		this.consumer = Objects.requireNonNull(consumer);
 		this.id = id;
 	}
@@ -105,7 +105,7 @@ public class GuildData implements IGuildData {
 	 * @see WatameBotDatabase#pushJSONUpdate(String, Object, long, boolean)
 	 */
 	@SuppressWarnings({ "removal", "deprecation" })
-	void setData(@Nonnull ResultSet result) throws SQLException {
+	void setData(@NotNull ResultSet result) throws SQLException {
 		// Get our configuration column
 		String jsonString = result.getString("GuildProperties");
 

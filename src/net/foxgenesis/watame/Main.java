@@ -5,11 +5,10 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.concurrent.ForkJoinPool;
 
-import javax.annotation.Nonnull;
-
 import org.apache.commons.configuration2.ImmutableConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.fusesource.jansi.AnsiConsole;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -153,7 +152,7 @@ public class Main {
 		StatusPrinter.printInCaseOfErrorsOrWarnings(context);
 	}
 
-	@Nonnull
+	@NotNull
 	static WatameBotSettings getSettings() {
 		return settings;
 	}

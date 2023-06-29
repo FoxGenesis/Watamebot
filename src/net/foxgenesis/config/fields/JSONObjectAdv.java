@@ -2,8 +2,7 @@ package net.foxgenesis.config.fields;
 
 import java.util.Objects;
 
-import javax.annotation.Nonnull;
-
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
 import net.foxgenesis.util.function.TriConsumer;
@@ -12,7 +11,7 @@ public class JSONObjectAdv extends JSONObject {
 
 	private final TriConsumer<String, Object, Boolean> update;
 
-	public JSONObjectAdv(@Nonnull String json, @Nonnull TriConsumer<String, Object, Boolean> update) {
+	public JSONObjectAdv(@NotNull String json, @NotNull TriConsumer<String, Object, Boolean> update) {
 		super(json);
 		this.update = Objects.requireNonNull(update);
 	}
@@ -25,7 +24,7 @@ public class JSONObjectAdv extends JSONObject {
 		return this;
 	}
 
-	public JSONObjectAdv putIfAbsent(@Nonnull String key, Object value) {
+	public JSONObjectAdv putIfAbsent(@NotNull String key, Object value) {
 		if (!has(key))
 			put(key, value);
 		return this;

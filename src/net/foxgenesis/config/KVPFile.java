@@ -15,8 +15,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import net.foxgenesis.util.resource.ModuleResource;
 
@@ -54,7 +54,7 @@ public class KVPFile {
 	 * @throws IOException Thrown if an error occurs while reading the InputStream
 	 *                     of the resource
 	 */
-	public KVPFile(@Nonnull File file) throws IOException {
+	public KVPFile(@NotNull File file) throws IOException {
 		this(file.toURI().toURL());
 	}
 
@@ -66,7 +66,7 @@ public class KVPFile {
 	 * @throws IOException Thrown if an error occurs while reading the InputStream
 	 *                     of the resource
 	 */
-	public KVPFile(@Nonnull URL url) throws IOException {
+	public KVPFile(@NotNull URL url) throws IOException {
 		// Ensure url is not null
 		Objects.requireNonNull(url);
 		parse(url);
@@ -80,7 +80,7 @@ public class KVPFile {
 	 * @throws IOException Thrown if an error occurs while reading the InputStream
 	 *                     of the resource
 	 */
-	public KVPFile(@Nonnull InputStream input) throws IOException {
+	public KVPFile(@NotNull InputStream input) throws IOException {
 		parse(input);
 	}
 
@@ -92,7 +92,7 @@ public class KVPFile {
 	 * @throws IOException Thrown if an error occurs while reading the InputStream
 	 *                     of the resource
 	 */
-	public KVPFile(@Nonnull ModuleResource resource) throws IOException {
+	public KVPFile(@NotNull ModuleResource resource) throws IOException {
 		// Ensure the resource is not null
 		Objects.requireNonNull(resource);
 		parse(resource);
@@ -239,7 +239,7 @@ public class KVPFile {
 	 * @throws IOException Thrown if an error occurs while reading the InputStream
 	 *                     of the resource
 	 */
-	public void parse(@Nonnull URL resourceURL) throws IOException {
+	public void parse(@NotNull URL resourceURL) throws IOException {
 		Objects.requireNonNull(resourceURL, "Resource url must not be null!");
 		try (InputStream in = resourceURL.openStream()) {
 			parse(lines(in));
@@ -254,7 +254,7 @@ public class KVPFile {
 	 * @throws IOException Thrown if an error occurs while reading the InputStream
 	 *                     of the resource
 	 */
-	public void parse(@Nonnull ModuleResource resource) throws IOException {
+	public void parse(@NotNull ModuleResource resource) throws IOException {
 		Objects.requireNonNull(resource, "The specified resource must not be null!");
 		try (InputStream in = resource.openStream()) {
 			parse(lines(in));
@@ -270,7 +270,7 @@ public class KVPFile {
 	 *                     of the resource
 	 */
 	@SuppressWarnings("resource")
-	public void parse(@Nonnull InputStream input) throws IOException {
+	public void parse(@NotNull InputStream input) throws IOException {
 		Objects.requireNonNull(input, "The specified stream must not be null!");
 		parse(lines(input));
 	}

@@ -4,9 +4,8 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * An interface that provides generic methods used to retrieve and set
@@ -18,6 +17,7 @@ import javax.annotation.Nullable;
  * @param <F> Lookup data type that coincides property lookup
  * @param <M> Property mapping type that turns the raw property data into a
  *            usable type
+ * 
  * @see IPropertyProvider
  * @see IPropertyMapping
  */
@@ -27,10 +27,11 @@ public interface ImmutableProperty<K, F, M extends IPropertyMapping> {
 	 * Get this property's data wrapped in an {@link IPropertyMapping}.
 	 * 
 	 * @param from - property lookup data
+	 * 
 	 * @return The property's data inside an {@link IPropertyMapping}
 	 */
-	@CheckForNull
-	M get(@Nonnull F from);
+	@Nullable
+	M get(@NotNull F from);
 
 	/**
 	 * Get this property's value by applying the mapping into the {@code resolver}
@@ -41,17 +42,19 @@ public interface ImmutableProperty<K, F, M extends IPropertyMapping> {
 	 * @param from     - property lookup data
 	 * @param fallback - supplier providing a fallback value
 	 * @param resolver - function to resolve the mapping into a usable data type
+	 * 
 	 * @return Returns the property's value by applying it using the
 	 *         {@code resolver} function. If the result of the {@code resolver}
 	 *         function is {@code null}, the {@code fallback} supplier's value will
 	 *         be returned instead
 	 */
-	default <U> U get(@Nonnull F from, @Nonnull Supplier<U> fallback,
-			@Nonnull Function<? super M, ? extends U> resolver) {
+	@Nullable
+	default <U> U get(@NotNull F from, @NotNull Supplier<U> fallback,
+			@NotNull Function<? super M, ? extends U> resolver) {
 		Objects.requireNonNull(fallback);
 		Objects.requireNonNull(resolver);
 
-		M mapping = get(from);
+		@SuppressWarnings("null") M mapping = get(from);
 		if (mapping != null)
 			return resolver.apply(mapping);
 		return fallback.get();
@@ -66,12 +69,14 @@ public interface ImmutableProperty<K, F, M extends IPropertyMapping> {
 	 * @param from     - property lookup data
 	 * @param fallback - fallback value
 	 * @param resolver - function to resolve the mapping into a usable data type
+	 * 
 	 * @return Returns the property's value by applying it using the
 	 *         {@code resolver} function. If the result of the {@code resolver}
 	 *         function is {@code null}, the {@code fallback} value will be returned
 	 *         instead
 	 */
-	default <U> U get(@Nonnull F from, @Nullable U fallback, @Nonnull Function<? super M, ? extends U> resolver) {
+	@Nullable
+	default <U> U get(@NotNull F from, @Nullable U fallback, @NotNull Function<? super M, ? extends U> resolver) {
 		return get(from, () -> fallback, resolver);
 	}
 
@@ -82,10 +87,12 @@ public interface ImmutableProperty<K, F, M extends IPropertyMapping> {
 	 * @param <U>      - returned data type of the {@code resolver}
 	 * @param from     - property lookup data
 	 * @param resolver - function to resolve the mapping into a usable data type
+	 * 
 	 * @return Returns the property's value by applying the mapping into the
 	 *         {@code resolver} function.
 	 */
-	default <U> U get(@Nonnull F from, @Nonnull Function<? super M, U> resolver) {
+	@Nullable
+	default <U> U get(@NotNull F from, @NotNull Function<? super M, U> resolver) {
 		return get(from, () -> null, resolver);
 	}
 
@@ -94,17 +101,18 @@ public interface ImmutableProperty<K, F, M extends IPropertyMapping> {
 	 * 
 	 * @return The property's key
 	 */
-	@Nonnull
+	@NotNull
 	K getKey();
 
 	/**
 	 * Check if this property is present.
 	 * 
 	 * @param from - lookup data
+	 * 
 	 * @return Returns {@code true} if the property was found using the provided
 	 *         lookup data
 	 */
-	boolean isPresent(@Nonnull F from);
+	boolean isPresent(@NotNull F from);
 
 	/**
 	 * Check if this property is end user editable.

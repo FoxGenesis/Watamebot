@@ -12,9 +12,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -48,31 +47,31 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 	/**
 	 * Service loader to load plugins
 	 */
-	@Nonnull
+	@NotNull
 	private final ServiceLoader<T> loader;
 
 	/**
 	 * Module layer of the loader
 	 */
-	@Nonnull
+	@NotNull
 	private final ModuleLayer layer;
 
 	/**
 	 * Class of the plugin we are loading
 	 */
-	@Nonnull
+	@NotNull
 	private final Class<T> pluginClass;
 
 	/**
 	 * Thread pool for loading plugins
 	 */
-	@Nonnull
+	@NotNull
 	private final ExecutorService pluginExecutor;
 
 	/**
 	 * Startup asynchronous executor
 	 */
-	@Nonnull
+	@NotNull
 	private final Context context;
 
 	/**
@@ -124,7 +123,7 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 	 * @return Returns a {@link CompletableFuture} that completes when all plugins
 	 *         have finished their {@link Plugin#preInit()}
 	 */
-	@Nonnull
+	@NotNull
 	public CompletableFuture<Void> preInit() {
 		logger.debug("Calling plugin pre-initialization async");
 		return forEachPlugin(Plugin::preInit, null);
@@ -136,7 +135,7 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 	 * @return Returns a {@link CompletableFuture} that completes when all plugins
 	 *         have finished their {@link Plugin#init(IEventStore)}
 	 */
-	@Nonnull
+	@NotNull
 	public CompletableFuture<Void> init() {
 		logger.debug("Calling plugin initialization async");
 		return forEachPlugin(plugin -> plugin.init(context.getEventRegister()), null);
@@ -151,7 +150,7 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 	 * @return Returns a {@link CompletableFuture} that completes when all plugins
 	 *         have finished their {@link Plugin#postInit(WatameBot)}
 	 */
-	@Nonnull
+	@NotNull
 	public CompletableFuture<Void> postInit(WatameBot watamebot) {
 		logger.debug("Calling plugin post-initialization async");
 		return forEachPlugin(plugin -> plugin.postInit(watamebot), null);
@@ -166,7 +165,7 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 	 * @return Returns a {@link CompletableFuture} that completes when all plugins
 	 *         have finished their {@link Plugin#onReady(WatameBot)}
 	 */
-	@Nonnull
+	@NotNull
 	public CompletableFuture<Void> onReady(WatameBot watamebot) {
 		logger.debug("Calling plugin on ready async");
 		return forEachPlugin(plugin -> plugin.onReady(watamebot), null);
@@ -180,7 +179,7 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 	 * 
 	 * @return Returns the action for chaining
 	 */
-	@Nonnull
+	@NotNull
 	public CommandListUpdateAction updateCommands(CommandListUpdateAction action) {
 		plugins.values().stream().filter(p -> p.providesCommands).map(Plugin::getCommands).forEach(action::addCommands);
 		return action;
@@ -198,7 +197,7 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 	 * @return Returns a {@link CompletableFuture} that completes after all plugins
 	 *         have finished the {@code task}.
 	 */
-	@Nonnull
+	@NotNull
 	private CompletableFuture<Void> forEachPlugin(Consumer<? super T> task, @Nullable Predicate<Plugin> filter) {
 		if (filter == null)
 			filter = p -> true;
@@ -298,7 +297,7 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 	 * @return Returns a {@link Class} that is used by the {@link ServiceLoader} to
 	 *         load the plugins
 	 */
-	@Nonnull
+	@NotNull
 	public Class<T> getPluginClass() {
 		return pluginClass;
 	}
@@ -309,7 +308,7 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 	 * @return Returns a {@link ModuleLayer} that is used by the
 	 *         {@link ServiceLoader} to load the plugins
 	 */
-	@Nonnull
+	@NotNull
 	public ModuleLayer getModuleLayer() {
 		return layer;
 	}
@@ -319,7 +318,7 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 	 * 
 	 * @return
 	 */
-	@Nonnull
+	@NotNull
 	public ExecutorService getAsynchronousExecutor() {
 		return pluginExecutor;
 	}

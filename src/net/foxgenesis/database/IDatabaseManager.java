@@ -2,7 +2,7 @@ package net.foxgenesis.database;
 
 import java.io.IOException;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 import net.foxgenesis.watame.plugin.Plugin;
 
@@ -14,10 +14,10 @@ public interface IDatabaseManager {
 	 */
 	public boolean isReady();
 
-	boolean register(@Nonnull Plugin owningPlugin, @Nonnull AbstractDatabase database) throws IOException;
+	boolean register(@NotNull Plugin owningPlugin, @NotNull AbstractDatabase database) throws IOException;
 
-	boolean isDatabaseRegistered(@Nonnull AbstractDatabase database);
+	boolean isDatabaseRegistered(@NotNull AbstractDatabase database);
 	
-	@Nonnull
+	@NotNull
 	String getName();
 }

@@ -18,7 +18,7 @@ module watamebot {
 	requires org.apache.commons.lang3;
 	requires ch.qos.logback.core;
 	requires ch.qos.logback.classic;
-	requires jsr305;
+	requires org.jetbrains.annotations;
 	requires java.desktop;
 
 	exports net.foxgenesis.config;

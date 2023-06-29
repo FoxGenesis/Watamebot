@@ -5,11 +5,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import org.apache.commons.configuration2.INIConfiguration;
 import org.apache.commons.configuration2.ImmutableConfiguration;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,18 +19,18 @@ public class WatameBotSettings {
 
 	private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
-	@Nonnull
+	@NotNull
 	public final Path configurationPath;
 
 	private final INIConfiguration config;
 
 	private final String token;
 
-	WatameBotSettings(@Nonnull Path configPath) throws Exception {
+	WatameBotSettings(@NotNull Path configPath) throws Exception {
 		this(configPath, null);
 	}
 
-	WatameBotSettings(@Nonnull Path configPath, @Nullable Path tokenFile2) throws Exception {
+	WatameBotSettings(@NotNull Path configPath, @Nullable Path tokenFile2) throws Exception {
 		this.configurationPath = Objects.requireNonNull(configPath);
 
 		if (!isValidDirectory(configPath))

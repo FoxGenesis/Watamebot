@@ -6,7 +6,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 import net.foxgenesis.property2.Property;
 import net.foxgenesis.property2.PropertyResolver;
@@ -17,18 +17,25 @@ public abstract class APropertyProvider<L, T extends Property<L>, R extends Prop
 	protected final R resolver;
 	protected final HashMap<String, T> properties = new HashMap<>();
 
-	public APropertyProvider(@Nonnull R resolver) { this.resolver = Objects.requireNonNull(resolver); }
+	public APropertyProvider(@NotNull R resolver) {
+		this.resolver = Objects.requireNonNull(resolver);
+	}
 
-	@Nonnull
-	public abstract T getProperty(@Nonnull String key);
+	@NotNull
+	public abstract T getProperty(@NotNull String key);
 
-	public boolean isPropertyPresent(@Nonnull String key) { return properties.containsKey(key); }
+	public boolean isPropertyPresent(@NotNull String key) {
+		return properties.containsKey(key);
+	}
 
-	@Nonnull
-	public Set<String> keySet() { return Collections.unmodifiableSet(properties.keySet()); }
+	@NotNull
+	public Set<String> keySet() {
+		return Collections.unmodifiableSet(properties.keySet());
+	}
 
-	@Nonnull
-	public Stream<T> typesOf(@Nonnull L lookup, @Nonnull PropertyType type) {
-		return Collections.unmodifiableCollection(properties.values()).stream().filter(p -> p.getType(lookup).equals(type));
+	@NotNull
+	public Stream<T> typesOf(@NotNull L lookup, @NotNull PropertyType type) {
+		return Collections.unmodifiableCollection(properties.values()).stream()
+				.filter(p -> p.getType(lookup).equals(type));
 	}
 }

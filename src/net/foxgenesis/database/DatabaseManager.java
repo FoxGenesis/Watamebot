@@ -14,9 +14,8 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,15 +31,15 @@ import net.foxgenesis.watame.plugin.Plugin;
  *
  */
 public class DatabaseManager implements IDatabaseManager, AutoCloseable {
-	@Nonnull
+	@NotNull
 	protected final Logger logger;
 
-	// @Nonnull
+	// @NotNull
 	// private final Set<AbstractDatabase> databases = new HashSet<>();
 
 	private final HashMap<Plugin, Set<AbstractDatabase>> databases = new HashMap<>();
 
-	@Nonnull
+	@NotNull
 	private final String name;
 
 	@Nullable
@@ -53,14 +52,14 @@ public class DatabaseManager implements IDatabaseManager, AutoCloseable {
 	 * 
 	 * @param name
 	 */
-	public DatabaseManager(@Nonnull String name) {
+	public DatabaseManager(@NotNull String name) {
 		this.name = Objects.requireNonNull(name);
 		logger = LoggerFactory.getLogger(name);
 	}
 
 	@SuppressWarnings("resource")
 	@Override
-	public boolean register(@Nonnull Plugin plugin, @Nonnull AbstractDatabase database) throws IOException {
+	public boolean register(@NotNull Plugin plugin, @NotNull AbstractDatabase database) throws IOException {
 		Objects.requireNonNull(database);
 
 		if (!plugin.needsDatabase)
@@ -117,7 +116,7 @@ public class DatabaseManager implements IDatabaseManager, AutoCloseable {
 		return databases.values().stream().anyMatch(set -> set.contains(database));
 	}
 
-	public synchronized CompletableFuture<Void> start(@Nonnull AConnectionProvider provider, Executor executor) {
+	public synchronized CompletableFuture<Void> start(@NotNull AConnectionProvider provider, Executor executor) {
 		final Executor ex = executor == null? ForkJoinPool.commonPool() : executor;
 		long start = System.nanoTime();
 		return CompletableFuture.runAsync(() -> {
@@ -170,7 +169,7 @@ public class DatabaseManager implements IDatabaseManager, AutoCloseable {
 				MethodTimer.formatToSeconds(System.nanoTime() - start)));
 	}
 
-	public synchronized void start(@Nonnull AConnectionProvider provider) {
+	public synchronized void start(@NotNull AConnectionProvider provider) {
 		long start = System.nanoTime();
 
 		this.provider = Objects.requireNonNull(provider);
@@ -212,7 +211,7 @@ public class DatabaseManager implements IDatabaseManager, AutoCloseable {
 	}
 
 	@Override
-	@Nonnull
+	@NotNull
 	public String getName() {
 		return name;
 	}

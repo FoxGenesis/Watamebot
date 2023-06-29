@@ -12,12 +12,11 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.util.Properties;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +34,7 @@ import net.foxgenesis.watame.WatameBot;
  *
  */
 public abstract class Plugin {
-	@Nonnull
+	@NotNull
 	private static final Path CONFIG_PATH = Paths.get("config");
 
 	static {
@@ -51,39 +50,39 @@ public abstract class Plugin {
 	/**
 	 * Plugin logger
 	 */
-	@Nonnull
+	@NotNull
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
 	/**
 	 * Plugin configurations
 	 */
-	@Nonnull
+	@NotNull
 	private final HashMap<String, PropertiesConfiguration> configs = new HashMap<>();
 
 	/**
 	 * Path to the plugin's configuration folder
 	 */
-	@Nonnull
+	@NotNull
 	public final Path configurationPath;
 
 	/**
 	 * Name identifier of the plugin.
 	 */
-	@Nonnull
+	@NotNull
 	public final String name;
 	/**
 	 * Friendly identifier of the plugin.
 	 */
-	@Nonnull
+	@NotNull
 	public final String friendlyName;
 	/**
 	 * Description of the plugin.
 	 */
-	@Nonnull
+	@NotNull
 	public final String description;
 	/**
 	 * Version of the plugin.
 	 */
-	@Nonnull
+	@NotNull
 	public final Version version;
 
 	/**
@@ -197,7 +196,7 @@ public abstract class Plugin {
 	 * @return Returns a non-null {@link Collection} of {@link CommandData} that
 	 *         this {@link Plugin} provides
 	 */
-	@Nonnull
+	@NotNull
 	protected Collection<CommandData> getCommands() {
 		return Collections.emptyList();
 	}

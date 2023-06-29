@@ -4,7 +4,7 @@ import java.sql.ResultSet;
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * NEED_JAVADOC
@@ -24,7 +24,7 @@ public class SQLConfigurationDatabase extends ConfigurationDatabase<Long> {
 	public SQLConfigurationDatabase(String name, String database, String table) { super(name, database, table); }
 
 	@Override
-	protected Optional<String> getInternal(@Nonnull Long lookup, @Nonnull String key) {
+	protected Optional<String> getInternal(@NotNull Long lookup, @NotNull String key) {
 		if (!isReady())
 			throw new UnsupportedOperationException("Database is not ready yet!");
 
@@ -43,7 +43,7 @@ public class SQLConfigurationDatabase extends ConfigurationDatabase<Long> {
 	}
 
 	@Override
-	protected boolean putInternal(@Nonnull Long lookup, @Nonnull String key, @Nonnull String value) {
+	protected boolean putInternal(@NotNull Long lookup, @NotNull String key, @NotNull String value) {
 		if (!isReady())
 			throw new UnsupportedOperationException("Database is not ready yet!");
 
@@ -60,7 +60,7 @@ public class SQLConfigurationDatabase extends ConfigurationDatabase<Long> {
 	}
 
 	@Override
-	protected boolean removeInternal(@Nonnull Long lookup, @Nonnull String key) {
+	protected boolean removeInternal(@NotNull Long lookup, @NotNull String key) {
 		if (!isReady())
 			throw new UnsupportedOperationException("Database is not ready yet!");
 

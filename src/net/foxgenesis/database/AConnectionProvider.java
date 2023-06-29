@@ -9,6 +9,7 @@ import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +45,7 @@ public abstract class AConnectionProvider implements AutoCloseable {
 
 	protected abstract Connection openConnection() throws SQLException;
 
+	@Nullable
 	protected <U> U openAutoClosedConnection(ConnectionConsumer<U> consumer, Consumer<Throwable> error) {
 		try (Connection conn = openConnection()) {
 			return consumer.applyConnection(conn);

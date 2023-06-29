@@ -1,6 +1,6 @@
 package net.foxgenesis.watame.property;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import net.dv8tion.jda.api.entities.Category;
 import net.dv8tion.jda.api.entities.Channel;
@@ -16,22 +16,22 @@ public interface IGuildPropertyMapping extends IPropertyMapping {
 
 	@Nullable
 	public Category getAsCategory();
-	
+
 	@Nullable
 	public Channel getAsChannel();
 	
 	@Nullable
 	public TextChannel getAsTextChannel();
-	
+
 	@Nullable
 	public VoiceChannel getAsVoiceChannel();
-	
+
 	@Nullable
 	public StageChannel getAsStageChannel();
-	
+
 	@Nullable
 	public NewsChannel getAsNewsChannel();
-	
+
 	@Nullable
 	public Role getAsRole();
 

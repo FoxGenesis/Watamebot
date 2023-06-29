@@ -3,7 +3,7 @@ package net.foxgenesis.property2.async;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 import net.foxgenesis.property2.PropertyType;
 
@@ -19,115 +19,127 @@ public interface AsyncImmutableProperty<L> {
 	 * NEED_JAVADOC
 	 * 
 	 * @param lookup
+	 * 
 	 * @return
 	 */
-	@Nonnull
-	public CompletableFuture<Optional<String>> getStringAsync(@Nonnull L lookup);
+	@NotNull
+	public CompletableFuture<Optional<String>> getStringAsync(@NotNull L lookup);
 
 	/**
 	 * NEED_JAVADOC
 	 * 
 	 * @param lookup
+	 * 
 	 * @return
 	 */
-	@Nonnull
-	public CompletableFuture<Optional<Boolean>> getBooleanAsync(@Nonnull L lookup);
+	@NotNull
+	public CompletableFuture<Optional<Boolean>> getBooleanAsync(@NotNull L lookup);
 
 	/**
 	 * NEED_JAVADOC
 	 * 
 	 * @param lookup
+	 * 
 	 * @return
 	 */
-	@Nonnull
-	public CompletableFuture<Optional<Integer>> getIntAsync(@Nonnull L lookup);
+	@NotNull
+	public CompletableFuture<Optional<Integer>> getIntAsync(@NotNull L lookup);
 
 	/**
 	 * NEED_JAVADOC
 	 * 
 	 * @param lookup
+	 * 
 	 * @return
 	 */
-	@Nonnull
-	public CompletableFuture<Optional<Float>> getFloatAsync(@Nonnull L lookup);
+	@NotNull
+	public CompletableFuture<Optional<Float>> getFloatAsync(@NotNull L lookup);
 
 	/**
 	 * NEED_JAVADOC
 	 * 
 	 * @param lookup
+	 * 
 	 * @return
 	 */
-	@Nonnull
-	public CompletableFuture<Optional<Double>> getDoubleAsync(@Nonnull L lookup);
+	@NotNull
+	public CompletableFuture<Optional<Double>> getDoubleAsync(@NotNull L lookup);
 
 	/**
 	 * NEED_JAVADOC
 	 * 
 	 * @param lookup
+	 * 
 	 * @return
 	 */
-	@Nonnull
-	public CompletableFuture<Optional<Long>> getLongAsync(@Nonnull L lookup);
+	@NotNull
+	public CompletableFuture<Optional<Long>> getLongAsync(@NotNull L lookup);
 
 	/**
 	 * NEED_JAVADOC
 	 * 
 	 * @param lookup
+	 * 
 	 * @return
 	 */
-	@Nonnull
-	public CompletableFuture<Optional<String[]>> getStringArrayAsync(@Nonnull L lookup);
+	@NotNull
+	public CompletableFuture<Optional<String[]>> getStringArrayAsync(@NotNull L lookup);
 
 	/**
 	 * NEED_JAVADOC
 	 * 
 	 * @param lookup
+	 * 
 	 * @return
 	 */
-	@Nonnull
-	public CompletableFuture<Optional<Boolean[]>> getBooleanArrayAsync(@Nonnull L lookup);
+	@NotNull
+	public CompletableFuture<Optional<Boolean[]>> getBooleanArrayAsync(@NotNull L lookup);
 
 	/**
 	 * NEED_JAVADOC
 	 * 
 	 * @param lookup
+	 * 
 	 * @return
 	 */
-	@Nonnull
-	public CompletableFuture<Optional<Integer[]>> getIntArrayAsync(@Nonnull L lookup);
+	@NotNull
+	public CompletableFuture<Optional<Integer[]>> getIntArrayAsync(@NotNull L lookup);
 
 	/**
 	 * NEED_JAVADOC
 	 * 
 	 * @param lookup
+	 * 
 	 * @return
 	 */
-	@Nonnull
-	public CompletableFuture<Optional<Float[]>> getFloatArrayAsync(@Nonnull L lookup);
+	@NotNull
+	public CompletableFuture<Optional<Float[]>> getFloatArrayAsync(@NotNull L lookup);
 
 	/**
 	 * NEED_JAVADOC
 	 * 
 	 * @param lookup
+	 * 
 	 * @return
 	 */
-	@Nonnull
-	public CompletableFuture<Optional<Double[]>> getDoubleArrayAsync(@Nonnull L lookup);
+	@NotNull
+	public CompletableFuture<Optional<Double[]>> getDoubleArrayAsync(@NotNull L lookup);
 
 	/**
 	 * NEED_JAVADOC
 	 * 
 	 * @param lookup
+	 * 
 	 * @return
 	 */
-	@Nonnull
-	public CompletableFuture<Optional<Long[]>> getLongArrayAsync(@Nonnull L lookup);
+	@NotNull
+	public CompletableFuture<Optional<Long[]>> getLongArrayAsync(@NotNull L lookup);
 
 	/**
 	 * NEED_JAVADOC
 	 * 
 	 * @return
 	 */
-	@Nonnull
-	public CompletableFuture<PropertyType> getTypeAsync(@Nonnull L lookup);
+	@NotNull
+	public CompletableFuture<PropertyType> getTypeAsync(@NotNull L lookup);
 }
