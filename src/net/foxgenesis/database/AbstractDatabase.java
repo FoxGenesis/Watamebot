@@ -145,9 +145,6 @@ public abstract class AbstractDatabase implements AutoCloseable {
 		}, error);
 	}
 
-
-	}
-
 	/**
 	 * NEED_JAVADOC
 	 * 
@@ -246,7 +243,7 @@ public abstract class AbstractDatabase implements AutoCloseable {
 	/**
 	 * NEED_JAVADOC
 	 * 
-	 * @return
+	 * @return Returns {@code true} if the database is ready for use
 	 */
 	public boolean isReady() {
 		return provider != null;
