@@ -31,13 +31,13 @@
 		<appender-ref ref="STDOUT" />
 		<queueSize>1</queueSize>
 		<includeCallerData>false</includeCallerData>
-		<neverBlock>true</neverBlock>
+		<neverBlock>false</neverBlock>
 	</appender>
 	<appender name="ASYNC_FILE"
 		class="ch.qos.logback.classic.AsyncAppender">
 		<discardingThreshold>0</discardingThreshold>
 		<appender-ref ref="FILE" />
-		<queueSize>1</queueSize>
+		<queueSize>1024</queueSize>
 		<includeCallerData>false</includeCallerData>
 		<neverBlock>false</neverBlock>
 	</appender>

@@ -10,8 +10,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 
-import javax.security.auth.login.LoginException;
-
 import org.apache.commons.configuration2.ImmutableConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -42,10 +40,10 @@ import net.foxgenesis.util.MethodTimer;
 import net.foxgenesis.util.ResourceUtils;
 import net.foxgenesis.watame.plugin.Plugin;
 import net.foxgenesis.watame.plugin.PluginHandler;
+import net.foxgenesis.watame.plugin.SeverePluginException;
 import net.foxgenesis.watame.property.GuildProperty;
 import net.foxgenesis.watame.property.IGuildPropertyMapping;
 import net.foxgenesis.watame.property.IGuildPropertyProvider;
-import net.foxgenesis.watame.sql.IGuildData;
 import net.foxgenesis.watame.sql.WatameBotDatabase;
 
 /**
@@ -247,7 +245,11 @@ public class WatameBot {
 		// Setup the database
 		try {
 			logger.debug("Adding database to database manager");
-			manager.register(pluginHandler.getPlugin("integrated"), database);
+			Plugin integrated = pluginHandler.getPlugin("integrated");
+			if (integrated != null)
+				manager.register(integrated, database);
+			else
+				throw new SeverePluginException("Failed to find the integrated plugin!");
 		} catch (IOException e) {
 			// Some error occurred while setting up database
 			ExitCode.DATABASE_SETUP_ERROR.programExit(e);
@@ -362,10 +364,10 @@ public class WatameBot {
 		// Setup our JDA with wanted values
 		logger.debug("Creating JDA");
 		JDABuilder builder = JDABuilder
-				.create(token, GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_BANS, GatewayIntent.GUILD_MESSAGES,
-						GatewayIntent.MESSAGE_CONTENT)
+				.create(token, GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MODERATION,
+						GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT)
 				.disableCache(CacheFlag.ACTIVITY, CacheFlag.VOICE_STATE, CacheFlag.EMOJI, CacheFlag.STICKER,
-						CacheFlag.CLIENT_STATUS, CacheFlag.ONLINE_STATUS)
+						CacheFlag.CLIENT_STATUS, CacheFlag.ONLINE_STATUS, CacheFlag.SCHEDULED_EVENTS)
 				.setChunkingFilter(ChunkingFilter.ALL).setAutoReconnect(true)
 				.setActivity(Activity.playing(config.getString("WatameBot.Status.startup", "Initalizing...")))
 				.setMemberCachePolicy(MemberCachePolicy.ALL).setStatus(OnlineStatus.DO_NOT_DISTURB);
@@ -393,7 +395,7 @@ public class WatameBot {
 
 				// We connected. Stop loop.
 				built = true;
-			} catch (LoginException ex) {
+			} catch (Exception ex) {
 				// Failed to connect. Log error
 				logger.warn("Failed to connect: [" + ex.getLocalizedMessage() + "]! Retrying in 5 seconds...", ex);
 
@@ -439,11 +441,6 @@ public class WatameBot {
 	 */
 	public IDatabaseManager getDatabaseManager() {
 		return manager;
-	}
-
-	@Deprecated(forRemoval = true)
-	public IGuildData getDataForGuild(Guild guild) {
-		return database.getDataForGuild(guild);
 	}
 
 	/**

@@ -1,9 +1,9 @@
 package net.foxgenesis.watame.command;
 
-import static net.foxgenesis.watame.Constants.Colors.ERROR;
-import static net.foxgenesis.watame.Constants.Colors.INFO;
-import static net.foxgenesis.watame.Constants.Colors.SUCCESS;
-import static net.foxgenesis.watame.Constants.Colors.WARNING_DARK;
+import static net.foxgenesis.watame.util.Colors.ERROR;
+import static net.foxgenesis.watame.util.Colors.INFO;
+import static net.foxgenesis.watame.util.Colors.SUCCESS;
+import static net.foxgenesis.watame.util.Colors.NOTICE;
 
 import java.util.HashMap;
 import java.util.List;
@@ -21,8 +21,8 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -61,7 +61,7 @@ public class ConfigCommand extends ListenerAdapter {
 		AutoCompleteQuery option = event.getFocusedOption();
 		Guild guild = event.getGuild();
 		if (event.isFromGuild() && guild != null) {
-			if (event.getCommandPath().startsWith("options/configuration") && option.getName().equals("key")) {
+			if (event.getFullCommandName().startsWith("options configuration") && option.getName().equals("key")) {
 				IPropertyProvider<String, Guild, IGuildPropertyMapping> provider = WatameBot.INSTANCE
 						.getPropertyProvider();
 				event.replyChoices(provider.keySet().stream().filter(key -> provider.getProperty(key).isEditable())
@@ -288,11 +288,11 @@ public class ConfigCommand extends ListenerAdapter {
 	 * @param value    - new property value
 	 */
 	private static void logChange(Member user, String key, String oldValue, String value) {
-		TextChannel channel = WatameBot.INSTANCE.getGuildLoggingChannel().get(user.getGuild(),
-				IGuildPropertyMapping::getAsTextChannel);
+		GuildMessageChannel channel = WatameBot.INSTANCE.getGuildLoggingChannel().get(user.getGuild(),
+				IGuildPropertyMapping::getAsMessageChannel);
 
 		if (channel != null) {
-			channel.sendMessageEmbeds(new EmbedBuilder().setColor(WARNING_DARK).setTitle("Configuration Change")
+			channel.sendMessageEmbeds(new EmbedBuilder().setColor(NOTICE).setTitle("Configuration Change")
 					.setDescription("Plugin configuration has been updated")
 					.addField("Type", value == null ? "Remove" : "Update", true)
 					.addField("User", user.getAsMention(), true).addField("Key", key, true)

@@ -21,7 +21,9 @@ public class SQLConfigurationDatabase extends ConfigurationDatabase<Long> {
 	 * @param database
 	 * @param table
 	 */
-	public SQLConfigurationDatabase(String name, String database, String table) { super(name, database, table); }
+	public SQLConfigurationDatabase(String name, String database, String table) {
+		super(name, database, table);
+	}
 
 	@Override
 	protected Optional<String> getInternal(@NotNull Long lookup, @NotNull String key) {
@@ -36,8 +38,8 @@ public class SQLConfigurationDatabase extends ConfigurationDatabase<Long> {
 			statement.setString(2, key);
 
 			try (ResultSet result = statement.executeQuery()) {
-				if (result.next()) { return Optional.of(result.getString("property")); }
-				return Optional.empty();
+				if (result.next()) { return result.getString("property"); }
+				return null;
 			}
 		}, err -> logger.error("Error while getting internal property", err));
 	}
@@ -56,7 +58,7 @@ public class SQLConfigurationDatabase extends ConfigurationDatabase<Long> {
 			statement.setString(2, key);
 			statement.setString(3, value);
 			return statement.executeUpdate() > 0;
-		}, err -> logger.error("Error while putting internal property", err));
+		}, err -> logger.error("Error while putting internal property", err)).orElse(false);
 	}
 
 	@Override
@@ -70,7 +72,7 @@ public class SQLConfigurationDatabase extends ConfigurationDatabase<Long> {
 			statement.setLong(1, lookup);
 			statement.setString(2, key);
 			return statement.executeUpdate() > 0;
-		}, err -> logger.error("Error while removing internal property", err));
+		}, err -> logger.error("Error while removing internal property", err)).orElse(false);
 	}
 
 	@Override

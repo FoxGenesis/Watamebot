@@ -52,56 +52,6 @@ public class WatameBotDatabase extends AbstractDatabase implements IGuildDataPro
 	/**
 	 * Register a guild to be loaded during data retrieval.
 	 * 
-	 * @param guild - {@link Guild} to be loaded
-	 * 
-	 * @throws NullPointerException if {@code guild} is {@code null}
-	 * 
-	 * @see #removeGuild(Guild)
-	 * 
-	 * @deprecated
-	 */
-	@Deprecated(forRemoval = true)
-	public void addGuild(@NotNull Guild guild) {
-		Objects.requireNonNull(guild);
-
-		logger.debug("Loading guild ({})[{}]", guild.getName(), guild.getIdLong());
-
-		this.data.put(guild.getIdLong(), new GuildData(guild, this::pushJSONUpdate));
-
-		// If initial data retrieval has already been completed, retrieve needed data
-		retrieveData(guild);
-
-		logger.trace("Guild loaded ({})[{}]", guild.getName(), guild.getIdLong());
-	}
-
-	/**
-	 * Remove a guild from the data manager.
-	 * 
-	 * @param guild - {@link Guild} to be removed
-	 * 
-	 * @throws NullPointerException if {@code guild} is {@code null}
-	 * 
-	 * @see #addGuild(Guild)
-	 * 
-	 * @deprecated
-	 */
-	@Deprecated(forRemoval = true)
-	public void removeGuild(@NotNull Guild guild) {
-		Objects.requireNonNull(guild);
-
-		logger.debug("Removing guild ({})[{}]", guild.getName(), guild.getIdLong());
-
-		try {
-			this.data.remove(guild.getIdLong());
-			logger.trace("Guild REMOVED ({})[{}]", guild.getName(), guild.getIdLong());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * Register a guild to be loaded during data retrieval.
-	 * 
 	 * <blockquote><b>NOTE:</b> This contains a
 	 * {@link ForkJoinPool.ManagedBlocker}!</blockquote>
 	 * 
@@ -193,7 +143,7 @@ public class WatameBotDatabase extends AbstractDatabase implements IGuildDataPro
 				logger.warn("Guild [{}] is missing in database! Attempting to insert and retrieve...", guildID);
 				return insertGuildInDatabase(guildID) && retrieveData(guildID, maxRetry, retry + 1);
 			}
-		}, e -> sqlLogger.error(QUERY_MARKER, "Error while reading guild", e));
+		}, e -> sqlLogger.error(QUERY_MARKER, "Error while reading guild", e)).orElse(false);
 	}
 
 	/**
@@ -212,57 +162,7 @@ public class WatameBotDatabase extends AbstractDatabase implements IGuildDataPro
 			int result = st.executeUpdate();
 			sqlLogger.debug("Insert Result: ", result);
 			return result > 0;
-		}, e -> sqlLogger.error(QUERY_MARKER, "Error while inserting new guild", e));
-	}
-
-	/**
-	 * Insert a new row into the database for a {@link Guild}.
-	 * 
-	 * @param guild - guild to insert
-	 * 
-	 * @deprecated
-	 */
-	@Deprecated(forRemoval = true)
-	private void insertGuildInDatabase(@NotNull Guild guild) {
-		Objects.requireNonNull(guild);
-
-		this.prepareStatement("guild_data_insert", st -> {
-			long guildID = guild.getIdLong();
-			st.setLong(1, guildID);
-
-			sqlLogger.trace(UPDATE_MARKER, st.toString());
-			System.out.println("update: " + st.executeUpdate());
-		}, e -> sqlLogger.error(QUERY_MARKER, "Error while inserting new guild", e));
-	}
-
-	/**
-	 * Retrieve guild data for a specific guild.
-	 * 
-	 * @param guild - {@link Guild} to retrieve data for
-	 * 
-	 * @deprecated
-	 */
-	@Deprecated(forRemoval = true)
-	private void retrieveData(@NotNull Guild guild) {
-		Objects.requireNonNull(guild);
-		this.prepareStatement("guild_data_get_id", s -> {
-			s.setLong(1, guild.getIdLong());
-			sqlLogger.trace(QUERY_MARKER, s.toString());
-
-			try (ResultSet set = s.executeQuery()) {
-				if (set.next()) {
-					long id = set.getLong("GuildID"); //$NON-NLS-1$
-					if (id != 0 && this.data.containsKey(id)) {
-						this.data.get(id).setData(set);
-						return;
-					}
-				}
-				logger.warn("Guild ({})[{}] is missing in database! Attempting to insert and retrieve...",
-						guild.getName(), guild.getIdLong());
-				insertGuildInDatabase(guild);
-				retrieveData(guild);
-			}
-		}, e -> sqlLogger.error(QUERY_MARKER, "Error while reading guild", e));
+		}, e -> sqlLogger.error(QUERY_MARKER, "Error while inserting new guild", e)).orElse(false);
 	}
 
 	@Override
@@ -312,7 +212,7 @@ public class WatameBotDatabase extends AbstractDatabase implements IGuildDataPro
 				sqlLogger.debug(UPDATE_MARKER, "PushUpdate -> " + removeStatement);
 
 				return removeStatement.executeUpdate();
-			}, e -> logger.error(UPDATE_MARKER, "Error while removing guild json data", e));
+			}, e -> logger.error(UPDATE_MARKER, "Error while removing guild json data", e)).orElse(0);
 
 		} else {
 			// Ensure we have data passed
@@ -328,7 +228,7 @@ public class WatameBotDatabase extends AbstractDatabase implements IGuildDataPro
 				sqlLogger.debug(UPDATE_MARKER, "PushUpdate -> " + updateStatement);
 
 				return updateStatement.executeUpdate();
-			}, e -> logger.error(UPDATE_MARKER, "Error while updating guild json data", e));
+			}, e -> logger.error(UPDATE_MARKER, "Error while updating guild json data", e)).orElse(0);
 		}
 		sqlLogger.debug(UPDATE_MARKER, "ExecuteUpdate <- " + result);
 

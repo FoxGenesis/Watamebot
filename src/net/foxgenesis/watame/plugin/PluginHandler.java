@@ -3,6 +3,7 @@ package net.foxgenesis.watame.plugin;
 import java.io.Closeable;
 import java.util.List;
 import java.util.Objects;
+import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 import java.util.ServiceLoader.Provider;
 import java.util.concurrent.CompletableFuture;
@@ -33,7 +34,7 @@ import net.foxgenesis.watame.WatameBot;
  *
  * @param <T> - the plugin class this instance uses
  */
-public class PluginHandler<T extends Plugin> implements Closeable {
+public class PluginHandler<@NotNull T extends Plugin> implements Closeable {
 	/**
 	 * logger
 	 */
@@ -42,6 +43,7 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 	/**
 	 * Map of plugins
 	 */
+	@NotNull
 	private final ConcurrentHashMap<String, T> plugins = new ConcurrentHashMap<>();
 
 	/**
@@ -106,11 +108,15 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 		list.forEach(provider -> {
 			logger.debug("Loading {}", provider.type());
 
-			T plugin = provider.get();
-			plugins.put(plugin.name, plugin);
-			context.getEventRegister().register(plugin);
+			try {
+				@SuppressWarnings("null") T plugin = provider.get();
+				plugins.put(plugin.name, plugin);
+				context.getEventRegister().register(plugin);
 
-			logger.info("Loaded {}", plugin.getDisplayInfo());
+				logger.info("Loaded {}", plugin.getDisplayInfo());
+			} catch (ServiceConfigurationError e) {
+				logger.error("Failed to load " + provider.type(), e);
+			}
 		});
 
 		time = System.nanoTime() - time;
@@ -287,6 +293,7 @@ public class PluginHandler<T extends Plugin> implements Closeable {
 	 * 
 	 * @return
 	 */
+	@Nullable
 	public T getPlugin(String identifier) {
 		return plugins.get(identifier);
 	}

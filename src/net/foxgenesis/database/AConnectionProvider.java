@@ -3,13 +3,14 @@ package net.foxgenesis.database;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,14 +46,14 @@ public abstract class AConnectionProvider implements AutoCloseable {
 
 	protected abstract Connection openConnection() throws SQLException;
 
-	@Nullable
-	protected <U> U openAutoClosedConnection(ConnectionConsumer<U> consumer, Consumer<Throwable> error) {
+	@NotNull
+	protected <U> Optional<U> openAutoClosedConnection(ConnectionConsumer<U> consumer, Consumer<Throwable> error) {
 		try (Connection conn = openConnection()) {
-			return consumer.applyConnection(conn);
+			return Optional.ofNullable(consumer.applyConnection(conn));
 		} catch (Exception e) {
 			if (error != null)
 				error.accept(e);
-			return null;
+			return Optional.empty();
 		}
 	}
 

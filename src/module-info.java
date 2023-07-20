@@ -34,6 +34,7 @@ module watamebot {
 	exports net.foxgenesis.util.resource;
 	exports net.foxgenesis.util.function;
 	exports net.foxgenesis.watame.property;
+	exports net.foxgenesis.watame.util;
 
 	uses net.foxgenesis.watame.plugin.Plugin;
 

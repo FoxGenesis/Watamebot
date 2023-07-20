@@ -51,8 +51,9 @@ public class FormattedModuleResource extends ModuleResource {
 	 * @throws NullPointerException If the module name, resource name or mappings
 	 *                              are null
 	 */
+	@SuppressWarnings("null")
 	public FormattedModuleResource(@NotNull String module, @NotNull String resource,
-			@NotNull Map<String, String> mappings) {
+			@SuppressWarnings("exports") @NotNull Map<@NotNull String, @NotNull String> mappings) {
 		super(module, resource);
 		this.mappings = Objects.requireNonNull(mappings);
 	}
