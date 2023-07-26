@@ -1,9 +1,12 @@
 package net.foxgenesis.watame;
 
 import java.io.IOException;
+import java.lang.module.ModuleDescriptor.Version;
 import java.nio.file.Path;
 import java.sql.SQLException;
+import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -33,11 +36,11 @@ import net.dv8tion.jda.internal.utils.IOUtil;
 import net.foxgenesis.database.DatabaseManager;
 import net.foxgenesis.database.IDatabaseManager;
 import net.foxgenesis.database.providers.MySQLConnectionProvider;
-import net.foxgenesis.executor.PrefixedForkJoinPoolFactory;
 import net.foxgenesis.property.IPropertyProvider;
 import net.foxgenesis.property.ImmutableProperty;
 import net.foxgenesis.util.MethodTimer;
 import net.foxgenesis.util.ResourceUtils;
+import net.foxgenesis.util.resource.ModuleResource;
 import net.foxgenesis.watame.plugin.Plugin;
 import net.foxgenesis.watame.plugin.PluginHandler;
 import net.foxgenesis.watame.plugin.SeverePluginException;
@@ -64,6 +67,12 @@ public class WatameBot {
 	public static final WatameBot INSTANCE;
 
 	/**
+	 * Current version
+	 */
+	@NotNull
+	private static final Version version;
+
+	/**
 	 * Settings that were parsed at startup
 	 */
 	private static final WatameBotSettings settings;
@@ -76,6 +85,14 @@ public class WatameBot {
 	static {
 		settings = Main.getSettings();
 		config = settings.getConfiguration();
+
+		try {
+			Properties p = new ModuleResource("watamebot",
+					"/META-INF/maven/net.foxgenesis.watame/watamebot/pom.properties").asProperties();
+			version = Version.parse(p.getProperty("version"));
+		} catch (NoSuchElementException | IOException e) {
+			throw new RuntimeException(e);
+		}
 
 		// initialize the main bot object with token
 		INSTANCE = new WatameBot(settings.getToken());
@@ -155,18 +172,19 @@ public class WatameBot {
 		logChannel = database.getProperty("log_channel");
 
 		// Create connection to discord through our token
-		builder = createJDA(token, new ForkJoinPool(Runtime.getRuntime().availableProcessors(),
-				new PrefixedForkJoinPoolFactory("Event Worker"), null, true));
+//		builder = createJDA(token, new ForkJoinPool(Runtime.getRuntime().availableProcessors(),
+//				new PrefixedForkJoinPoolFactory("Event Worker"), null, true));
+		builder = createJDA(token, null);
 
 		// Set our instance context
-		context = new Context(this, builder, null);
+		context = new Context(this, builder, null, version);
 
 		// Create our plugin handler
 		pluginHandler = new PluginHandler<>(context, getClass().getModule().getLayer(), Plugin.class);
 	}
 
 	void start() throws Exception {
-		logger.info("Starting...");
+		logger.info("Starting WatameBot v{}", version);
 
 		long start = System.nanoTime();
 
@@ -376,7 +394,6 @@ public class WatameBot {
 		if (eventExecutor != null)
 			builder.setEventPool(eventExecutor, true);
 
-		builder.setContextEnabled(true);
 		builder.setContextMap(mdcContext);
 		return builder;
 	}

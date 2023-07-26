@@ -2,7 +2,7 @@ package net.foxgenesis.watame.plugin;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.Runtime.Version;
+import java.lang.module.ModuleDescriptor.Version;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -117,7 +117,7 @@ public abstract class Plugin {
 			this.friendlyName = Objects.requireNonNull(properties.getProperty("friendlyName"),
 					"friendlyName must not be null!");
 
-			this.version = Runtime.Version
+			this.version = Version
 					.parse(Objects.requireNonNull(properties.getProperty("version"), "version must not be null!"));
 			this.description = properties.getProperty("description", "No description provided");
 			this.providesCommands = properties.getProperty("providesCommands", "false").equalsIgnoreCase("true");

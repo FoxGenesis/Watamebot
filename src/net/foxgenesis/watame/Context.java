@@ -1,6 +1,7 @@
 package net.foxgenesis.watame;
 
 import java.io.Closeable;
+import java.lang.module.ModuleDescriptor.Version;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
@@ -26,10 +27,14 @@ public class Context implements Closeable {
 
 	private final ExecutorService executor;
 
-	public Context(@NotNull WatameBot bot, @NotNull JDABuilder builder, @Nullable ExecutorService executor) {
+	private final Version version;
+
+	public Context(@NotNull WatameBot bot, @NotNull JDABuilder builder, @Nullable ExecutorService executor,
+			@NotNull Version version) {
 		this.bot = Objects.requireNonNull(bot);
 		this.executor = Objects.requireNonNullElse(executor, ForkJoinPool.commonPool());
 		this.eventStore = new EventStore(builder);
+		this.version = Objects.requireNonNull(version);
 	}
 
 	@NotNull
@@ -55,6 +60,11 @@ public class Context implements Closeable {
 	@NotNull
 	public State getState() {
 		return bot.getState();
+	}
+
+	@NotNull
+	public Version getVersion() {
+		return version;
 	}
 
 	void onJDABuilder(JDA jda) {

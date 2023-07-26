@@ -1,7 +1,10 @@
 package net.foxgenesis.watame.plugin;
 
 import java.io.Closeable;
-import java.util.List;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.module.ModuleDescriptor.Version;
+import java.util.Map;
 import java.util.Objects;
 import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
@@ -11,7 +14,9 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,6 +29,7 @@ import org.slf4j.MarkerFactory;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import net.foxgenesis.util.CompletableFutureUtils;
 import net.foxgenesis.util.MethodTimer;
+import net.foxgenesis.util.ResourceUtils;
 import net.foxgenesis.watame.Context;
 import net.foxgenesis.watame.WatameBot;
 
@@ -97,19 +103,28 @@ public class PluginHandler<@NotNull T extends Plugin> implements Closeable {
 	 */
 	@SuppressWarnings("resource")
 	public void loadPlugins() {
-		logger.info("Loading plugins...");
+		Version version = context.getVersion();
+
+		logger.info("Checking for plugins...");
+		Map<Provider<T>, Version> providers = loader.stream().collect(Collectors.toMap(Function.identity(),
+				p -> Objects.requireNonNullElse(getMinimumVersion(p.type()), version)));
+
+		logger.info("Found {} plugins", providers.size());
+		logger.info("Constructing plugins...");
 
 		long time = System.nanoTime();
 
-		List<Provider<T>> list = loader.stream().toList();
-
-		logger.debug("Found {} plugins", list.size());
-
-		list.forEach(provider -> {
+		providers.forEach((provider, minVersion) -> {
 			logger.debug("Loading {}", provider.type());
 
+			if (minVersion != null && version.compareTo(minVersion) < 0) {
+				logger.error("Plugin {} requires minimum version of {} ({} < {})! Skipping...", provider.type(),
+						minVersion, version, minVersion);
+				return;
+			}
+
 			try {
-				@SuppressWarnings("null") T plugin = provider.get();
+				T plugin = provider.get();
 				plugins.put(plugin.name, plugin);
 				context.getEventRegister().register(plugin);
 
@@ -120,7 +135,15 @@ public class PluginHandler<@NotNull T extends Plugin> implements Closeable {
 		});
 
 		time = System.nanoTime() - time;
-		logger.info("Loaded all plugins in {}ms", MethodTimer.formatToMilli(time));
+		logger.info("Constructed all plugins in {}ms", MethodTimer.formatToMilli(time));
+	}
+
+	private Version getMinimumVersion(Class<? extends T> type) {
+		try (InputStream in = type.getModule().getResourceAsStream("/minVersion")) {
+			return in == null ? null : Version.parse(ResourceUtils.toString(in));
+		} catch (IOException e) {
+			return null;
+		}
 	}
 
 	/**
