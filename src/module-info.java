@@ -4,6 +4,7 @@
  * @author Ashley
  *
  * @provides net.foxgenesis.watame.plugin.Plugin
+ * 
  * @uses net.foxgenesis.watame.plugin.Plugin
  */
 module watamebot {
@@ -14,20 +15,19 @@ module watamebot {
 	requires transitive com.zaxxer.hikari;
 	requires transitive org.apache.commons.configuration2;
 
-	requires org.fusesource.jansi;
+	requires static org.fusesource.jansi;
+	requires static org.jetbrains.annotations;
+
 	requires org.apache.commons.lang3;
 	requires ch.qos.logback.core;
 	requires ch.qos.logback.classic;
-	requires org.jetbrains.annotations;
 	requires java.desktop;
 
 	exports net.foxgenesis.config;
-	exports net.foxgenesis.config.fields;
 	exports net.foxgenesis.database;
 	exports net.foxgenesis.executor;
 	exports net.foxgenesis.property;
 	exports net.foxgenesis.log;
-	exports net.foxgenesis.watame.sql;
 	exports net.foxgenesis.watame;
 	exports net.foxgenesis.watame.plugin;
 	exports net.foxgenesis.util;
