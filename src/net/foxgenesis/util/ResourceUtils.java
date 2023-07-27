@@ -229,11 +229,13 @@ public final class ResourceUtils {
 	 * @throws SecurityException        Thrown if the specified file is not readable
 	 */
 	private static Path writeDefaults(ModuleResource defaults, Path dir, String output) throws IOException {
-		// Create plugin configuration folder
-		if (Files.notExists(dir, LinkOption.NOFOLLOW_LINKS))
-			Files.createDirectories(dir);
+		Path outputPath = dir.resolve(output).toAbsolutePath();
+		Path finalFolder = outputPath.getParent();
 
-		Path outputPath = dir.resolve(output);
+		// Create plugin configuration folder
+		if (Files.notExists(finalFolder, LinkOption.NOFOLLOW_LINKS))
+			Files.createDirectories(finalFolder);
+
 		// Create configuration file
 		if (Files.notExists(outputPath, LinkOption.NOFOLLOW_LINKS))
 			defaults.writeToFile(outputPath);
