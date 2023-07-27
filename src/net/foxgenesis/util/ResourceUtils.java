@@ -267,6 +267,23 @@ public final class ResourceUtils {
 	}
 
 	/**
+	 * Read all data from the specified {@link URL} and parse it as a string.
+	 * <p>
+	 * The input stream will be closed after completion
+	 * </p>
+	 * 
+	 * @param url - the {@link URL} to read from
+	 * 
+	 * @return Returns a string containing the data from the specified URL
+	 * 
+	 * @throws IOException If an I/O error occurs
+	 */
+	@SuppressWarnings("resource")
+	public static String toString(@NotNull URL url) throws IOException {
+		return toString(url.openStream());
+	}
+
+	/**
 	 * Read all data from the specified {@link InputStream} and parse all lines as a
 	 * string array.
 	 * <p>
