@@ -38,8 +38,7 @@ public class SQLConfigurationDatabase extends ConfigurationDatabase<Long> {
 			statement.setString(2, key);
 
 			try (ResultSet result = statement.executeQuery()) {
-				if (result.next()) { return result.getString("property"); }
-				return null;
+				return result.next() ? result.getString("property") : null;
 			}
 		}, err -> logger.error("Error while getting internal property", err));
 	}

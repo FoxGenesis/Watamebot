@@ -5,12 +5,13 @@ import java.sql.SQLException;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
+import net.foxgenesis.config.fields.JSONObjectAdv;
+import net.foxgenesis.util.function.QuadFunction;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import net.dv8tion.jda.api.entities.Guild;
-import net.foxgenesis.config.fields.JSONObjectAdv;
-import net.foxgenesis.util.function.QuadFunction;
 
 /**
  * Class used to contain guild database data.
@@ -45,21 +46,6 @@ public class GuildData implements IGuildData {
 	private JSONObjectAdv data;
 
 	volatile boolean setup = false;
-
-	/**
-	 * Creates a new instance of {@link GuildData} with a provided guild and the
-	 * {@link DataManager} that created it. <blockquote><b> *** THIS SHOULD ONLY BE
-	 * CALLED VIA {@link DataManager}! *** </blockquote></b>
-	 * 
-	 * @param guild       - The {@link Guild} that this instance represents
-	 * @param dataManager - the {@link DataManager} that created this instance
-	 * 
-	 * @deprecated
-	 */
-	@Deprecated(forRemoval = true)
-	GuildData(@NotNull Guild guild, @NotNull QuadFunction<String, Object, Long, Boolean, Integer> consumer) {
-		this(guild.getIdLong(), consumer);
-	}
 
 	/**
 	 * Creates a new instance of {@link GuildData} referencing the supplied guild id

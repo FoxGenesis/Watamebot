@@ -36,6 +36,6 @@ public abstract class APropertyProvider<L, T extends Property<L>, R extends Prop
 	@NotNull
 	public Stream<T> typesOf(@NotNull L lookup, @NotNull PropertyType type) {
 		return Collections.unmodifiableCollection(properties.values()).stream()
-				.filter(p -> p.getType(lookup).equals(type));
+				.filter(p -> p != null && p.getType(lookup).equals(type));
 	}
 }

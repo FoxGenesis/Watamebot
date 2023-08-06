@@ -53,7 +53,7 @@ public class WatameBotDatabase extends AbstractDatabase implements IGuildDataPro
 	 * Register a guild to be loaded during data retrieval.
 	 * 
 	 * <blockquote><b>NOTE:</b> This contains a
-	 * {@link ForkJoinPool.ManagedBlocker}!</blockquote>
+	 * {@link java.util.concurrent.ForkJoinPool.ManagedBlocker}!</blockquote>
 	 * 
 	 * @param id - guild ID to be removed
 	 * 
