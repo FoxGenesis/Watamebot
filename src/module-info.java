@@ -21,11 +21,13 @@ module watamebot {
 	requires ch.qos.logback.core;
 	requires ch.qos.logback.classic;
 	requires org.json;
+	requires java.sql.rowset;
 
 	exports net.foxgenesis.config;
 	exports net.foxgenesis.database;
 	exports net.foxgenesis.executor;
 	exports net.foxgenesis.property;
+	exports net.foxgenesis.property3;
 	exports net.foxgenesis.log;
 	exports net.foxgenesis.watame;
 	exports net.foxgenesis.watame.plugin;
