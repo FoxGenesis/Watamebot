@@ -9,7 +9,9 @@ import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Consumer;
+
+import net.foxgenesis.config.KVPFile;
+import net.foxgenesis.util.resource.ModuleResource;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -17,8 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.dv8tion.jda.internal.utils.IOUtil;
-import net.foxgenesis.config.KVPFile;
-import net.foxgenesis.util.resource.ModuleResource;
 
 /**
  * NEED_JAVADOC
@@ -115,16 +115,17 @@ public abstract class AbstractDatabase implements AutoCloseable {
 	 * @param id
 	 * @param func
 	 * @param error
+	 * 
+	 * @throws SQLException
 	 */
-	protected void prepareStatement(String id, SQLConsumer<PreparedStatement> func, Consumer<Throwable> error) {
+	protected void prepareStatement(String id, SQLConsumer<PreparedStatement> func, int... flags) throws SQLException {
 		validate(id);
 
-		provider.openAutoClosedConnection(conn -> {
-			try (PreparedStatement statement = conn.prepareStatement(getRawStatement(id))) {
+		try (Connection c = openConnection()) {
+			try (PreparedStatement statement = c.prepareStatement(getRawStatement(id), flags)) {
 				func.accept(statement);
-				return null;
 			}
-		}, error);
+		}
 	}
 
 	/**
@@ -133,16 +134,17 @@ public abstract class AbstractDatabase implements AutoCloseable {
 	 * @param id
 	 * @param func
 	 * @param error
+	 * 
+	 * @throws SQLException
 	 */
-	protected void prepareCallable(String id, SQLConsumer<CallableStatement> func, Consumer<Throwable> error) {
+	protected void prepareCallable(String id, SQLConsumer<CallableStatement> func) throws SQLException {
 		validate(id);
 
-		provider.openAutoClosedConnection(conn -> {
-			try (CallableStatement statement = conn.prepareCall(getRawStatement(id))) {
+		try (Connection c = openConnection()) {
+			try (CallableStatement statement = c.prepareCall(getRawStatement(id))) {
 				func.accept(statement);
-				return null;
 			}
-		}, error);
+		}
 	}
 
 	/**
@@ -154,17 +156,19 @@ public abstract class AbstractDatabase implements AutoCloseable {
 	 * @param error
 	 * 
 	 * @return
+	 * 
+	 * @throws SQLException
 	 */
 	@NotNull
-	protected <U> Optional<U> mapStatement(String id, SQLFunction<PreparedStatement, U> func,
-			Consumer<Throwable> error) {
+	protected <U> Optional<U> mapStatement(String id, SQLFunction<PreparedStatement, U> func, int... flags)
+			throws SQLException {
 		validate(id);
 
-		return provider.openAutoClosedConnection(conn -> {
-			try (PreparedStatement statement = conn.prepareStatement(getRawStatement(id))) {
-				return func.apply(statement);
+		try (Connection c = openConnection()) {
+			try (PreparedStatement statement = c.prepareStatement(getRawStatement(id), flags)) {
+				return Optional.ofNullable(func.apply(statement));
 			}
-		}, error);
+		}
 	}
 
 	/**
@@ -176,17 +180,18 @@ public abstract class AbstractDatabase implements AutoCloseable {
 	 * @param error
 	 * 
 	 * @return
+	 * 
+	 * @throws SQLException
 	 */
 	@Nullable
-	protected <U> Optional<U> mapCallable(String id, SQLFunction<CallableStatement, U> func,
-			Consumer<Throwable> error) {
+	protected <U> Optional<U> mapCallable(String id, SQLFunction<CallableStatement, U> func) throws SQLException {
 		validate(id);
 
-		return provider.openAutoClosedConnection(conn -> {
-			try (CallableStatement statement = conn.prepareCall(getRawStatement(id))) {
-				return func.apply(statement);
+		try (Connection c = openConnection()) {
+			try (CallableStatement statement = c.prepareCall(getRawStatement(id))) {
+				return Optional.ofNullable(func.apply(statement));
 			}
-		}, error);
+		}
 	}
 
 	/**
