@@ -1,4 +1,4 @@
-package net.foxgenesis.property3.impl;
+package net.foxgenesis.property.impl;
 
 import java.io.InputStream;
 import java.io.Serializable;
@@ -7,8 +7,9 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
-import net.foxgenesis.property3.PropertyException;
-import net.foxgenesis.property3.PropertyInfo;
+import net.foxgenesis.property.PropertyException;
+import net.foxgenesis.property.PropertyInfo;
+import net.foxgenesis.property.PropertyType;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,7 +25,7 @@ public interface LCKPropertyResolver {
 	 * @return Returns {@code true} if the property was successfully removed from
 	 *         the database
 	 * 
-	 * @see #putInternal(long, PropertyInfo, Serializable)
+	 * @see #putInternal(long, PropertyInfo, Serializable...)
 	 * @see #putInternal(long, PropertyInfo, InputStream)
 	 * @see #getInternal(long, PropertyInfo)
 	 * 
@@ -35,7 +36,6 @@ public interface LCKPropertyResolver {
 	/**
 	 * Put/Update an internal property inside the database.
 	 * 
-	 * @param <U>      object implementing {@link Serializable}
 	 * @param lookup   - property lookup
 	 * @param property - property to remove
 	 * @param value    - value to insert
@@ -49,8 +49,26 @@ public interface LCKPropertyResolver {
 	 * 
 	 * @throws PropertyException Thrown if an internal error occurs
 	 */
-	<U extends Serializable> boolean putInternal(long lookup, @NotNull PropertyInfo property, @Nullable U value)
-			throws PropertyException;
+//	boolean putInternal(long lookup, @NotNull PropertyInfo property, @Nullable Serializable... value)
+//			throws PropertyException;
+
+	/**
+	 * Put/Update an internal property inside the database.
+	 * 
+	 * @param lookup   - property lookup
+	 * @param property - property to remove
+	 * @param value    - value to insert
+	 * 
+	 * @return Returns {@code true} if the property was successfully added/updated
+	 *         in the database
+	 * 
+	 * @see #removeInternal(long, PropertyInfo)
+	 * @see #putInternal(long, PropertyInfo, InputStream)
+	 * @see #getInternal(long, PropertyInfo)
+	 * 
+	 * @throws PropertyException Thrown if an internal error occurs
+	 */
+//	boolean putInternal(long lookup, @NotNull PropertyInfo property, byte[] value) throws PropertyException;
 
 	/**
 	 * Put/Update an internal property inside the database.
@@ -63,7 +81,7 @@ public interface LCKPropertyResolver {
 	 *         in the database
 	 * 
 	 * @see #removeInternal(long, PropertyInfo)
-	 * @see #putInternal(long, PropertyInfo, Serializable)
+	 * @see #putInternal(long, PropertyInfo, Serializable...)
 	 * @see #getInternal(long, PropertyInfo)
 	 * 
 	 * @throws PropertyException Thrown if an internal error occurs
@@ -79,7 +97,7 @@ public interface LCKPropertyResolver {
 	 * @return Returns an {@link Optional} containing raw value data
 	 * 
 	 * @see #removeInternal(long, PropertyInfo)
-	 * @see #putInternal(long, PropertyInfo, Serializable)
+	 * @see #putInternal(long, PropertyInfo, Serializable...)
 	 * @see #putInternal(long, PropertyInfo, InputStream)
 	 * 
 	 * @throws PropertyException Thrown if an internal error occurs
@@ -109,14 +127,26 @@ public interface LCKPropertyResolver {
 	 * @param category   - category of the property
 	 * @param key        - property key
 	 * @param modifiable - is the property user modifiable
+	 * @param type       - blob object type
 	 * 
 	 * @return Returns the created {@link PropertyInfo}
 	 * 
 	 * @throws PropertyException Thrown if the property already exists or there was
 	 *                           an internal error
 	 */
-	PropertyInfo createPropertyInfo(@NotNull String category, @NotNull String key, boolean modifiable)
-			throws PropertyException;
+	PropertyInfo createPropertyInfo(@NotNull String category, @NotNull String key, boolean modifiable,
+			PropertyType type) throws PropertyException;
+
+	/**
+	 * Get the property linked to the specified {@code id}.
+	 * 
+	 * @param id - property id
+	 * 
+	 * @return Returns the {@link PropertyInfo} bound to the id
+	 * 
+	 * @throws PropertyException Thrown if an internal error occurs
+	 */
+	PropertyInfo getPropertyByID(int id) throws PropertyException;
 
 	/**
 	 * Check if the specified property exists inside the database.

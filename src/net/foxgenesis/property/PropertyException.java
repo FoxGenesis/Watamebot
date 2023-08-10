@@ -1,4 +1,4 @@
-package net.foxgenesis.property3;
+package net.foxgenesis.property;
 
 public class PropertyException extends RuntimeException {
 

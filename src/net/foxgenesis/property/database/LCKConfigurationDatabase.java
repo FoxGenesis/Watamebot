@@ -1,7 +1,6 @@
-package net.foxgenesis.property3.database;
+package net.foxgenesis.property.database;
 
 import java.io.InputStream;
-import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -13,22 +12,17 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.sql.rowset.serial.SerialBlob;
-
 import net.foxgenesis.database.AbstractDatabase;
-import net.foxgenesis.property3.PropertyException;
-import net.foxgenesis.property3.PropertyInfo;
-import net.foxgenesis.property3.impl.LCKPropertyResolver;
+import net.foxgenesis.property.PropertyException;
+import net.foxgenesis.property.PropertyInfo;
+import net.foxgenesis.property.PropertyType;
+import net.foxgenesis.property.impl.LCKPropertyResolver;
 import net.foxgenesis.util.resource.FormattedModuleResource;
 
-import org.apache.commons.lang3.SerializationUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPropertyResolver {
-	private static final long MIN_TIMESTAMP = 1420070400000L << 22;
-	private static final long MAX_TIMESTAMP = Long.parseUnsignedLong("18446744073709551615");
-
 	public static final int MAX_CATEGORY_LENGTH = 50;
 	public static final int MAX_KEY_LENGTH = 500;
 
@@ -51,6 +45,7 @@ public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPro
 	@Override
 	public boolean removeInternal(long lookup, @NotNull PropertyInfo info) throws PropertyException {
 		validate(lookup, info);
+		logger.debug("Removing property: {}", info);
 		try {
 			return this.mapStatement("property_delete", statement -> {
 				statement.setLong(1, lookup);
@@ -63,33 +58,21 @@ public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPro
 	}
 
 	@Override
-	public <U extends Serializable> boolean putInternal(long lookup, @NotNull PropertyInfo info, @Nullable U value)
-			throws PropertyException {
-		validate(lookup, info);
-		try {
-			return this.mapStatement("property_insert_update", statement -> {
-				statement.setLong(1, lookup);
-				statement.setInt(2, info.id());
-				statement.setBlob(3, new SerialBlob(SerializationUtils.serialize(value)));
-				return statement.executeUpdate() > 0;
-			}).orElse(false);
-		} catch (SQLException e) {
-			throw new PropertyException(e);
-		}
-	}
-
-	@Override
 	public boolean putInternal(long lookup, @NotNull PropertyInfo info, @Nullable InputStream in)
 			throws PropertyException {
-		validate(lookup, info);
-		try {
+		try (in) {
+			validate(lookup, info);
+			if (in == null)
+				return removeInternal(lookup, info);
+
+			logger.debug("Setting property: {}", info);
 			return this.mapStatement("property_insert_update", statement -> {
 				statement.setLong(1, lookup);
 				statement.setInt(2, info.id());
 				statement.setBlob(3, in);
 				return statement.executeUpdate() > 0;
 			}).orElse(false);
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			throw new PropertyException(e);
 		}
 	}
@@ -97,6 +80,7 @@ public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPro
 	@Override
 	public Optional<Blob> getInternal(long lookup, @NotNull PropertyInfo info) throws PropertyException {
 		validate(lookup, info);
+		logger.debug("Getting property: {}", info);
 		try {
 			return this.mapStatement("property_read", statement -> {
 				statement.setLong(1, lookup);
@@ -131,14 +115,16 @@ public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPro
 	}
 
 	@Override
-	public PropertyInfo createPropertyInfo(@NotNull String category, @NotNull String key, boolean modifiable)
-			throws PropertyException {
+	public PropertyInfo createPropertyInfo(@NotNull String category, @NotNull String key, boolean modifiable,
+			PropertyType type) throws PropertyException {
 		validate(category, key);
+		logger.debug("Creating property: [{}] {} (modifiable: {}, type: {})", category, key, modifiable, type);
 		try {
 			return this.mapStatement("property_info_create", statement -> {
 				statement.setString(1, category);
 				statement.setString(2, key);
 				statement.setBoolean(3, modifiable);
+				statement.setString(4, type.name().toLowerCase());
 
 				if (statement.executeUpdate() > 0) {
 					try (ResultSet result = statement.getGeneratedKeys()) {
@@ -149,7 +135,31 @@ public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPro
 
 				return -1;
 			}, Statement.RETURN_GENERATED_KEYS).filter(id -> id != -1)
-					.map(id -> new PropertyInfo(id, category, key, modifiable)).orElseThrow();
+					.map(id -> new PropertyInfo(id, category, key, modifiable, type)).orElseThrow();
+		} catch (SQLException e) {
+			throw new PropertyException(e);
+		}
+	}
+
+	@Override
+	public PropertyInfo getPropertyByID(int id) throws PropertyException {
+		if (id < 0)
+			throw new PropertyException("Invalid property id");
+		// Validate database connection
+		if (!isReady())
+			throw new PropertyException("Database is not ready yet!");
+
+		logger.debug("Getting property for id: {}", id);
+		try {
+			return this.mapStatement("property_info_read_by_id", statement -> {
+				statement.setInt(1, id);
+
+				try (ResultSet result = statement.executeQuery()) {
+					if (result.next())
+						return parsePropertyInfo(result);
+					return null;
+				}
+			}).orElseThrow();
 		} catch (SQLException e) {
 			throw new PropertyException(e);
 		}
@@ -158,6 +168,7 @@ public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPro
 	@Override
 	public boolean propertyInfoExists(@NotNull String category, @NotNull String key) throws PropertyException {
 		validate(category, key);
+		logger.debug("Getting property info for [{}] {}", category, key);
 		try {
 			return this.mapStatement("property_info_exists", statement -> {
 				statement.setString(1, category);
@@ -179,6 +190,7 @@ public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPro
 	public PropertyInfo getPropertyInfo(@NotNull String category, @NotNull String key)
 			throws PropertyException, NoSuchElementException {
 		validate(category, key);
+		logger.debug("Getting property info for [{}] {}", category, key);
 		try {
 			return this.mapStatement("property_info_read", statement -> {
 				statement.setString(1, category);
@@ -198,6 +210,7 @@ public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPro
 	@Override
 	@NotNull
 	public List<PropertyInfo> getPropertyList() throws PropertyException {
+		logger.debug("Getting property list");
 		try {
 			List<PropertyInfo> list = new ArrayList<>();
 			this.prepareStatement("property_info_get_all", statement -> {
@@ -219,6 +232,7 @@ public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPro
 	@Override
 	public void close() {}
 
+	@Override
 	@NotNull
 	public String getDatabase() {
 		return database;
@@ -235,7 +249,7 @@ public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPro
 	}
 
 	protected boolean isValidLookup(long lookup) {
-		return lookup >= MIN_TIMESTAMP && lookup <= MAX_TIMESTAMP;
+		return Math.floor(Math.log10(lookup)) + 1 == 18;
 	}
 
 	private void validate(long lookup, @Nullable PropertyInfo info) {
@@ -267,6 +281,7 @@ public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPro
 		String category = result.getString(2);
 		String name = result.getString(3);
 		boolean modifiable = result.getBoolean(4);
-		return new PropertyInfo(id, category, name, modifiable);
+		PropertyType type = PropertyType.valueOf(result.getString(5).toUpperCase());
+		return new PropertyInfo(id, category, name, modifiable, type);
 	}
 }

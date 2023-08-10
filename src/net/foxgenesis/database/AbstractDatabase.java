@@ -254,6 +254,10 @@ public abstract class AbstractDatabase implements AutoCloseable {
 		return provider != null;
 	}
 
+	public String getDatabase() {
+		return provider.getDatabase();
+	}
+
 	/**
 	 * NEED_JAVADOC
 	 * 

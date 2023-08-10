@@ -1,0 +1,60 @@
+package net.foxgenesis.watame.property;
+
+import java.io.IOException;
+import java.sql.Blob;
+import java.sql.SQLException;
+
+import net.foxgenesis.property.PropertyType;
+import net.foxgenesis.property.impl.BlobMapping;
+import net.foxgenesis.watame.WatameBot;
+
+import org.jetbrains.annotations.Nullable;
+
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel;
+import net.dv8tion.jda.api.requests.restaction.CacheRestAction;
+
+public class PluginPropertyMapping extends BlobMapping {
+
+	public PluginPropertyMapping(long lookup, byte[] data, PropertyType type) {
+		super(lookup, data, type);
+	}
+	
+	public PluginPropertyMapping(long lookup, Blob blob, PropertyType type) throws IOException, SQLException {
+		super(lookup, blob, type);
+	}
+	
+	public PluginPropertyMapping(Guild guild, Blob blob, PropertyType type) throws IOException, SQLException {
+		super(guild.getIdLong(), blob, type);
+	}
+
+	public PluginPropertyMapping(Guild guild, byte[] data, PropertyType type) {
+		super(guild.getIdLong(), data, type);
+	}
+
+	@Nullable
+	public Role getAsRole() {
+		return getGuild().getRoleById(getAsLong());
+	}
+
+	@Nullable
+	public GuildMessageChannel getAsMessageChannel() {
+		return getGuild().getChannelById(GuildMessageChannel.class, getAsLong());
+	}
+
+	public CacheRestAction<Member> retrieveAsMember() {
+		return getGuild().retrieveMemberById(getAsLong());
+	}
+
+	@Nullable
+	public Member getAsMember() {
+		return getGuild().getMemberById(getAsLong());
+	}
+
+	public Guild getGuild() {
+		// Hard coded to reduce work on end user
+		return WatameBot.INSTANCE.getJDA().getGuildById(getLookup());
+	}
+}

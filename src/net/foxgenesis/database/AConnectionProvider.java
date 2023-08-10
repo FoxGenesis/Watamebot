@@ -19,8 +19,10 @@ import net.dv8tion.jda.internal.utils.IOUtil;
 public abstract class AConnectionProvider implements AutoCloseable {
 
 	protected final Logger logger;
-	private final String name;
 	protected final Properties properties;
+
+	private final String name;
+	private final String database;
 
 	public AConnectionProvider(Properties properties, String name) {
 		this.name = Objects.requireNonNull(name);
@@ -36,7 +38,7 @@ public abstract class AConnectionProvider implements AutoCloseable {
 		String port = properties.getProperty("port", "3306");
 		properties.remove("port");
 
-		String database = properties.getProperty("database", "WatameBot");
+		this.database = properties.getProperty("database", "WatameBot");
 		properties.remove("database");
 
 		properties.put("jdbcUrl", "jdbc:%s://%s:%s/%s".formatted(type, ip, port, database));
@@ -74,7 +76,13 @@ public abstract class AConnectionProvider implements AutoCloseable {
 		});
 	}
 
-	public final String getName() { return name; }
+	public final String getName() {
+		return name;
+	}
+
+	public String getDatabase() {
+		return database;
+	}
 
 	@Override
 	public void close() throws Exception {
@@ -83,5 +91,7 @@ public abstract class AConnectionProvider implements AutoCloseable {
 	}
 
 	@FunctionalInterface
-	public interface ConnectionConsumer<U> { public U applyConnection(Connection connection) throws SQLException; }
+	public interface ConnectionConsumer<U> {
+		public U applyConnection(Connection connection) throws SQLException;
+	}
 }

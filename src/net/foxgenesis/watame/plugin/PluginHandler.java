@@ -187,7 +187,8 @@ public class PluginHandler<@NotNull T extends Plugin> implements Closeable {
 	 */
 	@NotNull
 	public CommandListUpdateAction updateCommands(CommandListUpdateAction action) {
-		plugins.values().stream().filter(p -> p.providesCommands).map(Plugin::getCommands).forEach(action::addCommands);
+		plugins.values().stream().filter(p -> p instanceof CommandProvider).map(CommandProvider.class::cast)
+				.map(CommandProvider::getCommands).filter(Objects::nonNull).forEach(action::addCommands);
 		return action;
 	}
 
@@ -287,6 +288,17 @@ public class PluginHandler<@NotNull T extends Plugin> implements Closeable {
 	}
 
 	/**
+	 * Check if a plugin is loaded.
+	 * 
+	 * @param pluginClass - class of the plugin to check
+	 * 
+	 * @return Returns {@code true} if the specified plugin was found
+	 */
+	public boolean isPluginPresent(Class<? extends T> pluginClass) {
+		return getPlugin(pluginClass) != null;
+	}
+
+	/**
 	 * NEED_JAVADOC
 	 * 
 	 * @param identifier
@@ -296,6 +308,14 @@ public class PluginHandler<@NotNull T extends Plugin> implements Closeable {
 	@Nullable
 	public T getPlugin(String identifier) {
 		return plugins.get(identifier);
+	}
+
+	@Nullable
+	public T getPlugin(Class<? extends T> pluginClass) {
+		for (T p : plugins.values())
+			if (pluginClass.isInstance(p))
+				return p;
+		return null;
 	}
 
 	/**

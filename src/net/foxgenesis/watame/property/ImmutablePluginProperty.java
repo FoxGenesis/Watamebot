@@ -1,22 +1,27 @@
-package net.foxgenesis.property;
+package net.foxgenesis.watame.property;
 
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import net.foxgenesis.property.PropertyInfo;
+import net.foxgenesis.property.PropertyMapping;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface ImmutableProperty {
+import net.dv8tion.jda.api.entities.Guild;
+
+public interface ImmutablePluginProperty {
 	/**
 	 * Get the current value of this property.
 	 * 
-	 * @param lookup - property lookup
+	 * @param guild - guild to get property of
 	 * 
 	 * @return Returns a {@link PropertyMapping} containing the raw data retrieved
 	 */
 	@NotNull
-	Optional<? extends PropertyMapping> get(long lookup);
+	Optional<PluginPropertyMapping> get(@NotNull Guild guild);
 
 	/**
 	 * Get the current value of this property and map it with the specified
@@ -27,20 +32,20 @@ public interface ImmutableProperty {
 	 * <blockquote>
 	 * 
 	 * <pre>
-	 * get(lookup, null, mapper)
+	 * get(guild, null, mapper)
 	 * </pre>
 	 * 
 	 * </blockquote>
 	 * 
 	 * @param <U>    Return type
-	 * @param lookup - property lookup
+	 * @param guild  - guild to get property of
 	 * @param mapper - function to convert the raw data into a usable type
 	 * 
 	 * @return Returns the mapped data or {@code null} if this property is empty
 	 */
 	@Nullable
-	default <U> U get(long lookup, @NotNull Function<? super PropertyMapping, U> mapper) {
-		return get(lookup, null, mapper);
+	default <U> U get(@NotNull Guild guild, @NotNull Function<? super PluginPropertyMapping, U> mapper) {
+		return get(guild, null, mapper);
 	}
 
 	/**
@@ -54,13 +59,13 @@ public interface ImmutableProperty {
 	 * <blockquote>
 	 * 
 	 * <pre>
-	 * get(lookup).map(mapper).orElseGet(defaultValue != null ? defaultValue : () -> null);
+	 * get(guild).map(mapper).orElseGet(defaultValue != null ? defaultValue : () -> null);
 	 * </pre>
 	 * 
 	 * </blockquote>
 	 * 
 	 * @param <U>          Return type
-	 * @param lookup       - property lookup
+	 * @param guild        - guild to get property of
 	 * @param defaultValue - default value supplier
 	 * @param mapper       - function to convert the raw data into a usable type
 	 * 
@@ -68,21 +73,24 @@ public interface ImmutableProperty {
 	 *         empty
 	 */
 	@Nullable
-	default <U> U get(long lookup, @Nullable Supplier<U> defaultValue,
-			@NotNull Function<? super PropertyMapping, U> mapper) {
-		return get(lookup).map(mapper).orElseGet(defaultValue != null ? defaultValue : () -> null);
+	default <U> U get(@NotNull Guild guild, @Nullable Supplier<U> defaultValue,
+			@NotNull Function<? super PluginPropertyMapping, U> mapper) {
+		Optional<PluginPropertyMapping> m = get(guild);
+		if (m.isEmpty())
+			return defaultValue != null ? defaultValue.get() : null;
+		return mapper.apply(m.get());
 	}
 
 	/**
 	 * Check if this property is populated in the configuration.
 	 * 
-	 * @param lookup - property lookup
+	 * @param guild - guild to get property of
 	 * 
-	 * @return Returns {@code true} if the {@code lookup} with this
+	 * @return Returns {@code true} if the {@code guild} with this
 	 *         {@link PropertyInfo} was found inside the configuration (empty or
 	 *         not)
 	 */
-	boolean isPresent(long lookup);
+	boolean isPresent(@NotNull Guild guild);
 
 	/**
 	 * Get the definition of this property

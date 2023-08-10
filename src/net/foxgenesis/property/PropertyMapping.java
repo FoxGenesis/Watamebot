@@ -1,7 +1,7 @@
-package net.foxgenesis.property3;
+package net.foxgenesis.property;
 
 public interface PropertyMapping {
-
+	String getAsPlainText();
 	Object getAsObject();
 	String getAsString();
 	boolean getAsBoolean();
@@ -17,4 +17,8 @@ public interface PropertyMapping {
 	float[] getAsFloatArray();
 	double[] getAsDoubleArray();
 	long[] getAsLongArray();
+	
+	 boolean isUserReadable();
+	 PropertyType getType();
+	 long getLookup();
 }

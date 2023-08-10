@@ -2,14 +2,21 @@ package net.foxgenesis.watame.command;
 
 import static net.foxgenesis.watame.util.Colors.ERROR;
 import static net.foxgenesis.watame.util.Colors.INFO;
-import static net.foxgenesis.watame.util.Colors.SUCCESS;
 import static net.foxgenesis.watame.util.Colors.NOTICE;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.function.BiConsumer;
+import java.util.Optional;
 import java.util.function.Consumer;
+
+import net.foxgenesis.property.PropertyInfo;
+import net.foxgenesis.watame.WatameBot;
+import net.foxgenesis.watame.property.PluginProperty;
+import net.foxgenesis.watame.property.PluginPropertyMapping;
+import net.foxgenesis.watame.property.PluginPropertyProvider;
+import net.foxgenesis.watame.util.Response;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,10 +37,6 @@ import net.dv8tion.jda.api.interactions.AutoCompleteQuery;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
-import net.foxgenesis.property.IProperty;
-import net.foxgenesis.property.IPropertyProvider;
-import net.foxgenesis.watame.WatameBot;
-import net.foxgenesis.watame.property.IGuildPropertyMapping;
 
 /**
  * Slash command to manually configure database values
@@ -45,7 +48,7 @@ public class ConfigCommand extends ListenerAdapter {
 	private static final Logger logger = LoggerFactory.getLogger("Configuration Command");
 
 	private static final String DEFAULT = "Default";
-	private static final String CONFIG_VALUE_FORMAT = "%s = `%s`";
+	private static final String CONFIG_VALUE_FORMAT = "* %s = `%s`";
 
 	@Override
 	public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
@@ -62,11 +65,14 @@ public class ConfigCommand extends ListenerAdapter {
 		Guild guild = event.getGuild();
 		if (event.isFromGuild() && guild != null) {
 			if (event.getFullCommandName().startsWith("options configuration") && option.getName().equals("key")) {
-				IPropertyProvider<String, Guild, IGuildPropertyMapping> provider = WatameBot.INSTANCE
-						.getPropertyProvider();
-				event.replyChoices(provider.keySet().stream().filter(key -> provider.getProperty(key).isEditable())
-						.filter(key -> key.contains(option.getValue().toLowerCase()))
-						.map(key -> new Command.Choice(key, key)).toList()).queue();
+				PluginPropertyProvider provider = WatameBot.INSTANCE.getPropertyProvider();
+				String value = option.getValue().toLowerCase();
+
+				@SuppressWarnings("null") List<Command.Choice> choices = provider.getPropertyList().stream()
+						.filter(PropertyInfo::modifiable).filter(info -> info.name().toLowerCase().contains(value))
+						.map(info -> new Command.Choice(info.category() + " " + info.name(), info.id())).limit(25)
+						.toList();
+				event.replyChoices(choices).queue();
 			}
 		}
 	}
@@ -89,7 +95,7 @@ public class ConfigCommand extends ListenerAdapter {
 	 * @param event - slash command event
 	 */
 	private static void handleConfiguration(SlashCommandInteractionEvent event) {
-		IPropertyProvider<String, Guild, IGuildPropertyMapping> provider = WatameBot.INSTANCE.getPropertyProvider();
+		PluginPropertyProvider provider = WatameBot.INSTANCE.getPropertyProvider();
 		String sub = Objects.requireNonNull(event.getSubcommandName());
 		InteractionHook hook = event.getHook();
 
@@ -113,18 +119,20 @@ public class ConfigCommand extends ListenerAdapter {
 	 * @param provider - property provider
 	 * @param hook     - event hook
 	 */
-	private static void getConfigurationSetting(SlashCommandInteractionEvent event,
-			IPropertyProvider<String, Guild, IGuildPropertyMapping> provider, InteractionHook hook) {
+	private static void getConfigurationSetting(SlashCommandInteractionEvent event, PluginPropertyProvider provider,
+			InteractionHook hook) {
 		event.deferReply(true).queue();
 
 		// Make sure key is valid
-		ensureKey(event.getOption("key", OptionMapping::getAsString), provider, hook, (key, property) -> {
+		ensureKey(event.getOption("key", OptionMapping::getAsInt), provider, hook, property -> {
 			User user = event.getUser();
-			logger.info("{}[{}] Checked configuration for {}", user.getName(), user.getId(), key);
-			hook.editOriginalEmbeds(response(INFO, "\u2699 Configuration \u2699",
-					CONFIG_VALUE_FORMAT.formatted(key, provider.getProperty(Objects.requireNonNull(key)).get(
-							Objects.requireNonNull(event.getGuild()), DEFAULT, IGuildPropertyMapping::getAsString))))
-					.queue();
+			logger.info("{}[{}] Checked configuration for {}", user.getName(), user.getId(), property.getInfo());
+
+			String pInfo = displayPropertyString(property.getInfo());
+			String pValue = getUserFriendlyValue(property.get(event.getGuild()));
+
+			hook.editOriginalEmbeds(
+					Response.info("\u2699 Configuration \u2699", CONFIG_VALUE_FORMAT.formatted(pInfo, pValue))).queue();
 		});
 	}
 
@@ -135,27 +143,37 @@ public class ConfigCommand extends ListenerAdapter {
 	 * @param provider - property provider
 	 * @param hook     - event hook
 	 */
-	private static void setConfigurationSetting(SlashCommandInteractionEvent event,
-			IPropertyProvider<String, Guild, IGuildPropertyMapping> provider, InteractionHook hook) {
+	private static void setConfigurationSetting(SlashCommandInteractionEvent event, PluginPropertyProvider provider,
+			InteractionHook hook) {
 		event.deferReply(true).queue();
 
 		// Make sure key is valid
-		ensureKey(event.getOption("key", OptionMapping::getAsString), provider, hook,
+		ensureKey(event.getOption("key", OptionMapping::getAsInt), provider, hook,
 				// Check if value is valid
-				(key, property) -> ensureValue(event.getOptions(), hook, value -> {
+				property -> ensureValue(event.getOptions(), hook, value -> {
 					// Check if property is editable
-					if (property.isEditable()) {
+					if (property.getInfo().modifiable()) {
 						Member member = Objects.requireNonNull(event.getMember());
 						Guild guild = member.getGuild();
-						String old = property.get(guild, DEFAULT, IGuildPropertyMapping::getAsString);
+						String key = displayPropertyString(property.getInfo());
+						String old = getUserFriendlyValue(property.get(guild));
 
+						boolean wasSet = switch (value.getType()) {
+							default -> throw new IllegalArgumentException("Unexpected value: " + value.getType());
+							case BOOLEAN -> property.set(guild, value.getAsBoolean());
+							case CHANNEL -> property.set(guild, value.getAsChannel().getIdLong());
+							case INTEGER -> property.set(guild, value.getAsInt());
+							case ROLE, USER, MENTIONABLE -> property.set(guild, value.getAsMentionable().getIdLong());
+							case NUMBER -> property.set(guild, value.getAsLong());
+							case STRING -> property.set(guild, value.getAsString());
+						};
 						// Attempt to set the property
-						if (property.set(guild, value, true)) {
+						if (wasSet) {
 							logger.info("{}[{}] Put {} -> {} into the configuration", member.getUser().getName(),
-									member.getUser().getId(), key, value);
+									member.getUser().getId(), key, value.getAsString());
 							hook.editOriginalEmbeds(
-									response(SUCCESS, "Updated", "Set `%s` to `%s`".formatted(key, value))).queue();
-							logChange(member, key, old, value);
+									Response.success("Set `%s` to `%s`".formatted(key, value.getAsString()))).queue();
+							logChange(member, key, old, value.getAsString());
 						} else
 							unknownError(hook);
 					} else
@@ -170,24 +188,24 @@ public class ConfigCommand extends ListenerAdapter {
 	 * @param provider - property provider
 	 * @param hook     - event hook
 	 */
-	private static void removeConfigurationSetting(SlashCommandInteractionEvent event,
-			IPropertyProvider<String, Guild, IGuildPropertyMapping> provider, InteractionHook hook) {
+	private static void removeConfigurationSetting(SlashCommandInteractionEvent event, PluginPropertyProvider provider,
+			InteractionHook hook) {
 		event.deferReply(true).queue();
 
 		// Make sure key is valid
-		ensureKey(event.getOption("key", OptionMapping::getAsString), provider, hook, (key, property) -> {
+		ensureKey(event.getOption("key", OptionMapping::getAsInt), provider, hook, property -> {
 			// Check if property is editable
-			if (property.isEditable()) {
+			if (property.getInfo().modifiable()) {
 				Member member = Objects.requireNonNull(event.getMember());
 				Guild guild = member.getGuild();
-				String old = property.get(guild, DEFAULT, IGuildPropertyMapping::getAsString);
+				String key = displayPropertyString(property.getInfo());
+				String old = getUserFriendlyValue(property.get(guild));
 
 				// Attempt to set the property
-				if (property.set(guild, null, true)) {
+				if (property.remove(guild)) {
 					logger.info("{}[{}] Removed {} from the configuration", member.getUser().getName(),
-							member.getUser().getId(), key);
-					hook.editOriginalEmbeds(response(SUCCESS, "Updated", "Set `%s` to `%s`".formatted(key, DEFAULT)))
-							.queue();
+							member.getUser().getId(), property.getInfo());
+					hook.editOriginalEmbeds(Response.success("Set `%s` to `%s`".formatted(key, DEFAULT))).queue();
 					logChange(member, key, old, DEFAULT);
 				} else
 					unknownError(hook);
@@ -204,7 +222,7 @@ public class ConfigCommand extends ListenerAdapter {
 	 * @param hook     - event hook
 	 */
 	private static void listAllConfigurationSettings(SlashCommandInteractionEvent event,
-			IPropertyProvider<String, Guild, IGuildPropertyMapping> provider, InteractionHook hook) {
+			PluginPropertyProvider provider, InteractionHook hook) {
 		event.deferReply(true).queue();
 
 		Guild guild = event.getGuild();
@@ -212,13 +230,13 @@ public class ConfigCommand extends ListenerAdapter {
 		if (guild != null) {
 			// Collect all values
 			HashMap<String, String> map = new HashMap<>();
-			provider.keySet().stream().forEach(key -> map.put(key,
-					provider.getProperty(key).get(guild, DEFAULT, IGuildPropertyMapping::getAsString)));
+			provider.getPropertyList().stream().map(info -> provider.getProperty(info)).forEach(property -> map
+					.put(displayPropertyString(property.getInfo()), getUserFriendlyValue(property.get(guild))));
 
 			// Build output
 			StringBuilder builder = new StringBuilder();
 			map.entrySet().stream().sorted((e1, e2) -> e1.getKey().compareTo(e2.getKey())).forEachOrdered(entry -> {
-				builder.append((" \u2022 " + CONFIG_VALUE_FORMAT + "\n").formatted(entry.getKey(), entry.getValue()));
+				builder.append((CONFIG_VALUE_FORMAT + "\n").formatted(entry.getKey(), entry.getValue()));
 			});
 
 			// Send
@@ -233,20 +251,18 @@ public class ConfigCommand extends ListenerAdapter {
 	 * @param key      - key to check
 	 * @param provider - property provider
 	 * @param hook     - event hook
-	 * 
-	 * @return Returns {@code true} if the key is not null and the property is
-	 *         present in the provider
+	 * @param consumer - resolved property consumer
 	 */
-	private static void ensureKey(String key, IPropertyProvider<String, Guild, IGuildPropertyMapping> provider,
-			InteractionHook hook,
-			@NotNull BiConsumer<String, IProperty<String, Guild, IGuildPropertyMapping>> consumer) {
-		if (key != null)
-			if (provider.isPropertyPresent(key))
-				consumer.accept(key, provider.getProperty(key));
-			else
-				hook.editOriginalEmbeds(response(ERROR, "Error", "Unkown Key")).queue();
-		else
-			hook.editOriginalEmbeds(response(ERROR, "Error", "Please enter a key")).queue();
+	private static void ensureKey(int id, PluginPropertyProvider provider, InteractionHook hook,
+			@NotNull Consumer<PluginProperty> consumer) {
+		if (id > 0) {
+			try {
+				consumer.accept(provider.getPropertyInfoByID(id));
+			} catch (NoSuchElementException e) {
+				hook.editOriginalEmbeds(Response.error("No property for id: " + id)).queue();
+			}
+		} else
+			hook.editOriginalEmbeds(Response.error("Invalid ID [" + id + "]. ID must be greater than 0.")).queue();
 	}
 
 	/**
@@ -257,10 +273,10 @@ public class ConfigCommand extends ListenerAdapter {
 	 * @param consumer - found value option
 	 */
 	private static void ensureValue(@NotNull List<OptionMapping> mappings, @NotNull InteractionHook hook,
-			@NotNull Consumer<String> consumer) {
+			@NotNull Consumer<OptionMapping> consumer) {
 		for (OptionMapping m : mappings)
 			if (!m.getName().equals("key")) {
-				consumer.accept(m.getAsString());
+				consumer.accept(m);
 				return;
 			}
 		hook.editOriginalEmbeds(response(ERROR, "Error", "Unable to get value field")).queue();
@@ -288,10 +304,11 @@ public class ConfigCommand extends ListenerAdapter {
 	 * @param value    - new property value
 	 */
 	private static void logChange(Member user, String key, String oldValue, String value) {
-		GuildMessageChannel channel = WatameBot.INSTANCE.getGuildLoggingChannel().get(user.getGuild(),
-				IGuildPropertyMapping::getAsMessageChannel);
+		GuildMessageChannel channel = WatameBot.INSTANCE.getLoggingChannel().get(user.getGuild(),
+				PluginPropertyMapping::getAsMessageChannel);
 
 		if (channel != null) {
+			logger.debug("Logging configuration change to {}", channel);
 			channel.sendMessageEmbeds(new EmbedBuilder().setColor(NOTICE).setTitle("Configuration Change")
 					.setDescription("Plugin configuration has been updated")
 					.addField("Type", value == null ? "Remove" : "Update", true)
@@ -302,7 +319,19 @@ public class ConfigCommand extends ListenerAdapter {
 		}
 	}
 
+	private static String displayPropertyString(PropertyInfo property) {
+		return "[" + property.category() + "] " + property.name();
+	}
+
 	private static void unknownError(InteractionHook hook) {
 		hook.editOriginalEmbeds(response(ERROR, "Error", "Something went wrong. Please try again later")).queue();
+	}
+
+	private static String getUserFriendlyValue(Optional<PluginPropertyMapping> value) {
+		return value.map(property -> {
+			if (property.isUserReadable())
+				return property.getAsPlainText();
+			return "Object[" + property.getLength() + "B]";
+		}).orElse(DEFAULT);
 	}
 }
