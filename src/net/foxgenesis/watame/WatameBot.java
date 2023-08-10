@@ -14,7 +14,6 @@ import org.apache.commons.configuration2.ImmutableConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
@@ -123,11 +122,6 @@ public class WatameBot {
 	private final Context context;
 
 	/**
-	 * {@link MDC} context map
-	 */
-	private final ConcurrentHashMap<String, String> mdcContext = new ConcurrentHashMap<>();
-
-	/**
 	 * Create a new instance with a specified login {@code token}.
 	 *
 	 * @param token - Token used to connect to discord
@@ -135,9 +129,6 @@ public class WatameBot {
 	 * @throws SQLException When failing to connect to the database file
 	 */
 	private WatameBot(@NotNull String token) {
-		// Set the MDC context
-		MDC.setContextMap(mdcContext);
-
 		// Update our state
 		updateState(State.CONSTRUCTING);
 		logger.debug("Creating WatameBot instance");
@@ -375,8 +366,6 @@ public class WatameBot {
 		// Set JDA's event pool executor
 		if (eventExecutor != null)
 			builder.setEventPool(eventExecutor, true);
-
-		builder.setContextMap(mdcContext);
 		return builder;
 	}
 
@@ -483,8 +472,7 @@ public class WatameBot {
 	private void updateState(State state) {
 		this.state = state;
 		logger.trace("STATE = " + state);
-		mdcContext.put("watame.status", state.name());
-		MDC.put("watame.status", state.name());
+		System.setProperty("watame.status", state.name());
 	}
 
 	/**
