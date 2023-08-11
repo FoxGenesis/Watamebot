@@ -92,6 +92,7 @@ public abstract class AConnectionProvider implements AutoCloseable {
 
 	@FunctionalInterface
 	public interface ConnectionConsumer<U> {
+		@SuppressWarnings("exports")
 		public U applyConnection(Connection connection) throws SQLException;
 	}
 }

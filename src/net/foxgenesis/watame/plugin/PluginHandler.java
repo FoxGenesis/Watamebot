@@ -310,6 +310,13 @@ public class PluginHandler<@NotNull T extends Plugin> implements Closeable {
 		return plugins.get(identifier);
 	}
 
+	/**
+	 * Get a plugin by class.
+	 * 
+	 * @param pluginClass - plugin class
+	 * 
+	 * @return Returns the found {@link Plugin} if found, otherwise {@code null}
+	 */
 	@Nullable
 	public T getPlugin(Class<? extends T> pluginClass) {
 		for (T p : plugins.values())

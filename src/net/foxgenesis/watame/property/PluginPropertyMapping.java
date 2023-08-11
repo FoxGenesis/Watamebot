@@ -5,9 +5,10 @@ import java.sql.Blob;
 import java.sql.SQLException;
 
 import net.foxgenesis.property.PropertyType;
-import net.foxgenesis.property.impl.BlobMapping;
+import net.foxgenesis.property.lck.impl.BlobMapping;
 import net.foxgenesis.watame.WatameBot;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import net.dv8tion.jda.api.entities.Guild;
@@ -18,20 +19,22 @@ import net.dv8tion.jda.api.requests.restaction.CacheRestAction;
 
 public class PluginPropertyMapping extends BlobMapping {
 
-	public PluginPropertyMapping(long lookup, byte[] data, PropertyType type) {
+	public PluginPropertyMapping(long lookup, byte[] data, @NotNull PropertyType type) {
 		super(lookup, data, type);
 	}
 	
-	public PluginPropertyMapping(long lookup, Blob blob, PropertyType type) throws IOException, SQLException {
-		super(lookup, blob, type);
-	}
-	
-	public PluginPropertyMapping(Guild guild, Blob blob, PropertyType type) throws IOException, SQLException {
-		super(guild.getIdLong(), blob, type);
+	public PluginPropertyMapping(@NotNull Guild guild, byte[] data, @NotNull PropertyType type) {
+		super(guild.getIdLong(), data, type);
 	}
 
-	public PluginPropertyMapping(Guild guild, byte[] data, PropertyType type) {
-		super(guild.getIdLong(), data, type);
+	@SuppressWarnings("exports")
+	public PluginPropertyMapping(long lookup, @NotNull Blob blob, @NotNull PropertyType type) throws IOException, SQLException {
+		super(lookup, blob, type);
+	}
+
+	@SuppressWarnings("exports")
+	public PluginPropertyMapping(@NotNull Guild guild, @NotNull Blob blob, @NotNull PropertyType type) throws IOException, SQLException {
+		super(guild.getIdLong(), blob, type);
 	}
 
 	@Nullable

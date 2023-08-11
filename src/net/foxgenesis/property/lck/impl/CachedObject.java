@@ -1,4 +1,4 @@
-package net.foxgenesis.property.impl;
+package net.foxgenesis.property.lck.impl;
 
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
@@ -8,7 +8,7 @@ import java.util.function.Supplier;
 import org.jetbrains.annotations.Nullable;
 
 public class CachedObject<T> {
-	private final AtomicReference<@Nullable T> obj = new AtomicReference<>();
+	private final AtomicReference<T> obj = new AtomicReference<>();
 	private final AtomicLong lastCache = new AtomicLong();
 	private final Supplier<T> updateFunction;
 

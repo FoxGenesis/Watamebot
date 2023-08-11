@@ -1,4 +1,4 @@
-package net.foxgenesis.watame.property;
+package net.foxgenesis.watame.property.impl;
 
 import java.io.IOException;
 import java.sql.Blob;
@@ -9,8 +9,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import net.foxgenesis.property.PropertyException;
 import net.foxgenesis.property.PropertyInfo;
 import net.foxgenesis.property.PropertyType;
-import net.foxgenesis.property.impl.CachedObject;
-import net.foxgenesis.property.impl.LCKPropertyResolver;
+import net.foxgenesis.property.lck.LCKPropertyResolver;
+import net.foxgenesis.property.lck.impl.CachedObject;
+import net.foxgenesis.watame.property.PluginPropertyMapping;
 
 import net.dv8tion.jda.api.entities.Guild;
 

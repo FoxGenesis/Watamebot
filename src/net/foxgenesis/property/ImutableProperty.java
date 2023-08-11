@@ -7,7 +7,7 @@ import java.util.function.Supplier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface ImmutableProperty {
+public interface ImutableProperty<L, M extends PropertyMapping> {
 	/**
 	 * Get the current value of this property.
 	 * 
@@ -16,7 +16,7 @@ public interface ImmutableProperty {
 	 * @return Returns a {@link PropertyMapping} containing the raw data retrieved
 	 */
 	@NotNull
-	Optional<? extends PropertyMapping> get(long lookup);
+	Optional<? extends M> get(@NotNull L lookup);
 
 	/**
 	 * Get the current value of this property and map it with the specified
@@ -39,7 +39,7 @@ public interface ImmutableProperty {
 	 * @return Returns the mapped data or {@code null} if this property is empty
 	 */
 	@Nullable
-	default <U> U get(long lookup, @NotNull Function<? super PropertyMapping, U> mapper) {
+	default <U> U get(@NotNull L lookup, @NotNull Function<? super M, U> mapper) {
 		return get(lookup, null, mapper);
 	}
 
@@ -68,8 +68,8 @@ public interface ImmutableProperty {
 	 *         empty
 	 */
 	@Nullable
-	default <U> U get(long lookup, @Nullable Supplier<U> defaultValue,
-			@NotNull Function<? super PropertyMapping, U> mapper) {
+	default <U> U get(@NotNull L lookup, @Nullable Supplier<U> defaultValue,
+			@NotNull Function<? super M, U> mapper) {
 		return get(lookup).map(mapper).orElseGet(defaultValue != null ? defaultValue : () -> null);
 	}
 
@@ -82,7 +82,7 @@ public interface ImmutableProperty {
 	 *         {@link PropertyInfo} was found inside the configuration (empty or
 	 *         not)
 	 */
-	boolean isPresent(long lookup);
+	boolean isPresent(@NotNull L lookup);
 
 	/**
 	 * Get the definition of this property

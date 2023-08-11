@@ -16,7 +16,7 @@ import net.foxgenesis.database.AbstractDatabase;
 import net.foxgenesis.property.PropertyException;
 import net.foxgenesis.property.PropertyInfo;
 import net.foxgenesis.property.PropertyType;
-import net.foxgenesis.property.impl.LCKPropertyResolver;
+import net.foxgenesis.property.lck.LCKPropertyResolver;
 import net.foxgenesis.util.resource.FormattedModuleResource;
 
 import org.jetbrains.annotations.NotNull;
@@ -30,8 +30,8 @@ public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPro
 	private final String table;
 	private final String propertyInfoTable;
 
-	public LCKConfigurationDatabase(@NotNull String name, @NotNull String database, @NotNull String propertyTable,
-			@NotNull String propertyInfoTable) {
+	public LCKConfigurationDatabase(String name, String database, String propertyTable,
+			String propertyInfoTable) {
 		super(name,
 				new FormattedModuleResource("watamebot", "/META-INF/configDatabase/statements.kvp",
 						Map.of("database", database, "table", propertyTable, "table2", propertyInfoTable)),
@@ -43,7 +43,7 @@ public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPro
 	}
 
 	@Override
-	public boolean removeInternal(long lookup, @NotNull PropertyInfo info) throws PropertyException {
+	public boolean removeInternal(Long lookup, PropertyInfo info) throws PropertyException {
 		validate(lookup, info);
 		logger.debug("Removing property: {}", info);
 		try {
@@ -58,8 +58,7 @@ public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPro
 	}
 
 	@Override
-	public boolean putInternal(long lookup, @NotNull PropertyInfo info, @Nullable InputStream in)
-			throws PropertyException {
+	public boolean putInternal(Long lookup, PropertyInfo info, InputStream in) throws PropertyException {
 		try (in) {
 			validate(lookup, info);
 			if (in == null)
@@ -78,7 +77,7 @@ public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPro
 	}
 
 	@Override
-	public Optional<Blob> getInternal(long lookup, @NotNull PropertyInfo info) throws PropertyException {
+	public Optional<Blob> getInternal(Long lookup, PropertyInfo info) throws PropertyException {
 		validate(lookup, info);
 		logger.debug("Getting property: {}", info);
 		try {
@@ -98,7 +97,7 @@ public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPro
 	}
 
 	@Override
-	public boolean isPresent(long lookup, @NotNull PropertyInfo info) throws PropertyException {
+	public boolean isPresent(Long lookup, PropertyInfo info) throws PropertyException {
 		validate(lookup, info);
 		try {
 			return this.mapStatement("property_exists", statement -> {
@@ -115,8 +114,8 @@ public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPro
 	}
 
 	@Override
-	public PropertyInfo createPropertyInfo(@NotNull String category, @NotNull String key, boolean modifiable,
-			PropertyType type) throws PropertyException {
+	public PropertyInfo createPropertyInfo(String category, String key, boolean modifiable, PropertyType type)
+			throws PropertyException, IllegalArgumentException {
 		validate(category, key);
 		logger.debug("Creating property: [{}] {} (modifiable: {}, type: {})", category, key, modifiable, type);
 		try {
@@ -135,14 +134,15 @@ public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPro
 
 				return -1;
 			}, Statement.RETURN_GENERATED_KEYS).filter(id -> id != -1)
-					.map(id -> new PropertyInfo(id, category, key, modifiable, type)).orElseThrow();
+					.map(id -> new PropertyInfo(id, category, key, modifiable, type))
+					.orElseThrow(() -> new IllegalArgumentException("Property already exists"));
 		} catch (SQLException e) {
 			throw new PropertyException(e);
 		}
 	}
 
 	@Override
-	public PropertyInfo getPropertyByID(int id) throws PropertyException {
+	public PropertyInfo getPropertyByID(int id) throws PropertyException, NoSuchElementException {
 		if (id < 0)
 			throw new PropertyException("Invalid property id");
 		// Validate database connection
@@ -166,7 +166,7 @@ public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPro
 	}
 
 	@Override
-	public boolean propertyInfoExists(@NotNull String category, @NotNull String key) throws PropertyException {
+	public boolean isRegistered(String category, String key) throws PropertyException {
 		validate(category, key);
 		logger.debug("Getting property info for [{}] {}", category, key);
 		try {
@@ -187,8 +187,7 @@ public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPro
 
 	@Override
 	@NotNull
-	public PropertyInfo getPropertyInfo(@NotNull String category, @NotNull String key)
-			throws PropertyException, NoSuchElementException {
+	public PropertyInfo getPropertyInfo(String category, String key) throws PropertyException, NoSuchElementException {
 		validate(category, key);
 		logger.debug("Getting property info for [{}] {}", category, key);
 		try {
@@ -208,7 +207,6 @@ public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPro
 	}
 
 	@Override
-	@NotNull
 	public List<PropertyInfo> getPropertyList() throws PropertyException {
 		logger.debug("Getting property list");
 		try {

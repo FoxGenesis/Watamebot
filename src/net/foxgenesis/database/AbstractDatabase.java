@@ -27,22 +27,19 @@ import net.dv8tion.jda.internal.utils.IOUtil;
  *
  */
 public abstract class AbstractDatabase implements AutoCloseable {
-	@NotNull
+
 	private final HashMap<String, String> statements = new HashMap<>();
 
-	@NotNull
 	private final ModuleResource operationsFile;
 
-	@NotNull
 	private final ModuleResource setupFile;
 
-	@NotNull
 	private final String name;
 
 	/**
 	 * Logger
 	 */
-	@NotNull
+
 	protected final Logger logger;
 
 	private AConnectionProvider provider;

@@ -23,7 +23,7 @@ import net.foxgenesis.watame.plugin.SeverePluginException;
 import net.foxgenesis.watame.property.ImmutablePluginProperty;
 import net.foxgenesis.watame.property.PluginProperty;
 import net.foxgenesis.watame.property.PluginPropertyProvider;
-import net.foxgenesis.watame.property.PluginPropertyProviderImpl;
+import net.foxgenesis.watame.property.impl.PluginPropertyProviderImpl;
 
 import org.apache.commons.configuration2.ImmutableConfiguration;
 import org.jetbrains.annotations.NotNull;

@@ -1,4 +1,4 @@
-package net.foxgenesis.property.impl;
+package net.foxgenesis.property.lck.impl;
 
 import java.io.IOException;
 import java.sql.Blob;
@@ -8,8 +8,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import net.foxgenesis.property.PropertyException;
 import net.foxgenesis.property.PropertyInfo;
+import net.foxgenesis.property.lck.LCKPropertyResolver;
 
-public class CachedLCKProperty extends LCKProperty {
+public class CachedLCKProperty extends LCKPropertyImpl {
 	protected final ConcurrentHashMap<Long, CachedObject<Optional<BlobMapping>>> cache = new ConcurrentHashMap<>();
 	private final long cacheTime;
 
@@ -19,7 +20,7 @@ public class CachedLCKProperty extends LCKProperty {
 	}
 
 	@Override
-	public Optional<BlobMapping> get(long lookup) {
+	public Optional<BlobMapping> get(Long lookup) {
 		init(lookup);
 		Optional<BlobMapping> map = cache.get(lookup).get();
 		if (map != null)
@@ -28,7 +29,7 @@ public class CachedLCKProperty extends LCKProperty {
 	}
 
 	@Override
-	public boolean set(long lookup, byte[] data) {
+	public boolean set(Long lookup, byte[] data) {
 		init(lookup);
 		if (super.set(lookup, data)) {
 			cache.get(lookup).update(Optional.ofNullable(createMapping(lookup, data)));
@@ -50,11 +51,11 @@ public class CachedLCKProperty extends LCKProperty {
 		return new CachedObject<Optional<BlobMapping>>(() -> retrieve(lookup), cacheTime);
 	}
 	
-	private Optional<BlobMapping> retrieve(long lookup) {
+	private Optional<BlobMapping> retrieve(Long lookup) {
 		return resolver.getInternal(lookup, getInfo()).map(b -> createMapping(lookup, b));
 	}
 
-	protected BlobMapping createMapping(long lookup, Blob blob) throws PropertyException {
+	protected BlobMapping createMapping(Long lookup, Blob blob) throws PropertyException {
 		if (blob == null)
 			return null;
 
@@ -65,7 +66,7 @@ public class CachedLCKProperty extends LCKProperty {
 		}
 	}
 
-	protected BlobMapping createMapping(long lookup, byte[] data) {
+	protected BlobMapping createMapping(Long lookup, byte[] data) {
 		if (data == null || data.length == 0)
 			return null;
 		BlobMapping map = new BlobMapping(lookup, data, getInfo().type());

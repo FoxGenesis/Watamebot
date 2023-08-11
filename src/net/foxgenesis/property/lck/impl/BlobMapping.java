@@ -1,4 +1,4 @@
-package net.foxgenesis.property.impl;
+package net.foxgenesis.property.lck.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,26 +9,24 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.Function;
-import java.util.function.IntFunction;
 
-import net.foxgenesis.property.PropertyException;
 import net.foxgenesis.property.PropertyMapping;
 import net.foxgenesis.property.PropertyType;
 
-import org.apache.commons.lang3.SerializationUtils;
+import org.jetbrains.annotations.NotNull;
 
 public class BlobMapping implements PropertyMapping {
 	private final byte[] data;
 	private final long lookup;
 	private final PropertyType type;
 
-	public BlobMapping(long lookup, byte[] data, PropertyType type) {
+	public BlobMapping(long lookup, byte[] data, @NotNull PropertyType type) {
 		this.lookup = lookup;
 		this.data = Objects.requireNonNull(data);
 		this.type = Objects.requireNonNull(type);
 	}
 
-	public BlobMapping(long lookup, Blob blob, PropertyType type) throws IOException, SQLException {
+	public BlobMapping(long lookup, @NotNull Blob blob, @NotNull PropertyType type) throws IOException, SQLException {
 		this.lookup = lookup;
 		this.type = Objects.requireNonNull(type);
 		try (InputStream in = blob.getBinaryStream()) {
@@ -47,20 +45,20 @@ public class BlobMapping implements PropertyMapping {
 
 	@Override
 	public Object getAsObject() {
-		return parse(Object.class);
+		return PropertyMapping.parse(Object.class, data);
 	}
 
 	@Override
 	public String getAsString() {
 		if (isUserReadable())
 			return getAsPlainText();
-		return parse(String.class);
+		return PropertyMapping.parse(String.class, data);
 	}
 
 	@Override
 	public boolean getAsBoolean() {
 		return switch (getType()) {
-			case OBJECT -> parse(Boolean.class);
+			case OBJECT -> PropertyMapping.parse(Boolean.class, data);
 			case PLAIN -> Boolean.parseBoolean(getAsPlainText());
 			case NUMBER -> new BigInteger(data).testBit(0);
 		};
@@ -69,7 +67,7 @@ public class BlobMapping implements PropertyMapping {
 	@Override
 	public int getAsInt() {
 		return switch (getType()) {
-			case OBJECT -> parse(Integer.class);
+			case OBJECT -> PropertyMapping.parse(Integer.class, data);
 			case PLAIN -> Integer.parseInt(getAsPlainText());
 			case NUMBER -> new BigInteger(data).intValue();
 		};
@@ -78,7 +76,7 @@ public class BlobMapping implements PropertyMapping {
 	@Override
 	public float getAsFloat() {
 		return switch (getType()) {
-			case OBJECT -> parse(Float.class);
+			case OBJECT -> PropertyMapping.parse(Float.class, data);
 			case PLAIN -> Float.parseFloat(getAsPlainText());
 			case NUMBER -> new BigInteger(data).floatValue();
 		};
@@ -87,7 +85,7 @@ public class BlobMapping implements PropertyMapping {
 	@Override
 	public double getAsDouble() {
 		return switch (getType()) {
-			case OBJECT -> parse(Double.class);
+			case OBJECT -> PropertyMapping.parse(Double.class, data);
 			case PLAIN -> Double.parseDouble(getAsPlainText());
 			case NUMBER -> new BigInteger(data).doubleValue();
 		};
@@ -96,7 +94,7 @@ public class BlobMapping implements PropertyMapping {
 	@Override
 	public long getAsLong() {
 		return switch (getType()) {
-			case OBJECT -> parse(Long.class);
+			case OBJECT -> PropertyMapping.parse(Long.class, data);
 			case PLAIN -> Long.parseLong(getAsPlainText());
 			case NUMBER -> new BigInteger(data).longValue();
 		};
@@ -105,8 +103,8 @@ public class BlobMapping implements PropertyMapping {
 	@Override
 	public String[] getAsStringArray() {
 		if (isUserReadable())
-			return unjoin(getAsPlainText(), Function.identity(), String[]::new);
-		return parse(String[].class);
+			return PropertyMapping.unjoin(getAsPlainText(), Function.identity(), String[]::new);
+		return PropertyMapping.parse(String[].class, data);
 	}
 
 	@Override
@@ -118,8 +116,8 @@ public class BlobMapping implements PropertyMapping {
 					out[i] = (data[i] & 1) == 1;
 				yield out;
 			}
-			case OBJECT -> parse(boolean[].class);
-			case PLAIN -> unjoinBoolean(getAsPlainText());
+			case OBJECT -> PropertyMapping.parse(boolean[].class, data);
+			case PLAIN -> PropertyMapping.unjoinBoolean(getAsPlainText());
 		};
 	}
 
@@ -133,8 +131,8 @@ public class BlobMapping implements PropertyMapping {
 					out[i] = b.getInt();
 				yield out;
 			}
-			case OBJECT -> parse(int[].class);
-			case PLAIN -> unjoinInt(getAsPlainText());
+			case OBJECT -> PropertyMapping.parse(int[].class, data);
+			case PLAIN -> PropertyMapping.unjoinInt(getAsPlainText());
 		};
 	}
 
@@ -148,8 +146,8 @@ public class BlobMapping implements PropertyMapping {
 					out[i] = b.getFloat();
 				yield out;
 			}
-			case OBJECT -> parse(float[].class);
-			case PLAIN -> unjoinFloat(getAsPlainText());
+			case OBJECT -> PropertyMapping.parse(float[].class, data);
+			case PLAIN -> PropertyMapping.unjoinFloat(getAsPlainText());
 		};
 	}
 
@@ -163,8 +161,8 @@ public class BlobMapping implements PropertyMapping {
 					out[i] = b.getDouble();
 				yield out;
 			}
-			case OBJECT -> parse(double[].class);
-			case PLAIN -> unjoinDouble(getAsPlainText());
+			case OBJECT -> PropertyMapping.parse(double[].class, data);
+			case PLAIN -> PropertyMapping.unjoinDouble(getAsPlainText());
 		};
 	}
 
@@ -178,8 +176,8 @@ public class BlobMapping implements PropertyMapping {
 					out[i] = b.getLong();
 				yield out;
 			}
-			case OBJECT -> parse(long[].class);
-			case PLAIN -> unjoinLong(getAsPlainText());
+			case OBJECT -> PropertyMapping.parse(long[].class, data);
+			case PLAIN -> PropertyMapping.unjoinLong(getAsPlainText());
 		};
 	}
 
@@ -187,18 +185,9 @@ public class BlobMapping implements PropertyMapping {
 	public byte[] getAsByteArray() {
 		return switch (getType()) {
 			case NUMBER -> Arrays.copyOf(data, data.length);
-			case OBJECT -> parse(byte[].class);
-			case PLAIN -> unjoinByte(getAsPlainText());
+			case OBJECT -> PropertyMapping.parse(byte[].class, data);
+			case PLAIN -> PropertyMapping.unjoinByte(getAsPlainText());
 		};
-	}
-
-	public boolean isPlainText() {
-		return type == PropertyType.PLAIN;
-	}
-
-	@Override
-	public boolean isUserReadable() {
-		return type != PropertyType.OBJECT;
 	}
 
 	@Override
@@ -206,68 +195,12 @@ public class BlobMapping implements PropertyMapping {
 		return type;
 	}
 
-	@Override
 	public long getLookup() {
 		return lookup;
 	}
 
+	@Override
 	public long getLength() {
 		return data.length;
-	}
-
-	private byte[] unjoinByte(String text) {
-		String[] arr = text.split(",");
-		byte[] out = new byte[arr.length];
-		for (int i = 0; i < arr.length; i++)
-			out[i] = Byte.parseByte(arr[i]);
-		return out;
-	}
-
-	private static boolean[] unjoinBoolean(String text) {
-		String[] arr = text.split(",");
-		boolean[] out = new boolean[arr.length];
-		for (int i = 0; i < arr.length; i++)
-			out[i] = Boolean.parseBoolean(arr[i]);
-		return out;
-	}
-
-	private static int[] unjoinInt(String text) {
-		String[] arr = text.split(",");
-		int[] out = new int[arr.length];
-		for (int i = 0; i < arr.length; i++)
-			out[i] = Integer.parseInt(arr[i]);
-		return out;
-	}
-
-	private static float[] unjoinFloat(String text) {
-		String[] arr = text.split(",");
-		float[] out = new float[arr.length];
-		for (int i = 0; i < arr.length; i++)
-			out[i] = Float.parseFloat(arr[i]);
-		return out;
-	}
-
-	private static double[] unjoinDouble(String text) {
-		String[] arr = text.split(",");
-		double[] out = new double[arr.length];
-		for (int i = 0; i < arr.length; i++)
-			out[i] = Double.parseDouble(arr[i]);
-		return out;
-	}
-
-	private static long[] unjoinLong(String text) {
-		String[] arr = text.split(",");
-		long[] out = new long[arr.length];
-		for (int i = 0; i < arr.length; i++)
-			out[i] = Long.parseLong(arr[i]);
-		return out;
-	}
-
-	private static <U> U[] unjoin(String text, Function<String, U> mapper, IntFunction<U[]> construct) {
-		return Arrays.stream(text.split(",")).map(mapper).toArray(construct);
-	}
-
-	private <U> U parse(Class<U> c) throws PropertyException {
-		return c.cast(SerializationUtils.deserialize(data));
 	}
 }

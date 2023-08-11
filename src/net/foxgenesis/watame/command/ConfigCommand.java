@@ -257,7 +257,7 @@ public class ConfigCommand extends ListenerAdapter {
 			@NotNull Consumer<PluginProperty> consumer) {
 		if (id > 0) {
 			try {
-				consumer.accept(provider.getPropertyInfoByID(id));
+				consumer.accept(provider.getPropertyByID(id));
 			} catch (NoSuchElementException e) {
 				hook.editOriginalEmbeds(Response.error("No property for id: " + id)).queue();
 			}
@@ -327,8 +327,10 @@ public class ConfigCommand extends ListenerAdapter {
 		hook.editOriginalEmbeds(response(ERROR, "Error", "Something went wrong. Please try again later")).queue();
 	}
 
-	private static String getUserFriendlyValue(Optional<PluginPropertyMapping> value) {
+	private static String getUserFriendlyValue(Optional<? extends PluginPropertyMapping> value) {
 		return value.map(property -> {
+			if (property == null)
+				return "null";
 			if (property.isUserReadable())
 				return property.getAsPlainText();
 			return "Object[" + property.getLength() + "B]";
