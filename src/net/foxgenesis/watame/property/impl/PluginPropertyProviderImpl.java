@@ -79,10 +79,10 @@ public class PluginPropertyProviderImpl implements PluginPropertyProvider {
 
 	/**
 	 * Check if a {@link PluginProperty} is inside the cache.
-	 * 
+	 *
 	 * @param plugin - property owner
 	 * @param key    - property name
-	 * 
+	 *
 	 * @return Returns the found {@link PluginProperty}, otherwise {@code null}
 	 */
 	private PluginProperty inCache(Plugin plugin, String key) {
@@ -94,9 +94,9 @@ public class PluginPropertyProviderImpl implements PluginPropertyProvider {
 
 	/**
 	 * Check if a {@link PluginProperty} is inside the cache.
-	 * 
+	 *
 	 * @param info - property info
-	 * 
+	 *
 	 * @return Returns the found {@link PluginProperty}, otherwise {@code null}
 	 */
 	private PluginProperty inCache(PropertyInfo info) {
@@ -108,9 +108,9 @@ public class PluginPropertyProviderImpl implements PluginPropertyProvider {
 
 	/**
 	 * Check if a {@link PluginProperty} is inside the cache
-	 * 
+	 *
 	 * @param id - property id
-	 * 
+	 *
 	 * @return Returns the found {@link PluginProperty}, otherwise {@code null}
 	 */
 	private PluginProperty inCache(int id) {

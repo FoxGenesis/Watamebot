@@ -46,11 +46,11 @@ public class CachedLCKProperty extends LCKPropertyImpl {
 		if (!cache.containsKey(lookup))
 			cache.put(lookup, newCache(lookup));
 	}
-	
+
 	private CachedObject<Optional<BlobMapping>> newCache(long lookup) {
-		return new CachedObject<Optional<BlobMapping>>(() -> retrieve(lookup), cacheTime);
+		return new CachedObject<>(() -> retrieve(lookup), cacheTime);
 	}
-	
+
 	private Optional<BlobMapping> retrieve(Long lookup) {
 		return resolver.getInternal(lookup, getInfo()).map(b -> createMapping(lookup, b));
 	}
@@ -69,7 +69,6 @@ public class CachedLCKProperty extends LCKPropertyImpl {
 	protected BlobMapping createMapping(Long lookup, byte[] data) {
 		if (data == null || data.length == 0)
 			return null;
-		BlobMapping map = new BlobMapping(lookup, data, getInfo().type());
-		return map;
+		return new BlobMapping(lookup, data, getInfo().type());
 	}
 }

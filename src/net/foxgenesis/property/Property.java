@@ -11,10 +11,10 @@ import org.jetbrains.annotations.NotNull;
 public interface Property<L, M extends PropertyMapping> extends ImutableProperty<L, M> {
 	/**
 	 * Set a {@link Serializable} object in the configuration.
-	 * 
+	 *
 	 * @param lookup - property lookup
 	 * @param obj    - object to store
-	 * 
+	 *
 	 * @return Returns {@code true} if the object was stored, {@code false}
 	 *         otherwise
 	 */
@@ -24,10 +24,10 @@ public interface Property<L, M extends PropertyMapping> extends ImutableProperty
 
 	/**
 	 * Set an array of bytes in the configuration
-	 * 
+	 *
 	 * @param lookup - property lookup
 	 * @param data   - array of data to store
-	 * 
+	 *
 	 * @return Returns {@code true} if the data was stored, {@code false} otherwise
 	 */
 	default boolean set(@NotNull L lookup, byte[] data) {
@@ -37,19 +37,19 @@ public interface Property<L, M extends PropertyMapping> extends ImutableProperty
 	/**
 	 * Set a property inside the configuration with the data read from the specified
 	 * {@link InputStream}.
-	 * 
+	 *
 	 * @param lookup - property lookup
 	 * @param in     - stream of data
-	 * 
+	 *
 	 * @return Returns {@code true} if the data was stored, {@code false} otherwise
 	 */
 	boolean set(@NotNull L lookup, @NotNull InputStream in);
 
 	/**
 	 * Remove this property from the configuration
-	 * 
+	 *
 	 * @param lookup - property lookup
-	 * 
+	 *
 	 * @return Returns {@code true} if the property with the specified
 	 *         {@code lookup} was removed from the configuration
 	 */
@@ -57,13 +57,13 @@ public interface Property<L, M extends PropertyMapping> extends ImutableProperty
 
 	/**
 	 * Serialize a object into a byte array.
-	 * 
+	 *
 	 * @param info - property information
 	 * @param obj  - object to serialize
-	 * 
+	 *
 	 * @return Returns the serialized data
 	 */
-	public static byte[] serialize(@NotNull PropertyInfo info, @NotNull Serializable obj) {
+	static byte[] serialize(@NotNull PropertyInfo info, @NotNull Serializable obj) {
 		if (info.type() == PropertyType.PLAIN) {
 			if (obj.getClass().isArray()) {
 				Serializable[] a = (Serializable[]) obj;
@@ -77,7 +77,8 @@ public interface Property<L, M extends PropertyMapping> extends ImutableProperty
 			}
 
 			return obj.toString().getBytes();
-		} else if (info.type() == PropertyType.NUMBER) {
+		}
+		if (info.type() == PropertyType.NUMBER) {
 			if (obj instanceof Integer i)
 				return ByteBuffer.allocate(Integer.SIZE / Byte.SIZE).putInt(i).array();
 			else if (obj instanceof Long f)

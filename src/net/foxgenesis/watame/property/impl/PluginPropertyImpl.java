@@ -68,9 +68,7 @@ public class PluginPropertyImpl implements PluginProperty {
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
+		if ((obj == null) || (getClass() != obj.getClass()))
 			return false;
 		PluginPropertyImpl other = (PluginPropertyImpl) obj;
 		return Objects.equals(info, other.info) && Objects.equals(resolver, other.resolver);

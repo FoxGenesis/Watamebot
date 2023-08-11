@@ -43,7 +43,7 @@ public class CachedPluginProperty extends PluginPropertyImpl {
 
 	protected void init(Guild lookup) {
 		if (!cache.containsKey(lookup.getIdLong()))
-			cache.put(lookup.getIdLong(), new CachedObject<PluginPropertyMapping>(() -> retrieve(lookup), cacheTime));
+			cache.put(lookup.getIdLong(), new CachedObject<>(() -> retrieve(lookup), cacheTime));
 	}
 
 	private PluginPropertyMapping retrieve(Guild lookup) {

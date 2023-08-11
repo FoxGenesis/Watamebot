@@ -1,10 +1,10 @@
 /**
  * Watamebot core module
- * 
+ *
  * @author Ashley
  *
  * @provides net.foxgenesis.watame.plugin.Plugin
- * 
+ *
  * @uses net.foxgenesis.watame.plugin.Plugin
  */
 module watamebot {

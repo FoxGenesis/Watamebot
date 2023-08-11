@@ -22,7 +22,7 @@ public class PluginPropertyMapping extends BlobMapping {
 	public PluginPropertyMapping(long lookup, byte[] data, @NotNull PropertyType type) {
 		super(lookup, data, type);
 	}
-	
+
 	public PluginPropertyMapping(@NotNull Guild guild, byte[] data, @NotNull PropertyType type) {
 		super(guild.getIdLong(), data, type);
 	}

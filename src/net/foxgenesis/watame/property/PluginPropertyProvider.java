@@ -12,12 +12,12 @@ public interface PluginPropertyProvider extends PropertyProvider<Plugin, String,
 	 * Register a {@link PropertyInfo} if it does not exist inside the configuration
 	 * and return a new {@link PluginProperty} created with the property
 	 * information.
-	 * 
+	 *
 	 * @param plugin     - property owner
 	 * @param key        - property name
 	 * @param modifiable - if can be modified by the end user
 	 * @param type       - property storage type
-	 * 
+	 *
 	 * @return Returns a {@link PluginProperty} with the specified
 	 *         {@link PropertyInfo}
 	 */
@@ -28,9 +28,9 @@ public interface PluginPropertyProvider extends PropertyProvider<Plugin, String,
 	/**
 	 * Get a {@link PluginProperty} based on the specified property information
 	 * {@code id}.
-	 * 
+	 *
 	 * @param id - {@link PropertyInfo} id
-	 * 
+	 *
 	 * @return Returns a {@link PluginProperty} using the specified
 	 *         {@link PropertyInfo} {@code id}
 	 */
@@ -40,10 +40,10 @@ public interface PluginPropertyProvider extends PropertyProvider<Plugin, String,
 	/**
 	 * Get a {@link PluginProperty} based on the specified property {@code owner}
 	 * and {@code name}.
-	 * 
+	 *
 	 * @param plugin - property owner
 	 * @param key    - property name
-	 * 
+	 *
 	 * @return Returns a {@link PluginProperty} linked to the {@link PropertyInfo}
 	 *         {@code category} and {@code name}
 	 */
@@ -52,9 +52,9 @@ public interface PluginPropertyProvider extends PropertyProvider<Plugin, String,
 
 	/**
 	 * Get a {@link PluginProperty} linked to the specified {@link PropertyInfo}.
-	 * 
+	 *
 	 * @param info - property information
-	 * 
+	 *
 	 * @return Returns a {@link PluginProperty} with the specified {@code info}
 	 */
 	@Override

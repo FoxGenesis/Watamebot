@@ -33,7 +33,7 @@ public class CachedObject<T> {
 		lastCache.set(System.currentTimeMillis());
 		return obj.updateAndGet(c -> updateFunction.get());
 	}
-	
+
 	@Nullable
 	public synchronized T update(T newValue) {
 		lastCache.set(System.currentTimeMillis());

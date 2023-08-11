@@ -38,7 +38,7 @@ public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPro
 				new FormattedModuleResource("watamebot", "/META-INF/configDatabase/setup.sql",
 						Map.of("database", database, "table", propertyTable, "table2", propertyInfoTable)));
 		this.database = Objects.requireNonNull(database);
-		this.table = Objects.requireNonNull(propertyTable);
+		table = Objects.requireNonNull(propertyTable);
 		this.propertyInfoTable = Objects.requireNonNull(propertyInfoTable);
 	}
 
@@ -211,7 +211,7 @@ public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPro
 		logger.debug("Getting property list");
 		try {
 			List<PropertyInfo> list = new ArrayList<>();
-			this.prepareStatement("property_info_get_all", statement -> {
+			prepareStatement("property_info_get_all", statement -> {
 				try (ResultSet result = statement.executeQuery()) {
 					while (result.next()) {
 						list.add(parsePropertyInfo(result));
