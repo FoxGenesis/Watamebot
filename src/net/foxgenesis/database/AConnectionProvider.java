@@ -26,7 +26,7 @@ public abstract class AConnectionProvider implements AutoCloseable {
 
 	public AConnectionProvider(Properties properties, String name) {
 		this.name = Objects.requireNonNull(name);
-		this.logger = LoggerFactory.getLogger(name);
+		logger = LoggerFactory.getLogger(name);
 		this.properties = Objects.requireNonNull(properties);
 
 		String type = properties.getProperty("databaseType", "mysql");
@@ -38,7 +38,7 @@ public abstract class AConnectionProvider implements AutoCloseable {
 		String port = properties.getProperty("port", "3306");
 		properties.remove("port");
 
-		this.database = properties.getProperty("database", "WatameBot");
+		database = properties.getProperty("database", "WatameBot");
 		properties.remove("database");
 
 		properties.put("jdbcUrl", "jdbc:%s://%s:%s/%s".formatted(type, ip, port, database));
@@ -92,7 +92,6 @@ public abstract class AConnectionProvider implements AutoCloseable {
 
 	@FunctionalInterface
 	public interface ConnectionConsumer<U> {
-		@SuppressWarnings("exports")
-		public U applyConnection(Connection connection) throws SQLException;
+		@SuppressWarnings("exports") U applyConnection(Connection connection) throws SQLException;
 	}
 }

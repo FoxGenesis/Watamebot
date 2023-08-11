@@ -37,7 +37,7 @@ public class IntegratedCommands extends Plugin {
 
 	@Override
 	public void postInit(WatameBot bot) {
-		
+
 	}
 
 	@Override

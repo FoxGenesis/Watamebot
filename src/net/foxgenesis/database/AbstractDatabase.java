@@ -22,7 +22,7 @@ import net.dv8tion.jda.internal.utils.IOUtil;
 
 /**
  * NEED_JAVADOC
- * 
+ *
  * @author Ashley
  *
  */
@@ -46,7 +46,7 @@ public abstract class AbstractDatabase implements AutoCloseable {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @param name
 	 * @param operationsFile
 	 * @param setupFile
@@ -70,7 +70,7 @@ public abstract class AbstractDatabase implements AutoCloseable {
 
 		new KVPFile(operationsFile).forEach((id, raw) -> {
 			if (!hasStatementID(id))
-				this.registerStatement(id, raw);
+				registerStatement(id, raw);
 			else
 				logger.error("Statement id {} is already registered!", id);
 		});
@@ -92,9 +92,9 @@ public abstract class AbstractDatabase implements AutoCloseable {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @return
-	 * 
+	 *
 	 * @throws SQLException
 	 */
 	protected Connection openConnection() throws SQLException {
@@ -108,11 +108,11 @@ public abstract class AbstractDatabase implements AutoCloseable {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @param id
 	 * @param func
 	 * @param error
-	 * 
+	 *
 	 * @throws SQLException
 	 */
 	protected void prepareStatement(String id, SQLConsumer<PreparedStatement> func, int... flags) throws SQLException {
@@ -127,11 +127,11 @@ public abstract class AbstractDatabase implements AutoCloseable {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @param id
 	 * @param func
 	 * @param error
-	 * 
+	 *
 	 * @throws SQLException
 	 */
 	protected void prepareCallable(String id, SQLConsumer<CallableStatement> func) throws SQLException {
@@ -146,14 +146,14 @@ public abstract class AbstractDatabase implements AutoCloseable {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @param <U>
 	 * @param id
 	 * @param func
 	 * @param error
-	 * 
+	 *
 	 * @return
-	 * 
+	 *
 	 * @throws SQLException
 	 */
 	@NotNull
@@ -170,14 +170,14 @@ public abstract class AbstractDatabase implements AutoCloseable {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @param <U>
 	 * @param id
 	 * @param func
 	 * @param error
-	 * 
+	 *
 	 * @return
-	 * 
+	 *
 	 * @throws SQLException
 	 */
 	@Nullable
@@ -193,9 +193,9 @@ public abstract class AbstractDatabase implements AutoCloseable {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @param id
-	 * 
+	 *
 	 * @return
 	 */
 	protected final boolean hasStatementID(String id) {
@@ -204,9 +204,9 @@ public abstract class AbstractDatabase implements AutoCloseable {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @param id
-	 * 
+	 *
 	 * @return
 	 */
 	protected final String getRawStatement(String id) {
@@ -229,7 +229,7 @@ public abstract class AbstractDatabase implements AutoCloseable {
 	private void validate(String id) {
 		if (!hasStatementID(id))
 			throw new NoSuchElementException("No statement exists with id " + id);
-		else if (!isReady())
+		if (!isReady())
 			throw new UnsupportedOperationException("Database has not been setup yet!");
 	}
 
@@ -244,7 +244,7 @@ public abstract class AbstractDatabase implements AutoCloseable {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @return Returns {@code true} if the database is ready for use
 	 */
 	public boolean isReady() {
@@ -257,7 +257,7 @@ public abstract class AbstractDatabase implements AutoCloseable {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @author Ashley
 	 *
 	 * @param <U>
@@ -269,7 +269,7 @@ public abstract class AbstractDatabase implements AutoCloseable {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @author Ashley
 	 *
 	 * @param <U>

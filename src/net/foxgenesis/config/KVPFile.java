@@ -15,10 +15,10 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import net.foxgenesis.util.resource.ModuleResource;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import net.foxgenesis.util.resource.ModuleResource;
 
 /**
  * Key Value Pair (KVP) file implementation.
@@ -40,7 +40,7 @@ public class KVPFile {
 
 	/**
 	 * Create a new instance with an empty mapping.
-	 * 
+	 *
 	 * @see #parse(InputStream)
 	 * @see #parse(URL)
 	 */
@@ -50,7 +50,7 @@ public class KVPFile {
 	 * Parse a {@link File} into a KVP (Key Value Pair) file.
 	 *
 	 * @param file - {@link File} to parse
-	 * 
+	 *
 	 * @throws IOException Thrown if an error occurs while reading the InputStream
 	 *                     of the resource
 	 */
@@ -62,7 +62,7 @@ public class KVPFile {
 	 * Parse a {@link URL} into a KVP (Key Value Pair) file.
 	 *
 	 * @param url - {@link URL} to parse
-	 * 
+	 *
 	 * @throws IOException Thrown if an error occurs while reading the InputStream
 	 *                     of the resource
 	 */
@@ -74,9 +74,9 @@ public class KVPFile {
 
 	/**
 	 * Parse an {@link InputStream} into a KVP (Key Value Pair) file.
-	 * 
+	 *
 	 * @param input - the {@link InputStream} to parse
-	 * 
+	 *
 	 * @throws IOException Thrown if an error occurs while reading the InputStream
 	 *                     of the resource
 	 */
@@ -86,9 +86,9 @@ public class KVPFile {
 
 	/**
 	 * Parse A {@link ModuleResource} into a KVP (Key Value Pair) file.
-	 * 
+	 *
 	 * @param resource - the {@link ModuleResource} to parse
-	 * 
+	 *
 	 * @throws IOException Thrown if an error occurs while reading the InputStream
 	 *                     of the resource
 	 */
@@ -106,7 +106,7 @@ public class KVPFile {
 	 * action are relayed to the caller.
 	 *
 	 * @param action - The action to be performed for each entry
-	 * 
+	 *
 	 * @see Map#forEach(BiConsumer)
 	 */
 	public void forEach(BiConsumer<? super String, ? super String> action) {
@@ -131,17 +131,17 @@ public class KVPFile {
 	 * two cases.
 	 *
 	 * @param key the key whose associated value is to be returned
-	 * 
+	 *
 	 * @return the value to which the specified key is mapped, or {@code null} if
 	 *         this map contains no mapping for the key
-	 * 
+	 *
 	 * @throws ClassCastException   if the key is of an inappropriate type for this
 	 *                              map (<a href=
 	 *                              "{@docRoot}/java.base/java/util/Collection.html#optional-restrictions">optional</a>)
 	 * @throws NullPointerException if the specified key is null and this map does
 	 *                              not permit null keys (<a href=
 	 *                              "{@docRoot}/java.base/java/util/Collection.html#optional-restrictions">optional</a>)
-	 * 
+	 *
 	 * @see #getOrDefault(String, String)
 	 */
 	@Nullable
@@ -155,17 +155,17 @@ public class KVPFile {
 	 *
 	 * @param key          the key whose associated value is to be returned
 	 * @param defaultValue the default mapping of the key
-	 * 
+	 *
 	 * @return the value to which the specified key is mapped, or
 	 *         {@code defaultValue} if this map contains no mapping for the key
-	 * 
+	 *
 	 * @throws ClassCastException   if the key is of an inappropriate type for this
 	 *                              map (<a href=
 	 *                              "{@docRoot}/java.base/java/util/Collection.html#optional-restrictions">optional</a>)
 	 * @throws NullPointerException if the specified key is null and this map does
 	 *                              not permit null keys (<a href=
 	 *                              "{@docRoot}/java.base/java/util/Collection.html#optional-restrictions">optional</a>)
-	 * 
+	 *
 	 * @see #get(String)
 	 */
 	@Nullable
@@ -180,13 +180,13 @@ public class KVPFile {
 	 * <p>
 	 * See more: {@link HashMap#computeIfAbsent(Object, Function)}
 	 * </p>
-	 * 
+	 *
 	 * @param key             key with which the specified value is to be associated
 	 * @param mappingFunction the mapping function to compute a value
-	 * 
+	 *
 	 * @return the current (existing or computed) value associated with the
 	 *         specified key, or null if the computed value is null
-	 * 
+	 *
 	 * @see HashMap#computeIfAbsent(Object, Function)
 	 */
 	@Nullable
@@ -201,9 +201,9 @@ public class KVPFile {
 	 * can be at most one such mapping.)
 	 *
 	 * @param key key whose presence in this map is to be tested
-	 * 
+	 *
 	 * @return {@code true} if this map contains a mapping for the specified key
-	 * 
+	 *
 	 * @throws ClassCastException   if the key is of an inappropriate type for this
 	 *                              map (<a href=
 	 *                              "{@docRoot}/java.base/java/util/Collection.html#optional-restrictions">optional</a>)
@@ -235,7 +235,7 @@ public class KVPFile {
 	 * Parse a resource {@link URL} into the configuration mapping.
 	 *
 	 * @param resourceURL - URL pointing to the resource to parse
-	 * 
+	 *
 	 * @throws IOException Thrown if an error occurs while reading the InputStream
 	 *                     of the resource
 	 */
@@ -248,9 +248,9 @@ public class KVPFile {
 
 	/**
 	 * Parse a {@link ModuleResource} into the configuration mapping.
-	 * 
+	 *
 	 * @param resource - the resource to parse
-	 * 
+	 *
 	 * @throws IOException Thrown if an error occurs while reading the InputStream
 	 *                     of the resource
 	 */
@@ -263,9 +263,9 @@ public class KVPFile {
 
 	/**
 	 * Parse an {@link InputStream} into the configuration mapping.
-	 * 
+	 *
 	 * @param input - the input stream to parse
-	 * 
+	 *
 	 * @throws IOException Thrown if an error occurs while reading the InputStream
 	 *                     of the resource
 	 */
@@ -277,7 +277,7 @@ public class KVPFile {
 
 	/**
 	 * Convert the parsed inputs into a key value mapping
-	 * 
+	 *
 	 * @param input - raw KVP style strings
 	 */
 	private void parse(List<String> input) {
@@ -288,16 +288,16 @@ public class KVPFile {
 		 * limit of two - Ensure split has two elements - Collect into a map - Put all in our map
 		 */
 		input.stream().filter(ignoreLines).map(line -> line.split("=", 2)).filter(split -> split.length == 2)
-				.collect(Collectors.toMap(split -> split[0].trim(), split -> split[1].trim())).forEach(config::put);;
+				.collect(Collectors.toMap(split -> split[0].trim(), split -> split[1].trim())).forEach(config::put);
 	}
 
 	/**
 	 * Read all lines from the {@link InputStream} into a {@link List}.
-	 * 
+	 *
 	 * @param in - the stream to read
-	 * 
+	 *
 	 * @return Returns a {@link List} containing the lines of the stream
-	 * 
+	 *
 	 * @throws IOException If an I/O error occurs
 	 */
 	private static List<String> lines(InputStream in) throws IOException {

@@ -16,13 +16,13 @@ import org.jetbrains.annotations.NotNull;
  * Properties to format are specified by using a regular expression:
  * </p>
  * <blockquote>
- * 
+ *
  * <pre>
  * \{\{(.*?)}}
  * </pre>
- * 
+ *
  * </blockquote>
- * 
+ *
  * @author Ashley
  *
  */
@@ -43,11 +43,11 @@ public class FormattedModuleResource extends ModuleResource {
 	 * <p>
 	 * The specified {@link Map} will be used to format all data in this resource.
 	 * </p>
-	 * 
+	 *
 	 * @param module   - name of the {@link Module} containing the resource
 	 * @param resource - absolute path to the resource
 	 * @param mappings - a {@link Map} containing all the properties to format
-	 * 
+	 *
 	 * @throws NullPointerException If the module name, resource name or mappings
 	 *                              are null
 	 */
@@ -78,9 +78,9 @@ public class FormattedModuleResource extends ModuleResource {
 
 	/**
 	 * Format a string will all the provided mappings.
-	 * 
+	 *
 	 * @param str - the string to format
-	 * 
+	 *
 	 * @return The formatted string
 	 */
 	private String format(String str) {

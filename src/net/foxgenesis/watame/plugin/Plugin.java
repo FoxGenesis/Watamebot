@@ -198,7 +198,11 @@ public abstract class Plugin {
 	 * 
 	 * @return Returns a non-null {@link Collection} of {@link CommandData} that
 	 *         this {@link Plugin} provides
+	 * 
+	 * @deprecated Command providing is moving. If you want to provide commands, the
+	 *             {@link Plugin} should implement {@link CommandProvider}.
 	 */
+	@Deprecated(forRemoval = true)
 	@NotNull
 	protected Collection<CommandData> getCommands() {
 		return Collections.emptyList();

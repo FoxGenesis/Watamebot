@@ -4,22 +4,21 @@ import java.util.Arrays;
 
 /**
  * Utility class that check the amount of time it takes to run a method
- * 
+ *
  * @author Ashley
  *
  */
 public final class MethodTimer {
-	
+
 	public static double runNano(Runnable r) {
 		long n = System.nanoTime();
 		r.run();
-		n = System.nanoTime() - n;
-		return n;
+		return System.nanoTime() - n;
 	}
 	/**
 	 * Time how long it takes to execute {@link Runnable} {@code r}. Time is
 	 * calculated in nano seconds and returned as milliseconds.
-	 * 
+	 *
 	 * @param r - {@link Runnable} to time
 	 * @return elapsed time in milliseconds
 	 * @see #run(Runnable, int)
@@ -31,7 +30,7 @@ public final class MethodTimer {
 	/**
 	 * Time how long it takes to execute {@link Runnable} {@code r}, {@code n}
 	 * amount of times. Then calculate the average elapsed time taken.
-	 * 
+	 *
 	 * @param r - {@link Runnable} to time
 	 * @param n - Amount of times to run
 	 * @return average elapsed time milliseconds
@@ -54,13 +53,13 @@ public final class MethodTimer {
 	 * decimal places.
 	 * <p>
 	 * This method is effectively equivalent to <blockquote>
-	 * 
+	 *
 	 * <pre>
 	 * MethodTimer.runFormatMS(r, 2)
 	 * </pre>
-	 * 
+	 *
 	 * </blockquote>
-	 * 
+	 *
 	 * @param r - {@link Runnable} to time
 	 * @return formatted string with two decimal places
 	 * @see #runFormatMS(Runnable, int)
@@ -74,13 +73,13 @@ public final class MethodTimer {
 	 * {@code decimals} decimal places.
 	 * <p>
 	 * This method is effectively equivalent to <blockquote>
-	 * 
+	 *
 	 * <pre>
 	 * String.format("%." + decimals + "f ms", run(r))
 	 * </pre>
-	 * 
+	 *
 	 * </blockquote>
-	 * 
+	 *
 	 * @param r        - {@link Runnable} to time
 	 * @param decimals - Amount of decimal places to format
 	 * @return formatted string with {@code decimals} decimal places
@@ -97,13 +96,13 @@ public final class MethodTimer {
 	 * a formatted string with {@code decimals} decimal places.
 	 * <p>
 	 * This method is effectively equivalent to <blockquote>
-	 * 
+	 *
 	 * <pre>
 	 * String.format("%." + decimals + "f ms", run(r, n));
 	 * </pre>
-	 * 
+	 *
 	 * </blockquote>
-	 * 
+	 *
 	 * @param r        - {@link Runnable} to time
 	 * @param n        - Amount of times to execute {@code r}
 	 * @param decimals - Amount of decimal places to format
@@ -121,13 +120,13 @@ public final class MethodTimer {
 	 * decimal places.
 	 * <p>
 	 * This method is effectively equivalent to <blockquote>
-	 * 
+	 *
 	 * <pre>
 	 * MethodTimer.runFormatMS(r, 2)
 	 * </pre>
-	 * 
+	 *
 	 * </blockquote>
-	 * 
+	 *
 	 * @param r - {@link Runnable} to time
 	 * @return formatted string with two decimal places
 	 * @see #runFormatMS(Runnable, int)
@@ -141,13 +140,13 @@ public final class MethodTimer {
 	 * {@code decimals} decimal places.
 	 * <p>
 	 * This method is effectively equivalent to <blockquote>
-	 * 
+	 *
 	 * <pre>
 	 * String.format("%." + decimals + "f ms", run(r))
 	 * </pre>
-	 * 
+	 *
 	 * </blockquote>
-	 * 
+	 *
 	 * @param r        - {@link Runnable} to time
 	 * @param decimals - Amount of decimal places to format
 	 * @return formatted string with {@code decimals} decimal places
@@ -164,13 +163,13 @@ public final class MethodTimer {
 	 * a formatted string with {@code decimals} decimal places.
 	 * <p>
 	 * This method is effectively equivalent to <blockquote>
-	 * 
+	 *
 	 * <pre>
 	 * String.format("%." + decimals + "f ms", run(r, n));
 	 * </pre>
-	 * 
+	 *
 	 * </blockquote>
-	 * 
+	 *
 	 * @param r        - {@link Runnable} to time
 	 * @param n        - Amount of times to execute {@code r}
 	 * @param decimals - Amount of decimal places to format
@@ -184,7 +183,7 @@ public final class MethodTimer {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @param time
 	 * @return
 	 */
@@ -192,7 +191,7 @@ public final class MethodTimer {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @param time
 	 * @param decimals
 	 * @return
@@ -201,7 +200,7 @@ public final class MethodTimer {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @param time
 	 * @return
 	 */
@@ -209,7 +208,7 @@ public final class MethodTimer {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @param time
 	 * @param decimals
 	 * @return
@@ -218,7 +217,7 @@ public final class MethodTimer {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @param time
 	 * @param decimals
 	 * @param div

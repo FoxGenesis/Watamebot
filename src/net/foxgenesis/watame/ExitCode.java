@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Enum of program exit codes
- * 
+ *
  * @author Ashley
  */
 public enum ExitCode {
@@ -26,14 +26,14 @@ public enum ExitCode {
 
 	/**
 	 * Create a new {@link ExitCode} with a specified number.
-	 * 
+	 *
 	 * @param statusCode - exit code number
 	 */
 	ExitCode(int statusCode) { this.statusCode = statusCode; }
 
 	/**
 	 * Returns the {@link ExitCode}'s number.
-	 * 
+	 *
 	 * @return exit code
 	 */
 	public Integer getCode() { return statusCode; }
@@ -45,22 +45,22 @@ public enum ExitCode {
 	 * to the call:
 	 * </p>
 	 * <blockquote>
-	 * 
+	 *
 	 * <pre>
 	 * exitCode.exitProgram()
 	 * </pre>
-	 * 
+	 *
 	 * </blockquote>
-	 * 
-	 * 
+	 *
+	 *
 	 * @see #programExit()
 	 * @param exitMessage - Exit message to log
 	 * @param thrown      - Throwable to log
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public void programExit(String exitMessage, Exception thrown) throws Exception {
 		// if(exitMessage != null || thrown != null)
-		LoggerFactory.getLogger(Logger.GLOBAL_LOGGER_NAME).error(exitMessage == null ? this.name() : exitMessage,
+		LoggerFactory.getLogger(Logger.GLOBAL_LOGGER_NAME).error(exitMessage == null ? name() : exitMessage,
 				thrown);
 		programExit();
 		if(thrown != null)
@@ -74,16 +74,16 @@ public enum ExitCode {
 	 * the call:
 	 * </p>
 	 * <blockquote>
-	 * 
+	 *
 	 * <pre>
 	 * exitCode.exitProgram(null, thrown)
 	 * </pre>
-	 * 
+	 *
 	 * </blockquote>
-	 * 
+	 *
 	 * @see #programExit(String, Exception)
 	 * @param thrown - Throwable to log
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public void programExit(Exception thrown) throws Exception { programExit(null, thrown); }
 
@@ -94,17 +94,17 @@ public enum ExitCode {
 	 * the call:
 	 * </p>
 	 * <blockquote>
-	 * 
+	 *
 	 * <pre>
 	 * exitCode.exitProgram(message, null)
 	 * </pre>
-	 * 
+	 *
 	 * </blockquote>
-	 * 
-	 * 
+	 *
+	 *
 	 * @see #programExit(String, Exception)
 	 * @param exitMessage - Exit message to log
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public void programExit(String exitMessage) throws Exception { programExit(exitMessage, null); }
 
@@ -114,13 +114,13 @@ public enum ExitCode {
 	 * This method is effectively equivalent to the call:
 	 * </p>
 	 * <blockquote>
-	 * 
+	 *
 	 * <pre>
 	 * System.exit(n)
 	 * </pre>
-	 * 
+	 *
 	 * </blockquote>
-	 * 
+	 *
 	 * @throws Exception
 	 * @see #programExit(String, Exception)
 	 */

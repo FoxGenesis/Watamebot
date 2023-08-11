@@ -14,7 +14,7 @@ public final class ArrayUtils {
 	public static String commaSeparated(int[] arr) {
 		return arr == null ? null : sep((Stream)Arrays.stream(arr));
 	}
-	
+
 	private static String sep(Stream<?> s) {
 		return s.map(a -> a + "").collect(Collectors.joining(","));
 	}

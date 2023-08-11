@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * A class that points to a resource inside a module and implements methods to
  * read from it.
- * 
+ *
  * @author Ashley
  *
  */
@@ -32,29 +32,29 @@ public class ModuleResource {
 	/**
 	 * Create a new {@link ModuleResource} that points to a specified
 	 * {@code resource} inside a {@code module}.
-	 * 
+	 *
 	 * @param module   - {@link Module} containing the resource
 	 * @param resource - absolute path to the resource
-	 * 
+	 *
 	 * @throws NullPointerException If the module name or resource name are null
-	 * 
+	 *
 	 * @see #ModuleResource(String, String)
 	 */
 	public ModuleResource(@NotNull Module module, @NotNull String resource) {
 		this.module = Objects.requireNonNull(module);
-		this.path = Objects.requireNonNull(resource);
+		path = Objects.requireNonNull(resource);
 	}
 
 	/**
 	 * Create a new {@link ModuleResource} that points to a specified
 	 * {@code resource} inside a {@code module}.
-	 * 
+	 *
 	 * @param moduleName   - name of the {@link Module} containing the resource
 	 * @param resourcePath - absolute path to the resource
-	 * 
+	 *
 	 * @throws NullPointerException   If the module name or resource name are null
 	 * @throws NoSuchElementException If the module was not found
-	 * 
+	 *
 	 * @see #ModuleResource(Module, String)
 	 */
 	public ModuleResource(@NotNull String moduleName, @NotNull String resourcePath) throws NoSuchElementException {
@@ -64,9 +64,9 @@ public class ModuleResource {
 
 	/**
 	 * Open an {@link InputStream} to this resource.
-	 * 
+	 *
 	 * @return Returns an {@link InputStream} of this resource.
-	 * 
+	 *
 	 * @throws IOException If an I/O error occurs
 	 */
 	public InputStream openStream() throws IOException {
@@ -75,10 +75,10 @@ public class ModuleResource {
 
 	/**
 	 * Copy this resource to the specified path.
-	 * 
+	 *
 	 * @param path    - {@link Path} tp copy to
 	 * @param options - options specifying how the copy should be done
-	 * 
+	 *
 	 * @throws IOException If an I/O error occurs when reading or writing
 	 */
 	public void writeToFile(@NotNull Path path, CopyOption... options) throws IOException {
@@ -89,9 +89,9 @@ public class ModuleResource {
 
 	/**
 	 * Read all data from this resource into a string.
-	 * 
+	 *
 	 * @return All data inside the resource as a string
-	 * 
+	 *
 	 * @throws IOException If an I/O error occurs
 	 */
 	public String readToString() throws IOException {
@@ -102,9 +102,9 @@ public class ModuleResource {
 
 	/**
 	 * Read all lines from this resource.
-	 * 
+	 *
 	 * @return All data inside the resource as an array of strings
-	 * 
+	 *
 	 * @throws IOException If an I/O error occurs
 	 */
 	public String[] readAllLines() throws IOException {
@@ -113,9 +113,9 @@ public class ModuleResource {
 
 	/**
 	 * Read this resource as a {@link Properties} file.
-	 * 
+	 *
 	 * @return Returns the parsed {@link Properties}
-	 * 
+	 *
 	 * @throws IOException If an I/O error occurs
 	 */
 	public Properties asProperties() throws IOException {
@@ -128,7 +128,7 @@ public class ModuleResource {
 
 	/**
 	 * Get the {@link Module} containing this resource.
-	 * 
+	 *
 	 * @return The containing {@link Module}
 	 */
 	public Module getModule() {
@@ -137,7 +137,7 @@ public class ModuleResource {
 
 	/**
 	 * Get the path to this resource.
-	 * 
+	 *
 	 * @return Returns the absolute path pointing to this resource
 	 */
 	public String getResourcePath() {

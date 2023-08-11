@@ -81,7 +81,7 @@ public interface Property<L, M extends PropertyMapping> extends ImutableProperty
 		if (info.type() == PropertyType.NUMBER) {
 			if (obj instanceof Integer i)
 				return ByteBuffer.allocate(Integer.SIZE / Byte.SIZE).putInt(i).array();
-			else if (obj instanceof Long f)
+			if (obj instanceof Long f)
 				return ByteBuffer.allocate(Long.SIZE / Byte.SIZE).putLong(f).array();
 			else if (obj instanceof Double d)
 				return ByteBuffer.allocate(Double.SIZE / Byte.SIZE).putDouble(d).array();

@@ -15,10 +15,10 @@ public final class Constants {
 	public static final ModuleResource DATABASE_SETTINGS_FILE = resource("defaults/database.properties");
 
 	public static final File PLUGINS_FOLDER = new File("plugins");
-	
+
 	public static final long PLUGIN_PROPERTY_CACHE_TIME = 5_000;
 
-	private static final ModuleResource resource(@NotNull String path) {
+	private static ModuleResource resource(@NotNull String path) {
 		return new ModuleResource("watamebot", "/META-INF/" + path);
 	}
 }

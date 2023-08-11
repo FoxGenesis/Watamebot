@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * Utility class for Strings
- * 
+ *
  * @author Ashley
  *
  */
@@ -54,9 +54,9 @@ public final class StringUtils {
 
 	/**
 	 * Find all URLs within a String and split its components into groups.
-	 * 
+	 *
 	 * @param str - String to check
-	 * 
+	 *
 	 * @return A {@link Stream} of {@link MatchResult MatchResults} containing URL
 	 *         groups: {@code protocol}({@code 1}), {@code domain}({@code 2}) and
 	 *         {@code path}({@code 3})
@@ -68,9 +68,9 @@ public final class StringUtils {
 
 	/**
 	 * Find all occurrences of a {@link URL} in the given string.
-	 * 
+	 *
 	 * @param str - string to check
-	 * 
+	 *
 	 * @return Returns a {@link Stream} of {@link URL URLs}
 	 */
 	@NotNull
@@ -82,15 +82,15 @@ public final class StringUtils {
 	 * Find all occurrences of a {@link URL} in the given string. All
 	 * {@link MalformedURLException MalformedURLExceptions} will be consumed by the
 	 * {@code errorHandler} while parsing.
-	 * 
+	 *
 	 * @param str          - string to check
 	 * @param errorHandler - possibly {@code null} error handler
-	 * 
+	 *
 	 * @return Returns a {@link Stream} of {@link URL URLs}
 	 */
 	@NotNull
 	public static Stream<URL> findURLs(@NotNull String str, @Nullable Consumer<Exception> errorHandler) {
-		Stream<@Nullable URL> stream = PATTERN_URL.matcher(str).results().map(result -> result.group())
+		Stream<@Nullable URL> stream = PATTERN_URL.matcher(str).results().map(MatchResult::group)
 				.filter(s -> !s.isBlank()).map(t -> {
 					try {
 						return new URL(t);
@@ -107,10 +107,10 @@ public final class StringUtils {
 
 	/**
 	 * Limit the length of a string if it exceeds the provided length.
-	 * 
+	 *
 	 * @param str    - string to limit
 	 * @param length - length limit
-	 * 
+	 *
 	 * @return Returns a {@link String} that does not exceed the given
 	 *         {@code length}
 	 */

@@ -34,7 +34,7 @@ public class Main {
 	 * Program entry point.
 	 *
 	 * @param args - program arguments
-	 * 
+	 *
 	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {

@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.function.Function;
 
+import net.foxgenesis.util.resource.ModuleResource;
+
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.FileBasedConfiguration;
 import org.apache.commons.configuration2.INIConfiguration;
@@ -29,11 +31,9 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.foxgenesis.util.resource.ModuleResource;
-
 /**
  * NEED_JAVADOC
- * 
+ *
  * @author Ashley
  *
  */
@@ -48,9 +48,9 @@ public final class ResourceUtils {
 	 * Read all lines from a resource
 	 *
 	 * @param path - {@link URL} path to the resource
-	 * 
+	 *
 	 * @return Returns all lines as a {@link List<String>}
-	 * 
+	 *
 	 * @throws IOException Thrown if an error occurs while reading the
 	 *                     {@link InputStream} of the resource
 	 */
@@ -78,11 +78,11 @@ public final class ResourceUtils {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @param path
-	 * 
+	 *
 	 * @return
-	 * 
+	 *
 	 * @throws IOException
 	 */
 	public static Properties getProperties(URL path) throws IOException {
@@ -100,13 +100,13 @@ public final class ResourceUtils {
 	 * Parse a {@link Properties} file at the specified {@link Path}. If the
 	 * specified file was not found, the <i>defaults</i> will be written to its
 	 * location.
-	 * 
+	 *
 	 * @param path     - path to the properties file
 	 * @param defaults - (optional) resource containing the default properties file
-	 * 
+	 *
 	 * @return Returns a {@link Properties} file that was parsed from the specified
 	 *         path
-	 * 
+	 *
 	 * @throws IOException           If an I/O error occurs
 	 * @throws FileNotFoundException If the specified file was not found and no
 	 *                               defaults were given
@@ -133,13 +133,13 @@ public final class ResourceUtils {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @param defaults
 	 * @param dir
 	 * @param output
-	 * 
+	 *
 	 * @return
-	 * 
+	 *
 	 * @throws IOException
 	 * @throws ConfigurationException
 	 */
@@ -153,7 +153,7 @@ public final class ResourceUtils {
 		propParams.setBasePath(dir.toString());
 		propParams.setPath(outputPath.toString());
 
-		FileBasedConfigurationBuilder<PropertiesConfiguration> builder = new FileBasedConfigurationBuilder<PropertiesConfiguration>(
+		FileBasedConfigurationBuilder<PropertiesConfiguration> builder = new FileBasedConfigurationBuilder<>(
 				PropertiesConfiguration.class);
 
 		builder.configure(propParams);
@@ -165,13 +165,13 @@ public final class ResourceUtils {
 	 * Load an {@code .ini} configuration file from the specified directory and
 	 * file. If the file is not found, the provided {@link ModuleResource} pointing
 	 * to the configuration defaults will be used instead.
-	 * 
+	 *
 	 * @param defaults - resource containing the configuration defaults
 	 * @param dir      - the directory containing the configuration file
 	 * @param output   - the name of the configuration file
-	 * 
+	 *
 	 * @return Returns the parsed {@link INIConfiguration}
-	 * 
+	 *
 	 * @throws IOException            If an I/O error occurs
 	 * @throws ConfigurationException If an error occurs
 	 * @throws SecurityException      Thrown if the specified file is not readable
@@ -186,7 +186,7 @@ public final class ResourceUtils {
 	 * Load a {@link Configuration} file from the specified directory and file name.
 	 * If the file is not found, the specified {@link ModuleResource} pointing to a
 	 * default {@link Configuration} will be used instead.
-	 * 
+	 *
 	 * @param <T>                Configuration type
 	 * @param defaults           - configuration defaults
 	 * @param dir                - directory containing the file
@@ -195,9 +195,9 @@ public final class ResourceUtils {
 	 * @param paramBuilder       - method that provides the required
 	 *                           {@link BuilderParameters} based on the specified
 	 *                           output file
-	 * 
+	 *
 	 * @return Returns the created {@link Configuration} of the specified type
-	 * 
+	 *
 	 * @throws IOException            If an I/O error occurs
 	 * @throws ConfigurationException If an error occurs
 	 * @throws SecurityException      Thrown if the specified file is not readable
@@ -207,7 +207,7 @@ public final class ResourceUtils {
 			throws IOException, ConfigurationException {
 		// Save our default configuration file if not exist
 		Path outputPath = writeDefaults(defaults, dir, output);
-		return new FileBasedConfigurationBuilder<T>(configurationClass)
+		return new FileBasedConfigurationBuilder<>(configurationClass)
 				.configure((BuilderParameters) paramBuilder.apply(outputPath.toAbsolutePath().toString()))
 				.getConfiguration();
 	}
@@ -215,15 +215,15 @@ public final class ResourceUtils {
 	/**
 	 * Write the default configuration file to the specified directory and file
 	 * name.
-	 * 
+	 *
 	 * @param defaults - {@link ModuleResource} pointing to the default
 	 *                 configuration file
 	 * @param dir      - output directory
 	 * @param output   - output file name
-	 * 
+	 *
 	 * @return Returns a {@link Path} pointing to the new or existing configuration
 	 *         file
-	 * 
+	 *
 	 * @throws IOException              If an I/O error occurs
 	 * @throws IllegalArgumentException Thrown if the specified file is a directory
 	 * @throws SecurityException        Thrown if the specified file is not readable
@@ -253,11 +253,11 @@ public final class ResourceUtils {
 	 * <p>
 	 * The input stream will be closed after completion
 	 * </p>
-	 * 
+	 *
 	 * @param input - the input stream to read
-	 * 
+	 *
 	 * @return Returns a string containing the data from the specified input stream
-	 * 
+	 *
 	 * @throws IOException If an I/O error occurs
 	 */
 	public static String toString(@NotNull InputStream input) throws IOException {
@@ -271,11 +271,11 @@ public final class ResourceUtils {
 	 * <p>
 	 * The input stream will be closed after completion
 	 * </p>
-	 * 
+	 *
 	 * @param url - the {@link URL} to read from
-	 * 
+	 *
 	 * @return Returns a string containing the data from the specified URL
-	 * 
+	 *
 	 * @throws IOException If an I/O error occurs
 	 */
 	@SuppressWarnings("resource")
@@ -289,23 +289,23 @@ public final class ResourceUtils {
 	 * <p>
 	 * The input stream will be closed after completion
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * This method is effectively equivalent to:
 	 * </p>
 	 * <blockquote>
-	 * 
+	 *
 	 * <pre>
 	 * toString(input).split("(\\r\\n|\\r|\\n)")
 	 * </pre>
-	 * 
+	 *
 	 * </blockquote>
-	 * 
+	 *
 	 * @param input - the input stream to read
-	 * 
+	 *
 	 * @return Returns a string array containing the data from the specified input
 	 *         stream
-	 * 
+	 *
 	 * @throws IOException If an I/O error occurs
 	 */
 	public static String[] toSplitString(@NotNull InputStream input) throws IOException {

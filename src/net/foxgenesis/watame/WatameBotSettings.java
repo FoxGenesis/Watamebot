@@ -5,15 +5,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
+import net.foxgenesis.util.ResourceUtils;
+import net.foxgenesis.util.resource.ModuleResource;
+
 import org.apache.commons.configuration2.INIConfiguration;
 import org.apache.commons.configuration2.ImmutableConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import net.foxgenesis.util.ResourceUtils;
-import net.foxgenesis.util.resource.ModuleResource;
 
 public class WatameBotSettings {
 
@@ -31,13 +31,13 @@ public class WatameBotSettings {
 	}
 
 	WatameBotSettings(@NotNull Path configPath, @Nullable Path tokenFile2) throws Exception {
-		this.configurationPath = Objects.requireNonNull(configPath);
+		configurationPath = Objects.requireNonNull(configPath);
 
 		if (!isValidDirectory(configPath))
 			throw new IOException("Invalid configuration directory");
 
 		config = ResourceUtils.loadINI(new ModuleResource(getClass().getModule(), "/META-INF/defaults/watamebot.ini"),
-				this.configurationPath, "watamebot.ini");
+				configurationPath, "watamebot.ini");
 
 		// Get the token
 		Path tokenFile = tokenFile2 == null ? Path.of(config.getString("Token.tokenFile", "token.txt"))
@@ -67,7 +67,7 @@ public class WatameBotSettings {
 	 * NEED_JAVADOC
 	 *
 	 * @return
-	 * 
+	 *
 	 * @throws Throwable
 	 */
 	private static String readToken(Path filepath) throws Exception {
@@ -76,10 +76,10 @@ public class WatameBotSettings {
 
 	/**
 	 * Check the discord token is valid.
-	 * 
+	 *
 	 * @return Returns {@code true} if the token is not {@code null} and is not
 	 *         blank
-	 * 
+	 *
 	 * @throws Throwable
 	 */
 	private static boolean isValidToken(String token) throws Exception {
@@ -94,11 +94,9 @@ public class WatameBotSettings {
 				e.printStackTrace();
 			}
 
-		if (Files.exists(path)) {
-			if (check(Files.isDirectory(path), "Configuration path must be a directory!")) {
-				return check(Files.isReadable(path), "Unable to read from configuration directory!")
-						&& check(Files.isWritable(path), "Unable to write to configuration directory!");
-			}
+		if (Files.exists(path) && check(Files.isDirectory(path), "Configuration path must be a directory!")) {
+			return check(Files.isReadable(path), "Unable to read from configuration directory!")
+					&& check(Files.isWritable(path), "Unable to write to configuration directory!");
 		}
 
 		return false;

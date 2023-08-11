@@ -138,7 +138,7 @@ public class WatameBot {
 	 * Create a new instance with a specified login {@code token}.
 	 *
 	 * @param token - Token used to connect to discord
-	 * 
+	 *
 	 * @throws SQLException When failing to connect to the database file
 	 */
 	private WatameBot(@NotNull String token) {
@@ -155,7 +155,7 @@ public class WatameBot {
 
 		// Create database connection
 		try {
-			this.connectionProvider = new MySQLConnectionProvider(ResourceUtils
+			connectionProvider = new MySQLConnectionProvider(ResourceUtils
 					.getProperties(Path.of("config", "database.properties"), Constants.DATABASE_SETTINGS_FILE));
 		} catch (IOException e) {
 			try {
@@ -245,7 +245,7 @@ public class WatameBot {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @throws Exception
 	 */
 	private void preInit() throws Exception {
@@ -260,10 +260,9 @@ public class WatameBot {
 		try {
 			logger.debug("Adding database to database manager");
 			Plugin integrated = pluginHandler.getPlugin("integrated");
-			if (integrated != null) {
-				manager.register(integrated, propertyDatabase);
-			} else
+			if (integrated == null)
 				throw new SeverePluginException("Failed to find the integrated plugin!");
+			manager.register(integrated, propertyDatabase);
 		} catch (IOException e) {
 			// Some error occurred while setting up database
 			ExitCode.DATABASE_SETUP_ERROR.programExit(e);
@@ -286,7 +285,7 @@ public class WatameBot {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @throws Exception
 	 */
 	private void init() throws Exception {
@@ -310,7 +309,7 @@ public class WatameBot {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @throws Exception
 	 */
 	private void postInit() throws Exception {
@@ -360,7 +359,7 @@ public class WatameBot {
 	 *
 	 * @param token         - Token used to connect to discord
 	 * @param eventExecutor - JDA event pool
-	 * 
+	 *
 	 * @return connected JDA object
 	 */
 	private JDABuilder createJDA(String token, ExecutorService eventExecutor) {
@@ -458,7 +457,7 @@ public class WatameBot {
 	 * Get the current state of the bot.
 	 *
 	 * @return Returns the {@link State} of the bot
-	 * 
+	 *
 	 * @see State
 	 */
 	public State getState() {
@@ -505,7 +504,7 @@ public class WatameBot {
 		public final Marker marker;
 
 		State() {
-			marker = MarkerFactory.getMarker(this.name());
+			marker = MarkerFactory.getMarker(name());
 		}
 	}
 }
