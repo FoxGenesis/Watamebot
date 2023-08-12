@@ -33,9 +33,7 @@ public class PluginPropertyProviderImpl implements PluginPropertyProvider {
 
 	@Override
 	public PluginProperty upsertProperty(Plugin plugin, String key, boolean modifiable, PropertyType type) {
-		if (!propertyExists(plugin, key))
-			registerProperty(plugin, key, modifiable, type);
-		return getProperty(plugin, key);
+		return getProperty(registerProperty(plugin, key, modifiable, type));
 	}
 
 	@Override
