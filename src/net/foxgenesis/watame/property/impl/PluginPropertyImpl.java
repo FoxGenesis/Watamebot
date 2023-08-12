@@ -40,12 +40,14 @@ public class PluginPropertyImpl implements PluginProperty {
 	}
 
 	@Override
-	public boolean set(Guild lookup, InputStream in) {
+	public boolean set(Guild lookup, InputStream in, boolean isUserInput) {
+		checkUserInput(isUserInput);
 		return resolver.putInternal(lookup.getIdLong(), getInfo(), in);
 	}
 
 	@Override
-	public boolean remove(Guild lookup) {
+	public boolean remove(Guild lookup, boolean isUserInput) {
+		checkUserInput(isUserInput);
 		return resolver.removeInternal(lookup.getIdLong(), getInfo());
 	}
 

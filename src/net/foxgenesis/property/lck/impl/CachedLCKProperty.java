@@ -29,9 +29,10 @@ public class CachedLCKProperty extends LCKPropertyImpl {
 	}
 
 	@Override
-	public boolean set(Long lookup, byte[] data) {
+	public boolean set(Long lookup, byte[] data, boolean isUserInput) {
+		checkUserInput(isUserInput);
 		init(lookup);
-		if (super.set(lookup, data)) {
+		if (super.set(lookup, data, isUserInput)) {
 			cache.get(lookup).update(Optional.ofNullable(createMapping(lookup, data)));
 			return true;
 		}

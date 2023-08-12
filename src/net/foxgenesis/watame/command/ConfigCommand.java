@@ -160,12 +160,12 @@ public class ConfigCommand extends ListenerAdapter {
 
 						boolean wasSet = switch (value.getType()) {
 							default -> throw new IllegalArgumentException("Unexpected value: " + value.getType());
-							case BOOLEAN -> property.set(guild, value.getAsBoolean());
-							case CHANNEL -> property.set(guild, value.getAsChannel().getIdLong());
-							case INTEGER -> property.set(guild, value.getAsInt());
-							case ROLE, USER, MENTIONABLE -> property.set(guild, value.getAsMentionable().getIdLong());
-							case NUMBER -> property.set(guild, value.getAsLong());
-							case STRING -> property.set(guild, value.getAsString());
+							case BOOLEAN -> property.set(guild, value.getAsBoolean(), true);
+							case CHANNEL -> property.set(guild, value.getAsChannel().getIdLong(), true);
+							case INTEGER -> property.set(guild, value.getAsInt(), true);
+							case ROLE, USER, MENTIONABLE -> property.set(guild, value.getAsMentionable().getIdLong(), true);
+							case NUMBER -> property.set(guild, value.getAsLong(), true);
+							case STRING -> property.set(guild, value.getAsString(), true);
 						};
 						// Attempt to set the property
 						if (wasSet) {
@@ -202,7 +202,7 @@ public class ConfigCommand extends ListenerAdapter {
 				String old = getUserFriendlyValue(property.get(guild));
 
 				// Attempt to set the property
-				if (property.remove(guild)) {
+				if (property.remove(guild, true)) {
 					logger.info("{}[{}] Removed {} from the configuration", member.getUser().getName(),
 							member.getUser().getId(), property.getInfo());
 					hook.editOriginalEmbeds(Response.success("Set `%s` to `%s`".formatted(key, DEFAULT))).queue();

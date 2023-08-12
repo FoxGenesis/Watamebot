@@ -12,48 +12,82 @@ public interface Property<L, M extends PropertyMapping> extends ImutableProperty
 	/**
 	 * Set a {@link Serializable} object in the configuration.
 	 *
-	 * @param lookup - property lookup
-	 * @param obj    - object to store
+	 * @param lookup      - property lookup
+	 * @param obj         - object to store
+	 * @param isUserInput - if this call is by the user
 	 *
 	 * @return Returns {@code true} if the object was stored, {@code false}
 	 *         otherwise
 	 */
-	default boolean set(@NotNull L lookup, @NotNull Serializable obj) {
-		return set(lookup, Property.serialize(getInfo(), obj));
+	default boolean set(@NotNull L lookup, @NotNull Serializable obj, boolean isUserInput) {
+		checkUserInput(isUserInput);
+		return set(lookup, Property.serialize(getInfo(), obj), isUserInput);
 	}
 
 	/**
 	 * Set an array of bytes in the configuration
 	 *
-	 * @param lookup - property lookup
-	 * @param data   - array of data to store
+	 * @param lookup      - property lookup
+	 * @param data        - array of data to store
+	 * @param isUserInput - if this call is by the user
 	 *
 	 * @return Returns {@code true} if the data was stored, {@code false} otherwise
 	 */
-	default boolean set(@NotNull L lookup, byte[] data) {
-		return set(lookup, new ByteArrayInputStream(data));
+	default boolean set(@NotNull L lookup, byte[] data, boolean isUserInput) {
+		checkUserInput(isUserInput);
+		return set(lookup, new ByteArrayInputStream(data), isUserInput);
 	}
 
 	/**
 	 * Set a property inside the configuration with the data read from the specified
 	 * {@link InputStream}.
 	 *
-	 * @param lookup - property lookup
-	 * @param in     - stream of data
+	 * @param lookup      - property lookup
+	 * @param in          - stream of data
+	 * @param isUserInput - if this call is by the user
 	 *
 	 * @return Returns {@code true} if the data was stored, {@code false} otherwise
 	 */
-	boolean set(@NotNull L lookup, @NotNull InputStream in);
+	boolean set(@NotNull L lookup, @NotNull InputStream in, boolean isUserInput);
 
 	/**
 	 * Remove this property from the configuration
 	 *
-	 * @param lookup - property lookup
+	 * @param lookup      - property lookup
+	 * @param isUserInput - if this call is by the user
 	 *
 	 * @return Returns {@code true} if the property with the specified
 	 *         {@code lookup} was removed from the configuration
 	 */
-	boolean remove(@NotNull L lookup);
+	boolean remove(@NotNull L lookup, boolean isUserInput);
+
+	/**
+	 * Check if this property can be modified by user input.
+	 * 
+	 * @return Returns {@code true} if the user is allowed to modify this property.
+	 *         {@code false} otherwise
+	 */
+	default boolean isUserModifiable() {
+		return getInfo().modifiable();
+	}
+
+	/**
+	 * Method checks if this property is allowed to be modified by the user. If
+	 * {@code user} is {@code true} and {@link #isUserModifiable()} is
+	 * {@code false}, this method will throw a {@link UnmodifiablePropertyException}
+	 * to stop further execution.
+	 * 
+	 * @param user - if this call is from the user
+	 * 
+	 * @throws UnmodifiablePropertyException Thrown if {@code user} is {@code true}
+	 *                                       and {@link #isUserModifiable()} is
+	 *                                       {@code false}
+	 */
+	default void checkUserInput(boolean user) {
+		if (user && !isUserModifiable())
+			throw new UnmodifiablePropertyException(
+					"Property " + getInfo() + " is not allowed to be modified by user input");
+	}
 
 	/**
 	 * Serialize a object into a byte array.

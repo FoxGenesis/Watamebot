@@ -37,22 +37,26 @@ public class LCKPropertyImpl implements Property<Long, PropertyMapping> {
 	}
 
 	@Override
-	public boolean set(Long lookup, Serializable obj) {
-		return set(lookup, Property.serialize(getInfo(), obj));
+	public boolean set(Long lookup, Serializable obj, boolean isUserInput) {
+		checkUserInput(isUserInput);
+		return set(lookup, Property.serialize(getInfo(), obj), isUserInput);
 	}
 
 	@Override
-	public boolean set(Long lookup, byte[] data) {
-		return set(lookup, new ByteArrayInputStream(data));
+	public boolean set(Long lookup, byte[] data, boolean isUserInput) {
+		checkUserInput(isUserInput);
+		return set(lookup, new ByteArrayInputStream(data), isUserInput);
 	}
 
 	@Override
-	public boolean set(Long lookup, InputStream in) {
+	public boolean set(Long lookup, InputStream in, boolean isUserInput) {
+		checkUserInput(isUserInput);
 		return resolver.putInternal(lookup, info, in);
 	}
 
 	@Override
-	public boolean remove(Long lookup) {
+	public boolean remove(Long lookup, boolean isUserInput) {
+		checkUserInput(isUserInput);
 		return resolver.removeInternal(lookup, info);
 	}
 
@@ -64,18 +68,6 @@ public class LCKPropertyImpl implements Property<Long, PropertyMapping> {
 	@Override
 	public PropertyInfo getInfo() {
 		return info;
-	}
-
-	public String getCategory() {
-		return info.category();
-	}
-
-	public String getKey() {
-		return info.name();
-	}
-
-	public boolean isUserEditable() {
-		return info.modifiable();
 	}
 
 	@Override

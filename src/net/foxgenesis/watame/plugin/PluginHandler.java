@@ -247,7 +247,6 @@ public class PluginHandler<@NotNull T extends Plugin> implements Closeable {
 	 * @param marker - method marker
 	 */
 	private void pluginError(T plugin, Throwable error) {
-		MDC.put("watame.status", context.getState().name());
 		Throwable temp = error;
 
 		if (error instanceof CompletionException && error.getCause() instanceof SeverePluginException)
