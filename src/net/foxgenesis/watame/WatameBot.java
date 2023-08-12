@@ -187,17 +187,22 @@ public class WatameBot {
 
 		// Update our state to constructing
 		updateState(State.CONSTRUCTING);
+		logger.info("Constructing");
+		construct();
 
 		// Set our state to pre-init
 		updateState(State.PRE_INIT);
+		logger.info("Calling pre-initialization");
 		preInit();
 
 		// Set our state to init
 		updateState(State.INIT);
+		logger.info("Calling initialization");
 		init();
 
 		// Set our state to post-init
 		updateState(State.POST_INIT);
+		logger.info("Calling post-initialization");
 		postInit();
 
 		long end = System.nanoTime();
@@ -205,6 +210,7 @@ public class WatameBot {
 		// Set our state to running
 		updateState(State.RUNNING);
 		logger.info("Startup completed in {} seconds", MethodTimer.formatToSeconds(end - start));
+		logger.info("Calling on ready");
 		ready();
 	}
 

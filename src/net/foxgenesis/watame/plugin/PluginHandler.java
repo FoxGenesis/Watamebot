@@ -13,19 +13,19 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
-import org.slf4j.Marker;
-import org.slf4j.MarkerFactory;
-
-import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import net.foxgenesis.util.CompletableFutureUtils;
 import net.foxgenesis.util.MethodTimer;
 import net.foxgenesis.watame.Context;
 import net.foxgenesis.watame.WatameBot;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
+
+import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 
 /**
  * Class used to handle all plugin related tasks.
@@ -131,7 +131,6 @@ public class PluginHandler<@NotNull T extends Plugin> implements Closeable {
 	 */
 	@NotNull
 	public CompletableFuture<Void> preInit() {
-		logger.debug("Calling plugin pre-initialization async");
 		return forEachPlugin(Plugin::preInit, null);
 	}
 
@@ -143,7 +142,6 @@ public class PluginHandler<@NotNull T extends Plugin> implements Closeable {
 	 */
 	@NotNull
 	public CompletableFuture<Void> init() {
-		logger.debug("Calling plugin initialization async");
 		return forEachPlugin(plugin -> plugin.init(context.getEventRegister()), null);
 	}
 
@@ -158,7 +156,6 @@ public class PluginHandler<@NotNull T extends Plugin> implements Closeable {
 	 */
 	@NotNull
 	public CompletableFuture<Void> postInit(WatameBot watamebot) {
-		logger.debug("Calling plugin post-initialization async");
 		return forEachPlugin(plugin -> plugin.postInit(watamebot), null);
 	}
 
@@ -173,7 +170,6 @@ public class PluginHandler<@NotNull T extends Plugin> implements Closeable {
 	 */
 	@NotNull
 	public CompletableFuture<Void> onReady(WatameBot watamebot) {
-		logger.debug("Calling plugin on ready async");
 		return forEachPlugin(plugin -> plugin.onReady(watamebot), null);
 	}
 
