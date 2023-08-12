@@ -6,13 +6,12 @@ import java.lang.module.ModuleDescriptor.Version;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 
+import net.foxgenesis.database.AbstractDatabase;
 import net.foxgenesis.property.PropertyInfo;
 import net.foxgenesis.property.PropertyType;
 import net.foxgenesis.util.ResourceUtils;
@@ -190,25 +189,6 @@ public abstract class Plugin {
 	}
 
 	/**
-	 * Register all {@link CommandData} that this plugin provides.
-	 * <p>
-	 * <b>** {@code providesCommands} must be set to true in
-	 * {@code plugin.properties}! **</b>
-	 * </p>
-	 * 
-	 * @return Returns a non-null {@link Collection} of {@link CommandData} that
-	 *         this {@link Plugin} provides
-	 * 
-	 * @deprecated Command providing is moving. If you want to provide commands, the
-	 *             {@link Plugin} should implement {@link CommandProvider}.
-	 */
-	@Deprecated(forRemoval = true)
-	@NotNull
-	protected Collection<CommandData> getCommands() {
-		return Collections.emptyList();
-	}
-
-	/**
 	 * Register a plugin property inside the database.
 	 * 
 	 * @param name       - name of the property
@@ -269,6 +249,18 @@ public abstract class Plugin {
 	 */
 	protected final PluginPropertyProvider getPropertyProvider() {
 		return WatameBot.INSTANCE.getPropertyProvider();
+	}
+
+	/**
+	 * Register an {@link AbstractDatabase} that this {@link Plugin} requires.
+	 * 
+	 * @param database - database to register
+	 * 
+	 * @throws IOException Thrown if there was an error while reading the database
+	 *                     setup files
+	 */
+	protected final void registerDatabase(AbstractDatabase database) throws IOException {
+		WatameBot.INSTANCE.getDatabaseManager().register(this, database);
 	}
 
 	// =========================================================================================================
