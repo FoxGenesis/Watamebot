@@ -5,16 +5,11 @@ import java.sql.SQLException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import net.dv8tion.jda.internal.utils.IOUtil;
 
 public abstract class AConnectionProvider implements AutoCloseable {
 
@@ -24,7 +19,7 @@ public abstract class AConnectionProvider implements AutoCloseable {
 	private final String name;
 	private final String database;
 
-	public AConnectionProvider(Properties properties, String name) {
+	public AConnectionProvider(@NotNull Properties properties, @NotNull String name) {
 		this.name = Objects.requireNonNull(name);
 		logger = LoggerFactory.getLogger(name);
 		this.properties = Objects.requireNonNull(properties);
@@ -46,10 +41,18 @@ public abstract class AConnectionProvider implements AutoCloseable {
 		properties.put("poolName", name);
 	}
 
+	@NotNull
 	protected abstract Connection openConnection() throws SQLException;
+	
+	@NotNull
+	protected <U> Optional<U> openAutoClosedConnection(@NotNull ConnectionConsumer<U> consumer) throws SQLException {
+		try(Connection conn = openConnection()) {
+			return Optional.ofNullable(consumer.applyConnection(conn));
+		}
+	}
 
 	@NotNull
-	protected <U> Optional<U> openAutoClosedConnection(ConnectionConsumer<U> consumer, Consumer<Throwable> error) {
+	protected <U> Optional<U> openAutoClosedConnection(@NotNull ConnectionConsumer<U> consumer, Consumer<Throwable> error) {
 		try (Connection conn = openConnection()) {
 			return Optional.ofNullable(consumer.applyConnection(conn));
 		} catch (Exception e) {
@@ -57,23 +60,6 @@ public abstract class AConnectionProvider implements AutoCloseable {
 				error.accept(e);
 			return Optional.empty();
 		}
-	}
-
-	protected <U> CompletableFuture<U> asyncConnection(Function<Connection, U> function) {
-		CompletableFuture<Connection> conn = CompletableFuture.supplyAsync(() -> {
-			try {
-				return openConnection();
-			} catch (SQLException e) {
-				throw new CompletionException(e);
-			}
-		});
-
-		CompletableFuture<Connection> copy = conn.copy();
-		return conn.thenApplyAsync(function).whenCompleteAsync((result, error) -> {
-			copy.thenAcceptAsync(IOUtil::silentClose);
-			if (error != null)
-				throw new CompletionException(error);
-		});
 	}
 
 	public final String getName() {
@@ -92,6 +78,6 @@ public abstract class AConnectionProvider implements AutoCloseable {
 
 	@FunctionalInterface
 	public interface ConnectionConsumer<U> {
-		@SuppressWarnings("exports") U applyConnection(Connection connection) throws SQLException;
+		@SuppressWarnings("exports") U applyConnection(@NotNull Connection connection) throws SQLException;
 	}
 }
