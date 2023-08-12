@@ -15,7 +15,7 @@ public class MySQLConnectionProvider extends AConnectionProvider {
 	private final HikariDataSource source;
 
 	public MySQLConnectionProvider(Properties properties) throws ConnectException {
-		super(properties, "MySQL Connection Provider");
+		super("MySQL", properties);
 
 		properties.putIfAbsent("dataSource.cachePrepStmts", true);
 		properties.putIfAbsent("dataSource.prepStmtCacheSize", 250);

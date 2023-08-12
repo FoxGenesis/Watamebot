@@ -19,7 +19,7 @@ public abstract class AConnectionProvider implements AutoCloseable {
 	private final String name;
 	private final String database;
 
-	public AConnectionProvider(@NotNull Properties properties, @NotNull String name) {
+	public AConnectionProvider( @NotNull String name, @NotNull Properties properties) {
 		this.name = Objects.requireNonNull(name);
 		logger = LoggerFactory.getLogger(name);
 		this.properties = Objects.requireNonNull(properties);
