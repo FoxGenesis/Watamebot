@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import net.foxgenesis.watame.WatameBot;
+import net.foxgenesis.watame.plugin.CommandProvider;
 import net.foxgenesis.watame.plugin.IEventStore;
 import net.foxgenesis.watame.plugin.Plugin;
 
