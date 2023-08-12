@@ -168,7 +168,7 @@ public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPro
 	@Override
 	public boolean isRegistered(String category, String key) throws PropertyException {
 		validate(category, key);
-		logger.debug("Getting property info for [{}] {}", category, key);
+		logger.debug("Checking for existing property [{}] {}", category, key);
 		try {
 			return this.mapStatement("property_info_exists", statement -> {
 				statement.setString(1, category);
