@@ -125,24 +125,17 @@ public class PluginHandler<@NotNull T extends Plugin> implements Closeable {
 
 	/**
 	 * Pre-Initialize all plugins.
-	 * 
-	 * @return Returns a {@link CompletableFuture} that completes when all plugins
-	 *         have finished their {@link Plugin#preInit()}
 	 */
-	@NotNull
-	public CompletableFuture<Void> preInit() {
-		return forEachPlugin(Plugin::preInit, null);
+	public void preInit() {
+		plugins.values().forEach(Plugin::preInit);
 	}
 
 	/**
 	 * Initialize all plugins.
-	 * 
-	 * @return Returns a {@link CompletableFuture} that completes when all plugins
-	 *         have finished their {@link Plugin#init(IEventStore)}
 	 */
 	@NotNull
-	public CompletableFuture<Void> init() {
-		return forEachPlugin(plugin -> plugin.init(context.getEventRegister()), null);
+	public void init() {
+		plugins.values().forEach(plugin -> plugin.init(context.getEventRegister()));
 	}
 
 	/**
@@ -150,13 +143,10 @@ public class PluginHandler<@NotNull T extends Plugin> implements Closeable {
 	 * 
 	 * @param watamebot - reference to {@link WatameBot} that is passed on to the
 	 *                  plugin's {@code postInit}
-	 * 
-	 * @return Returns a {@link CompletableFuture} that completes when all plugins
-	 *         have finished their {@link Plugin#postInit(WatameBot)}
 	 */
 	@NotNull
-	public CompletableFuture<Void> postInit(WatameBot watamebot) {
-		return forEachPlugin(plugin -> plugin.postInit(watamebot), null);
+	public void postInit(WatameBot watamebot) {
+		plugins.values().forEach(plugin -> plugin.postInit(watamebot));
 	}
 
 	/**

@@ -1,7 +1,6 @@
 package net.foxgenesis.watame;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -147,12 +146,12 @@ public class WatameBot {
 		Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "WatameBot Shutdown Thread"));
 
 		// Create our database manager
-		manager = new DatabaseManager("WatameBot Database Manager");
+		manager = new DatabaseManager("Database Manager");
 
 		// Create database connection
 		try {
-			connectionProvider = new MySQLConnectionProvider(ResourceUtils
-					.getProperties(Path.of("config", "database.properties"), Constants.DATABASE_SETTINGS_FILE));
+			connectionProvider = new MySQLConnectionProvider(ResourceUtils.getProperties(
+					settings.configurationPath.resolve("database.properties"), Constants.DATABASE_SETTINGS_FILE));
 		} catch (IOException e) {
 			try {
 				ExitCode.DATABASE_SETUP_ERROR.programExit(e);
@@ -177,13 +176,11 @@ public class WatameBot {
 	}
 
 	void start() throws Exception {
-		logger.info("Starting WatameBot");
-
 		long start = System.nanoTime();
 
 		// Update our state to constructing
 		updateState(State.CONSTRUCTING);
-		logger.info("Constructing");
+		logger.info("Starting");
 		construct();
 
 		// Set our state to pre-init
@@ -238,23 +235,11 @@ public class WatameBot {
 	 * @throws Exception
 	 */
 	private void preInit() throws Exception {
-		/*
-		 * ====== PRE-INITIALIZATION ======
-		 */
-
-		// Pre-initialize all plugins async
-		CompletableFuture<Void> pluginPreInit = pluginHandler.preInit();
-
-		/*
-		 * ====== END PRE-INITIALIZATION ======
-		 */
-
-		// Wait for all plugins to be have pre-initialized
-		logger.debug("Waiting for plugin pre-initialization");
-		pluginPreInit.join();
+		// Pre-initialize all plugins
+		pluginHandler.preInit();
 
 		logger.info("Starting database pool");
-		manager.start(connectionProvider, null).join();
+		manager.start(connectionProvider);
 	}
 
 	/**
@@ -263,22 +248,13 @@ public class WatameBot {
 	 * @throws Exception
 	 */
 	private void init() throws Exception {
-		/*
-		 * ====== INITIALIZATION ======
-		 */
 		// Assert that the moderation log property is set
 		Plugin integrated = pluginHandler.getPlugin("integrated");
 		if (integrated != null)
 			loggingChannel = propertyProvider.upsertProperty(integrated, "modlog", true, PropertyType.NUMBER);
 
 		// Initialize all plugins
-		CompletableFuture<Void> pluginInit = pluginHandler.init();
-		/*
-		 * ====== END INITIALIZATION ======
-		 */
-
-		logger.debug("Waiting for plugin initialization");
-		pluginInit.join();
+		pluginHandler.init();
 	}
 
 	/**
@@ -290,12 +266,13 @@ public class WatameBot {
 		/*
 		 * ====== POST-INITIALIZATION ======
 		 */
+
+		// Post-initialize all plugins
+		pluginHandler.postInit(this);
+
 		logger.info("Connecting to discord");
 		discord = buildJDA();
 		context.onJDABuilder(discord);
-
-		// Post-initialize all plugins
-		CompletableFuture<Void> pluginPostInit = pluginHandler.postInit(this);
 
 		// Register commands
 		logger.info("Collecting commands...");
@@ -304,9 +281,6 @@ public class WatameBot {
 		/*
 		 * ====== END POST-INITIALIZATION ======
 		 */
-
-		logger.debug("Waiting for plugin post-initialization");
-		pluginPostInit.join();
 
 		// Wait for discord to be ready
 		if (discord.getStatus() != Status.CONNECTED)
