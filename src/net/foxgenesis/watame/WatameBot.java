@@ -185,7 +185,8 @@ public class WatameBot {
 
 		long start = System.nanoTime();
 
-		pluginHandler.loadPlugins();
+		// Update our state to constructing
+		updateState(State.CONSTRUCTING);
 
 		// Set our state to pre-init
 		updateState(State.PRE_INIT);
@@ -241,6 +242,14 @@ public class WatameBot {
 			logger.warn("Timed out waiting for common pool shutdown. Continuing shutdown...");
 
 		logger.info("Exiting...");
+	}
+
+	private void construct() throws Exception {
+		/*
+		 * ====== CONSTRUCTION ======
+		 */
+		// Construct plugins
+		pluginHandler.loadPlugins();
 	}
 
 	/**

@@ -17,6 +17,9 @@ public final class Constants {
 	public static final File PLUGINS_FOLDER = new File("plugins");
 
 	public static final long PLUGIN_PROPERTY_CACHE_TIME = 5_000;
+	
+	public static final String DATABASE_TABLE_PROPERTY_INFO = "PropertyInfo";
+	public static final String DATABASE_TABLE_PROPERTIES = "Properties";
 
 	private static ModuleResource resource(@NotNull String path) {
 		return new ModuleResource("watamebot", "/META-INF/" + path);
