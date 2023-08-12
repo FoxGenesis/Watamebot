@@ -31,7 +31,7 @@ public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPro
 	private final String propertyInfoTable;
 
 	public LCKConfigurationDatabase(String database, String propertyTable, String propertyInfoTable) {
-		super("LCK Configuration Database",
+		super("LCK Configuration",
 				new FormattedModuleResource("watamebot", "/META-INF/configDatabase/statements.kvp",
 						Map.of("database", database, "table", propertyTable, "table2", propertyInfoTable)),
 				new FormattedModuleResource("watamebot", "/META-INF/configDatabase/setup.sql",
