@@ -22,7 +22,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
 
-public class IntegratedCommands extends Plugin {
+public class IntegratedCommands extends Plugin implements CommandProvider {
 	@Override
 	protected void onConstruct(Properties meta, Map<String, Configuration> configs) {}
 
