@@ -166,8 +166,8 @@ public class WatameBot {
 		}
 
 		// Create our plugin property database
-		propertyDatabase = new LCKConfigurationDatabase("LCK Configuration", connectionProvider.getDatabase(),
-				"Properties", "PropertyInfo");
+		propertyDatabase = new LCKConfigurationDatabase(connectionProvider.getDatabase(),
+				Constants.DATABASE_TABLE_PROPERTIES, Constants.DATABASE_TABLE_PROPERTY_INFO);
 		propertyProvider = new PluginPropertyProviderImpl(propertyDatabase, Constants.PLUGIN_PROPERTY_CACHE_TIME);
 
 		// Create discord connection builder
