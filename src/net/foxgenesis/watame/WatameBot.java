@@ -141,7 +141,7 @@ public class WatameBot {
 	 *
 	 * @throws SQLException When failing to connect to the database file
 	 */
-	private WatameBot(@NotNull String token) {
+	private WatameBot(char[] token) {
 		// Set shutdown thread
 		logger.debug("Adding shutdown hook");
 		Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "WatameBot Shutdown Thread"));
@@ -216,6 +216,20 @@ public class WatameBot {
 		 */
 		// Construct plugins
 		pluginHandler.loadPlugins();
+
+		// Setup the database
+		try {
+			Plugin integrated = pluginHandler.getPlugin("integrated");
+			if (integrated == null)
+				throw new SeverePluginException("Failed to find the integrated plugin!");
+			manager.register(integrated, propertyDatabase);
+		} catch (IOException e) {
+			// Some error occurred while setting up database
+			ExitCode.DATABASE_SETUP_ERROR.programExit(e);
+		} catch (IllegalArgumentException e) {
+			// Resource was null
+			ExitCode.DATABASE_INVALID_SETUP_FILE.programExit(e);
+		}
 	}
 
 	/**
@@ -230,21 +244,6 @@ public class WatameBot {
 
 		// Pre-initialize all plugins async
 		CompletableFuture<Void> pluginPreInit = pluginHandler.preInit();
-
-		// Setup the database
-		try {
-			logger.debug("Adding database to database manager");
-			Plugin integrated = pluginHandler.getPlugin("integrated");
-			if (integrated == null)
-				throw new SeverePluginException("Failed to find the integrated plugin!");
-			manager.register(integrated, propertyDatabase);
-		} catch (IOException e) {
-			// Some error occurred while setting up database
-			ExitCode.DATABASE_SETUP_ERROR.programExit(e);
-		} catch (IllegalArgumentException e) {
-			// Resource was null
-			ExitCode.DATABASE_INVALID_SETUP_FILE.programExit(e);
-		}
 
 		/*
 		 * ====== END PRE-INITIALIZATION ======
@@ -373,13 +372,13 @@ public class WatameBot {
 	 *
 	 * @return connected JDA object
 	 */
-	private JDABuilder createJDA(String token, ExecutorService eventExecutor) {
+	private JDABuilder createJDA(char[] token, ExecutorService eventExecutor) {
 		Objects.requireNonNull(token, "Login token must not be null");
 
 		// Setup our JDA with wanted values
 		logger.debug("Creating JDA");
 		JDABuilder builder = JDABuilder
-				.create(token, GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MODERATION,
+				.create(new String(token), GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MODERATION,
 						GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT)
 				.disableCache(CacheFlag.ACTIVITY, CacheFlag.VOICE_STATE, CacheFlag.EMOJI, CacheFlag.STICKER,
 						CacheFlag.CLIENT_STATUS, CacheFlag.ONLINE_STATUS, CacheFlag.SCHEDULED_EVENTS)

@@ -1,5 +1,6 @@
 package net.foxgenesis.watame;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,7 +25,10 @@ public class WatameBotSettings {
 
 	private final INIConfiguration config;
 
-	private final String token;
+	/**
+	 * Authentication token (passwords should be stored as char[])
+	 */
+	private final char[] token;
 
 	WatameBotSettings(@NotNull Path configPath) throws Exception {
 		this(configPath, null);
@@ -39,27 +43,22 @@ public class WatameBotSettings {
 		config = ResourceUtils.loadINI(new ModuleResource(getClass().getModule(), "/META-INF/defaults/watamebot.ini"),
 				configurationPath, "watamebot.ini");
 
-		// Get the token
+		// Get the token file
 		Path tokenFile = tokenFile2 == null ? Path.of(config.getString("Token.tokenFile", "token.txt"))
 				: configPath.resolve(tokenFile2);
 
 		if (!isValidFile(tokenFile))
 			throw new SettingsException("Invalid token file");
 
+		// Read token
 		token = readToken(tokenFile);
-
-		// Validate the token
-		logger.info("Checking token");
-		if (!isValidToken(token)) {
-			ExitCode.INVALID_TOKEN.programExit("Invalid token");
-		}
 	}
 
 	public ImmutableConfiguration getConfiguration() {
 		return config;
 	}
 
-	String getToken() {
+	char[] getToken() {
 		return token;
 	}
 
@@ -70,20 +69,16 @@ public class WatameBotSettings {
 	 *
 	 * @throws Throwable
 	 */
-	private static String readToken(Path filepath) throws Exception {
-		return Files.lines(filepath).filter(s -> !s.startsWith("#")).map(String::trim).findFirst().orElse("");
-	}
-
-	/**
-	 * Check the discord token is valid.
-	 *
-	 * @return Returns {@code true} if the token is not {@code null} and is not
-	 *         blank
-	 *
-	 * @throws Throwable
-	 */
-	private static boolean isValidToken(String token) throws Exception {
-		return !(token == null || token.isBlank());
+	private static char[] readToken(Path filepath) throws Exception {
+		char[] buffer = new char[70];
+		int read = 0;
+		try (BufferedReader reader = Files.newBufferedReader(filepath)) {
+			read = reader.read(buffer);
+		}
+		logger.info("Checking token");
+		if (read != 70)
+			ExitCode.INVALID_TOKEN.programExit("Invalid token");
+		return buffer;
 	}
 
 	private static boolean isValidDirectory(Path path) throws SettingsException {
