@@ -142,10 +142,6 @@ public class WatameBot {
 	 * @throws SQLException When failing to connect to the database file
 	 */
 	private WatameBot(@NotNull String token) {
-		// Update our state
-		updateState(State.CONSTRUCTING);
-		logger.debug("Creating WatameBot instance");
-
 		// Set shutdown thread
 		logger.debug("Adding shutdown hook");
 		Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "WatameBot Shutdown Thread"));
@@ -212,42 +208,6 @@ public class WatameBot {
 		logger.info("Startup completed in {} seconds", MethodTimer.formatToSeconds(end - start));
 		logger.info("Calling on ready");
 		ready();
-	}
-
-	/**
-	 * Bot shutdown method.
-	 * <p>
-	 * This method will be called on program exit.
-	 * </p>
-	 */
-	private void shutdown() {
-		// Set our state to shutdown
-		updateState(State.SHUTDOWN);
-
-		logger.info("Shutting down...");
-
-		IOUtil.silentClose(pluginHandler);
-
-		// Disconnect from discord
-		if (discord != null) {
-			logger.info("Shutting down JDA...");
-			discord.shutdown();
-		}
-
-		// Close connection to datebase
-		try {
-			logger.info("Closing database connection");
-			if (manager != null)
-				manager.close();
-		} catch (Exception e) {
-			logger.error("Error while closing database connection!", e);
-		}
-
-		// Await all futures to complete
-		if (!ForkJoinPool.commonPool().awaitQuiescence(1, TimeUnit.MINUTES))
-			logger.warn("Timed out waiting for common pool shutdown. Continuing shutdown...");
-
-		logger.info("Exiting...");
 	}
 
 	private void construct() throws Exception {
@@ -367,6 +327,42 @@ public class WatameBot {
 
 		// Fire on ready event
 		pluginHandler.onReady(this);
+	}
+
+	/**
+	 * Bot shutdown method.
+	 * <p>
+	 * This method will be called on program exit.
+	 * </p>
+	 */
+	private void shutdown() {
+		// Set our state to shutdown
+		updateState(State.SHUTDOWN);
+
+		logger.info("Shutting down...");
+
+		IOUtil.silentClose(pluginHandler);
+
+		// Disconnect from discord
+		if (discord != null) {
+			logger.info("Shutting down JDA...");
+			discord.shutdown();
+		}
+
+		// Close connection to datebase
+		try {
+			logger.info("Closing database connection");
+			if (manager != null)
+				manager.close();
+		} catch (Exception e) {
+			logger.error("Error while closing database connection!", e);
+		}
+
+		// Await all futures to complete
+		if (!ForkJoinPool.commonPool().awaitQuiescence(1, TimeUnit.MINUTES))
+			logger.warn("Timed out waiting for common pool shutdown. Continuing shutdown...");
+
+		logger.info("Exiting...");
 	}
 
 	/**
