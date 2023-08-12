@@ -3,7 +3,6 @@ package net.foxgenesis.watame;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
