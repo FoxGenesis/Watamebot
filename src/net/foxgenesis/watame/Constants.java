@@ -16,8 +16,8 @@ public final class Constants {
 
 	public static final File PLUGINS_FOLDER = new File("plugins");
 
-	public static final long PLUGIN_PROPERTY_CACHE_TIME = 5_000;
-	
+	public static final long PLUGIN_PROPERTY_CACHE_TIME = 300_000; // 5 minutes
+
 	public static final String DATABASE_TABLE_PROPERTY_INFO = "PropertyInfo";
 	public static final String DATABASE_TABLE_PROPERTIES = "Properties";
 
