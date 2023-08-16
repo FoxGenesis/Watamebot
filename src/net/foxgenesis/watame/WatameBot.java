@@ -1,8 +1,10 @@
 package net.foxgenesis.watame;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.sql.SQLException;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
@@ -35,6 +37,7 @@ import net.dv8tion.jda.api.JDA.Status;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.exceptions.InvalidTokenException;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
@@ -139,7 +142,7 @@ public class WatameBot {
 	 *
 	 * @throws SQLException When failing to connect to the database file
 	 */
-	private WatameBot(char[] token) {
+	private WatameBot(String token) {
 		// Set shutdown thread
 		logger.debug("Adding shutdown hook");
 		Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "WatameBot Shutdown Thread"));
@@ -149,14 +152,9 @@ public class WatameBot {
 
 		// Create database connection
 		try {
-			connectionProvider = new MySQLConnectionProvider(ResourceUtils.getProperties(
-					settings.configurationPath.resolve("database.properties"), Constants.DATABASE_SETTINGS_FILE));
-		} catch (IOException e) {
-			try {
-				ExitCode.DATABASE_SETUP_ERROR.programExit(e);
-			} catch (Exception e1) {
-				throw new RuntimeException(e1);
-			}
+			connectionProvider = getConnectionProvider();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
 		}
 
 		// Create our plugin property database
@@ -269,7 +267,6 @@ public class WatameBot {
 		// Post-initialize all plugins
 		pluginHandler.postInit(this);
 
-		logger.info("Connecting to discord");
 		discord = buildJDA();
 		context.onJDABuilder(discord);
 
@@ -311,6 +308,7 @@ public class WatameBot {
 		// Set our state to shutdown
 		updateState(State.SHUTDOWN);
 
+		System.out.println();
 		logger.info("Shutting down...");
 
 		IOUtil.silentClose(pluginHandler);
@@ -345,13 +343,13 @@ public class WatameBot {
 	 *
 	 * @return connected JDA object
 	 */
-	private JDABuilder createJDA(char[] token, ExecutorService eventExecutor) {
+	private JDABuilder createJDA(String token, ExecutorService eventExecutor) {
 		Objects.requireNonNull(token, "Login token must not be null");
 
 		// Setup our JDA with wanted values
 		logger.debug("Creating JDA");
 		JDABuilder builder = JDABuilder
-				.create(new String(token), GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MODERATION,
+				.create(token, GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MODERATION,
 						GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT)
 				.disableCache(CacheFlag.ACTIVITY, CacheFlag.VOICE_STATE, CacheFlag.EMOJI, CacheFlag.STICKER,
 						CacheFlag.CLIENT_STATUS, CacheFlag.ONLINE_STATUS, CacheFlag.SCHEDULED_EVENTS)
@@ -368,36 +366,69 @@ public class WatameBot {
 
 	private JDA buildJDA() throws Exception {
 		JDA discordTmp = null;
-		boolean built = false;
 
-		// Attempt to connect to discord. If failed because no Internet, wait 10 seconds
+		// Attempt to connect to discord. If failed because no Internet, wait 5 seconds
 		// and retry.
-		do {
+		int tries = 0;
+		int maxTries = 5;
+		double delay = 2;
+
+		while (++tries < maxTries) {
+			if (tries > 1) {
+				delay = Math.pow(delay, tries);
+				logger.warn("Retrying in " + delay + " seconds...");
+				Thread.sleep((long) delay * 1000);
+			}
 			try {
 				// Attempt to login to discord
 				logger.info("Attempting to login to discord");
 				discordTmp = builder.build();
 
 				// We connected. Stop loop.
-				built = true;
+				break;
+			} catch (InvalidTokenException e) {
+				ExitCode.INVALID_TOKEN.programExit(e.getLocalizedMessage());
 			} catch (Exception ex) {
 				// Failed to connect. Log error
-				logger.warn("Failed to connect: [" + ex.getLocalizedMessage() + "]! Retrying in 5 seconds...", ex);
-
-				// Sleep for five seconds before
-				try {
-					Thread.sleep(5_000);
-				} catch (InterruptedException e) {}
+				logger.error("Failed to connect: " + ex.getLocalizedMessage());
 			}
-
-		} while (!built);
+		}
 
 		if (discordTmp == null) {
-			ExitCode.JDA_BUILD_FAIL.programExit("Failed to build JDA");
+			ExitCode.JDA_BUILD_FAIL.programExit("Failed to build JDA after " + maxTries + " tries");
 			return null;
 		}
 
 		return discordTmp;
+	}
+
+	private AConnectionProvider getConnectionProvider() throws Exception {
+		AConnectionProvider provider = null;
+		int tries = 0;
+		int maxTries = 5;
+		double delay = 2;
+		Properties properties = ResourceUtils.getProperties(settings.configurationPath.resolve("database.properties"),
+				Constants.DATABASE_SETTINGS_FILE);
+
+		while (tries < maxTries && provider == null) {
+			delay = Math.pow(delay, tries);
+			if (delay > 1) {
+				try {
+					logger.info("Retrying in {} seconds...", delay);
+					Thread.sleep((long) delay * 1000);
+				} catch (InterruptedException e) {}
+			}
+			try {
+				tries++;
+				provider = new MySQLConnectionProvider(properties);
+			} catch (ConnectException e) {
+				logger.error("Failed to connect to database: {}", e.getLocalizedMessage());
+			}
+		}
+
+		if (provider == null)
+			ExitCode.DATABASE_SETUP_ERROR.programExit("Failed to connect to the database after " + maxTries + " tries");
+		return provider;
 	}
 
 	/**

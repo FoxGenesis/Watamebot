@@ -119,7 +119,7 @@ public class DatabaseManager implements IDatabaseManager, AutoCloseable {
 	}
 
 	public synchronized CompletableFuture<Void> start(@NotNull AConnectionProvider provider, Executor executor) {
-		final Executor ex = executor == null? ForkJoinPool.commonPool() : executor;
+		final Executor ex = executor == null ? ForkJoinPool.commonPool() : executor;
 		long start = System.nanoTime();
 		return CompletableFuture.runAsync(() -> {
 			this.provider = Objects.requireNonNull(provider);
@@ -220,7 +220,9 @@ public class DatabaseManager implements IDatabaseManager, AutoCloseable {
 
 	@Override
 	public void close() throws Exception {
-		databases.values().forEach(s -> s.forEach(IOUtil::silentClose));
+		synchronized (databases) {
+			databases.values().forEach(s -> s.forEach(IOUtil::silentClose));
+		}
 		if (provider != null)
 			provider.close();
 	}

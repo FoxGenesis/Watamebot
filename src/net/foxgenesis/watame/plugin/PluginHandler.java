@@ -217,10 +217,8 @@ public class PluginHandler<@NotNull T extends Plugin> implements Closeable {
 		} catch (Exception e) {
 			pluginError(plugin, new SeverePluginException(e, false));
 		}
-		if (plugin.needsDatabase) {
-			logger.info("Unloading database connections from ", plugin.getDisplayInfo());
+		if (plugin.needsDatabase)
 			context.getDatabaseManager().unload(plugin);
-		}
 		logger.warn(plugin.getDisplayInfo() + " unloaded");
 	}
 

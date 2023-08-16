@@ -1,6 +1,5 @@
 package net.foxgenesis.watame;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,12 +12,8 @@ import org.apache.commons.configuration2.INIConfiguration;
 import org.apache.commons.configuration2.ImmutableConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class WatameBotSettings {
-
-	private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
 	@NotNull
 	public final Path configurationPath;
@@ -28,7 +23,7 @@ public class WatameBotSettings {
 	/**
 	 * Authentication token (passwords should be stored as char[])
 	 */
-	private final char[] token;
+	private final String token;
 
 	WatameBotSettings(@NotNull Path configPath) throws Exception {
 		this(configPath, null);
@@ -58,7 +53,7 @@ public class WatameBotSettings {
 		return config;
 	}
 
-	char[] getToken() {
+	String getToken() {
 		return token;
 	}
 
@@ -69,16 +64,8 @@ public class WatameBotSettings {
 	 *
 	 * @throws Throwable
 	 */
-	private static char[] readToken(Path filepath) throws Exception {
-		char[] buffer = new char[70];
-		int read = 0;
-		try (BufferedReader reader = Files.newBufferedReader(filepath)) {
-			read = reader.read(buffer);
-		}
-		logger.info("Checking token");
-		if (read != 70)
-			ExitCode.INVALID_TOKEN.programExit("Invalid token");
-		return buffer;
+	private static String readToken(Path filepath) throws Exception {
+		return Files.lines(filepath).filter(s -> !s.startsWith("#")).map(String::trim).findFirst().orElse("");
 	}
 
 	private static boolean isValidDirectory(Path path) throws SettingsException {
