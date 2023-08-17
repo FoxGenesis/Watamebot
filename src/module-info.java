@@ -1,16 +1,15 @@
 /**
  * Watamebot core module
- * 
+ *
  * @author Ashley
  *
  * @provides net.foxgenesis.watame.plugin.Plugin
- * 
+ *
  * @uses net.foxgenesis.watame.plugin.Plugin
  */
 module watamebot {
 	requires transitive net.dv8tion.jda;
 	requires transitive org.slf4j;
-	requires transitive java.sql;
 	requires transitive org.apache.commons.configuration2;
 
 	requires static org.fusesource.jansi;
@@ -20,12 +19,14 @@ module watamebot {
 	requires org.apache.commons.lang3;
 	requires ch.qos.logback.core;
 	requires ch.qos.logback.classic;
-	requires org.json;
+	requires java.sql.rowset;
+	requires java.sql;
 
 	exports net.foxgenesis.config;
 	exports net.foxgenesis.database;
 	exports net.foxgenesis.executor;
 	exports net.foxgenesis.property;
+	exports net.foxgenesis.property.lck;
 	exports net.foxgenesis.log;
 	exports net.foxgenesis.watame;
 	exports net.foxgenesis.watame.plugin;

@@ -5,25 +5,24 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
+import net.foxgenesis.util.ResourceUtils;
+import net.foxgenesis.util.resource.ModuleResource;
+
 import org.apache.commons.configuration2.INIConfiguration;
 import org.apache.commons.configuration2.ImmutableConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import net.foxgenesis.util.ResourceUtils;
-import net.foxgenesis.util.resource.ModuleResource;
 
 public class WatameBotSettings {
-
-	private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
 	@NotNull
 	public final Path configurationPath;
 
 	private final INIConfiguration config;
 
+	/**
+	 * Authentication token (passwords should be stored as char[])
+	 */
 	private final String token;
 
 	WatameBotSettings(@NotNull Path configPath) throws Exception {
@@ -31,28 +30,23 @@ public class WatameBotSettings {
 	}
 
 	WatameBotSettings(@NotNull Path configPath, @Nullable Path tokenFile2) throws Exception {
-		this.configurationPath = Objects.requireNonNull(configPath);
+		configurationPath = Objects.requireNonNull(configPath);
 
 		if (!isValidDirectory(configPath))
 			throw new IOException("Invalid configuration directory");
 
 		config = ResourceUtils.loadINI(new ModuleResource(getClass().getModule(), "/META-INF/defaults/watamebot.ini"),
-				this.configurationPath, "watamebot.ini");
+				configurationPath, "watamebot.ini");
 
-		// Get the token
+		// Get the token file
 		Path tokenFile = tokenFile2 == null ? Path.of(config.getString("Token.tokenFile", "token.txt"))
 				: configPath.resolve(tokenFile2);
 
 		if (!isValidFile(tokenFile))
 			throw new SettingsException("Invalid token file");
 
+		// Read token
 		token = readToken(tokenFile);
-
-		// Validate the token
-		logger.info("Checking token");
-		if (!isValidToken(token)) {
-			ExitCode.INVALID_TOKEN.programExit("Invalid token");
-		}
 	}
 
 	public ImmutableConfiguration getConfiguration() {
@@ -67,23 +61,11 @@ public class WatameBotSettings {
 	 * NEED_JAVADOC
 	 *
 	 * @return
-	 * 
+	 *
 	 * @throws Throwable
 	 */
 	private static String readToken(Path filepath) throws Exception {
 		return Files.lines(filepath).filter(s -> !s.startsWith("#")).map(String::trim).findFirst().orElse("");
-	}
-
-	/**
-	 * Check the discord token is valid.
-	 * 
-	 * @return Returns {@code true} if the token is not {@code null} and is not
-	 *         blank
-	 * 
-	 * @throws Throwable
-	 */
-	private static boolean isValidToken(String token) throws Exception {
-		return !(token == null || token.isBlank());
 	}
 
 	private static boolean isValidDirectory(Path path) throws SettingsException {
@@ -94,11 +76,9 @@ public class WatameBotSettings {
 				e.printStackTrace();
 			}
 
-		if (Files.exists(path)) {
-			if (check(Files.isDirectory(path), "Configuration path must be a directory!")) {
-				return check(Files.isReadable(path), "Unable to read from configuration directory!")
-						&& check(Files.isWritable(path), "Unable to write to configuration directory!");
-			}
+		if (Files.exists(path) && check(Files.isDirectory(path), "Configuration path must be a directory!")) {
+			return check(Files.isReadable(path), "Unable to read from configuration directory!")
+					&& check(Files.isWritable(path), "Unable to write to configuration directory!");
 		}
 
 		return false;

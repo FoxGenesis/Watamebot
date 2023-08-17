@@ -9,7 +9,9 @@ import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Consumer;
+
+import net.foxgenesis.config.KVPFile;
+import net.foxgenesis.util.resource.ModuleResource;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -17,39 +19,34 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.dv8tion.jda.internal.utils.IOUtil;
-import net.foxgenesis.config.KVPFile;
-import net.foxgenesis.util.resource.ModuleResource;
 
 /**
  * NEED_JAVADOC
- * 
+ *
  * @author Ashley
  *
  */
 public abstract class AbstractDatabase implements AutoCloseable {
-	@NotNull
+
 	private final HashMap<String, String> statements = new HashMap<>();
 
-	@NotNull
 	private final ModuleResource operationsFile;
 
-	@NotNull
 	private final ModuleResource setupFile;
 
-	@NotNull
 	private final String name;
 
 	/**
 	 * Logger
 	 */
-	@NotNull
+
 	protected final Logger logger;
 
 	private AConnectionProvider provider;
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @param name
 	 * @param operationsFile
 	 * @param setupFile
@@ -73,7 +70,7 @@ public abstract class AbstractDatabase implements AutoCloseable {
 
 		new KVPFile(operationsFile).forEach((id, raw) -> {
 			if (!hasStatementID(id))
-				this.registerStatement(id, raw);
+				registerStatement(id, raw);
 			else
 				logger.error("Statement id {} is already registered!", id);
 		});
@@ -95,9 +92,9 @@ public abstract class AbstractDatabase implements AutoCloseable {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @return
-	 * 
+	 *
 	 * @throws SQLException
 	 */
 	protected Connection openConnection() throws SQLException {
@@ -111,89 +108,94 @@ public abstract class AbstractDatabase implements AutoCloseable {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @param id
 	 * @param func
 	 * @param error
+	 *
+	 * @throws SQLException
 	 */
-	protected void prepareStatement(String id, SQLConsumer<PreparedStatement> func, Consumer<Throwable> error) {
+	protected void prepareStatement(String id, SQLConsumer<PreparedStatement> func, int... flags) throws SQLException {
 		validate(id);
 
-		provider.openAutoClosedConnection(conn -> {
-			try (PreparedStatement statement = conn.prepareStatement(getRawStatement(id))) {
+		try (Connection c = openConnection()) {
+			try (PreparedStatement statement = c.prepareStatement(getRawStatement(id), flags)) {
 				func.accept(statement);
-				return null;
 			}
-		}, error);
+		}
 	}
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @param id
 	 * @param func
 	 * @param error
+	 *
+	 * @throws SQLException
 	 */
-	protected void prepareCallable(String id, SQLConsumer<CallableStatement> func, Consumer<Throwable> error) {
+	protected void prepareCallable(String id, SQLConsumer<CallableStatement> func) throws SQLException {
 		validate(id);
 
-		provider.openAutoClosedConnection(conn -> {
-			try (CallableStatement statement = conn.prepareCall(getRawStatement(id))) {
+		try (Connection c = openConnection()) {
+			try (CallableStatement statement = c.prepareCall(getRawStatement(id))) {
 				func.accept(statement);
-				return null;
 			}
-		}, error);
+		}
 	}
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @param <U>
 	 * @param id
 	 * @param func
 	 * @param error
-	 * 
+	 *
 	 * @return
+	 *
+	 * @throws SQLException
 	 */
 	@NotNull
-	protected <U> Optional<U> mapStatement(String id, SQLFunction<PreparedStatement, U> func,
-			Consumer<Throwable> error) {
+	protected <U> Optional<U> mapStatement(String id, SQLFunction<PreparedStatement, U> func, int... flags)
+			throws SQLException {
 		validate(id);
 
-		return provider.openAutoClosedConnection(conn -> {
-			try (PreparedStatement statement = conn.prepareStatement(getRawStatement(id))) {
-				return func.apply(statement);
+		try (Connection c = openConnection()) {
+			try (PreparedStatement statement = c.prepareStatement(getRawStatement(id), flags)) {
+				return Optional.ofNullable(func.apply(statement));
 			}
-		}, error);
+		}
 	}
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @param <U>
 	 * @param id
 	 * @param func
 	 * @param error
-	 * 
+	 *
 	 * @return
+	 *
+	 * @throws SQLException
 	 */
 	@Nullable
-	protected <U> Optional<U> mapCallable(String id, SQLFunction<CallableStatement, U> func,
-			Consumer<Throwable> error) {
+	protected <U> Optional<U> mapCallable(String id, SQLFunction<CallableStatement, U> func) throws SQLException {
 		validate(id);
 
-		return provider.openAutoClosedConnection(conn -> {
-			try (CallableStatement statement = conn.prepareCall(getRawStatement(id))) {
-				return func.apply(statement);
+		try (Connection c = openConnection()) {
+			try (CallableStatement statement = c.prepareCall(getRawStatement(id))) {
+				return Optional.ofNullable(func.apply(statement));
 			}
-		}, error);
+		}
 	}
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @param id
-	 * 
+	 *
 	 * @return
 	 */
 	protected final boolean hasStatementID(String id) {
@@ -202,9 +204,9 @@ public abstract class AbstractDatabase implements AutoCloseable {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @param id
-	 * 
+	 *
 	 * @return
 	 */
 	protected final String getRawStatement(String id) {
@@ -227,7 +229,7 @@ public abstract class AbstractDatabase implements AutoCloseable {
 	private void validate(String id) {
 		if (!hasStatementID(id))
 			throw new NoSuchElementException("No statement exists with id " + id);
-		else if (!isReady())
+		if (!isReady())
 			throw new UnsupportedOperationException("Database has not been setup yet!");
 	}
 
@@ -242,16 +244,20 @@ public abstract class AbstractDatabase implements AutoCloseable {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @return Returns {@code true} if the database is ready for use
 	 */
 	public boolean isReady() {
 		return provider != null;
 	}
 
+	public String getDatabase() {
+		return provider.getDatabase();
+	}
+
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @author Ashley
 	 *
 	 * @param <U>
@@ -263,7 +269,7 @@ public abstract class AbstractDatabase implements AutoCloseable {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @author Ashley
 	 *
 	 * @param <U>

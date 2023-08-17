@@ -10,7 +10,7 @@ import java.util.Objects;
 /**
  * Utility class that tries to create a Lock on a specific PID file. If the
  * locking fails, we know that another instance of the application is running.
- * 
+ *
  * @author Spaz-Master, Ashley
  *
  */
@@ -25,13 +25,13 @@ public final class SingleInstanceUtil {
 	 * Attempt to obtain lock on PID with {@code amt} retries.
 	 * <p>
 	 * This method is equivalent to <blockquote>
-	 * 
+	 *
 	 * <pre>
 	 * SingleInstanceUtil.waitAndGetLock(8007, amt, 10_000)
 	 * </pre>
-	 * 
+	 *
 	 * </blockquote>
-	 * 
+	 *
 	 * @param amt - Amount of retries before failing to obtain lock
 	 * @throws SingleInstanceLockException Thrown if try count equals or exceeds
 	 *                                     {@code amt}
@@ -44,13 +44,13 @@ public final class SingleInstanceUtil {
 	 * delay between retries.
 	 * <p>
 	 * This method is equivalent to <blockquote>
-	 * 
+	 *
 	 * <pre>
 	 * SingleInstanceUtil.waitAndGetLock(8007, amt, 10_000)
 	 * </pre>
-	 * 
+	 *
 	 * </blockquote>
-	 * 
+	 *
 	 * @param file - location of PID file should attempt to lock
 	 * @param amt  - Amount of retries before failing to obtain lock
 	 * @throws SingleInstanceLockException Thrown if try count equals or exceeds
@@ -62,7 +62,7 @@ public final class SingleInstanceUtil {
 	/**
 	 * Attempt to obtain lock on PID file {@code pid}, {@code amt} times with
 	 * {@code delay} delay between retries.
-	 * 
+	 *
 	 * @param file  - location of PID file
 	 * @param amt   - Amount of retries before failing to obtain lock
 	 * @param delay - Delay between retries
@@ -119,7 +119,7 @@ public final class SingleInstanceUtil {
 
 	/**
 	 * Class that obtains and holds a PID lock on a file.
-	 * 
+	 *
 	 * @author Ashley
 	 *
 	 */
@@ -136,7 +136,7 @@ public final class SingleInstanceUtil {
 
 		/**
 		 * Create a new instance with a specific file to lock to.
-		 * 
+		 *
 		 * @param file - {@link File} to use as a PID lock
 		 */
 		public PIDLock(File file) {
@@ -149,7 +149,7 @@ public final class SingleInstanceUtil {
 
 		/**
 		 * Attempt to obtain an exclusive lock on the file.
-		 * 
+		 *
 		 * @throws IOException Thrown if a lock could not be obtained or other
 		 *                     operations were unable to be performed
 		 */
@@ -188,7 +188,7 @@ public final class SingleInstanceUtil {
 
 		/**
 		 * Check if the lock is valid.
-		 * 
+		 *
 		 * @return Returns {@code true} if the PID file channel is not {@code null} and
 		 *         is open
 		 */
@@ -201,7 +201,7 @@ public final class SingleInstanceUtil {
 	/**
 	 * Exception class thrown when SingleInstanceUtil fails to obtain a lock on its
 	 * desired port.
-	 * 
+	 *
 	 * @author Ashley
 	 *
 	 */
@@ -224,8 +224,7 @@ public final class SingleInstanceUtil {
 
 		public SingleInstanceLockException(File file, int retries) {
 			// Call parent constructor
-			super();
-			this.pidLocation = file;
+			pidLocation = file;
 			this.retries = retries;
 		}
 

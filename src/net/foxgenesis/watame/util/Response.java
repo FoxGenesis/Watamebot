@@ -1,10 +1,15 @@
 package net.foxgenesis.watame.util;
 
-import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import static net.foxgenesis.watame.util.Colors.*;
+import static net.foxgenesis.watame.util.Colors.ERROR;
+import static net.foxgenesis.watame.util.Colors.INFO;
+import static net.foxgenesis.watame.util.Colors.NOTICE;
+import static net.foxgenesis.watame.util.Colors.SUCCESS;
+import static net.foxgenesis.watame.util.Colors.WARNING;
 
 import org.jetbrains.annotations.NotNull;
+
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 
 public final class Response {
 

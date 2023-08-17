@@ -6,6 +6,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 
+import net.foxgenesis.database.DatabaseManager;
+import net.foxgenesis.watame.WatameBot.State;
+import net.foxgenesis.watame.plugin.EventStore;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -13,9 +17,6 @@ import org.slf4j.LoggerFactory;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.foxgenesis.database.DatabaseManager;
-import net.foxgenesis.watame.WatameBot.State;
-import net.foxgenesis.watame.plugin.EventStore;
 
 public class Context implements Closeable {
 	private static final Logger logger = LoggerFactory.getLogger(Context.class);
@@ -29,7 +30,7 @@ public class Context implements Closeable {
 	public Context(@NotNull WatameBot bot, @NotNull JDABuilder builder, @Nullable ExecutorService executor) {
 		this.bot = Objects.requireNonNull(bot);
 		this.executor = Objects.requireNonNullElse(executor, ForkJoinPool.commonPool());
-		this.eventStore = new EventStore(builder);
+		eventStore = new EventStore(builder);
 	}
 
 	@NotNull

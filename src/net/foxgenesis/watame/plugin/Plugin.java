@@ -6,11 +6,19 @@ import java.lang.module.ModuleDescriptor.Version;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+
+import net.foxgenesis.database.AbstractDatabase;
+import net.foxgenesis.property.PropertyInfo;
+import net.foxgenesis.property.PropertyType;
+import net.foxgenesis.util.ResourceUtils;
+import net.foxgenesis.util.resource.ModuleResource;
+import net.foxgenesis.watame.WatameBot;
+import net.foxgenesis.watame.property.PluginProperty;
+import net.foxgenesis.watame.property.PluginPropertyProvider;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
@@ -22,10 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
-import net.foxgenesis.database.IDatabaseManager;
-import net.foxgenesis.util.ResourceUtils;
-import net.foxgenesis.util.resource.ModuleResource;
-import net.foxgenesis.watame.WatameBot;
 
 /**
  * NEED_JAVADOC
@@ -109,8 +113,8 @@ public abstract class Plugin {
 			throw new SeverePluginException("Plugin is not in a named module!");
 
 		// Load plugin properties
+		Properties properties = new Properties();
 		try (InputStream stream = module.getResourceAsStream("/plugin.properties")) {
-			Properties properties = new Properties();
 			properties.load(stream);
 
 			this.name = Objects.requireNonNull(properties.getProperty("name"), "name must not be null!");
@@ -120,18 +124,16 @@ public abstract class Plugin {
 			this.version = Version
 					.parse(Objects.requireNonNull(properties.getProperty("version"), "version must not be null!"));
 			this.description = properties.getProperty("description", "No description provided");
-			this.providesCommands = properties.getProperty("providesCommands", "false").equalsIgnoreCase("true");
+			this.providesCommands = this instanceof CommandProvider;
 			this.needsDatabase = properties.getProperty("needsDatabase", "false").equalsIgnoreCase("true");
 
 			this.configurationPath = CONFIG_PATH.resolve(this.name);
-
-			// Fire on load event
-			onPropertiesLoaded(properties);
 		} catch (IOException e) {
 			throw new SeverePluginException(e, true);
 		}
 
 		// Load configurations if they are present
+		Map<String, Configuration> configs = new HashMap<>();
 		if (c.isAnnotationPresent(PluginConfiguration.class)) {
 			PluginConfiguration[] configDeclares = c.getDeclaredAnnotationsByType(PluginConfiguration.class);
 
@@ -148,14 +150,14 @@ public abstract class Plugin {
 							pluginConfig.outputFile());
 
 					configs.put(id, config);
-
-					// Fire on load event
-					onConfigurationLoaded(id, config);
 				} catch (IOException | ConfigurationException e) {
 					throw new SeverePluginException(e, false);
 				}
 			}
 		}
+
+		// Fire construct finish event
+		onConstruct(properties, configs);
 	}
 
 	// =========================================================================================================
@@ -187,59 +189,94 @@ public abstract class Plugin {
 	}
 
 	/**
-	 * Register all {@link CommandData} that this plugin provides.
-	 * <p>
-	 * <b>** {@code providesCommands} must be set to true in
-	 * {@code plugin.properties}! **</b>
-	 * </p>
+	 * Register a plugin property inside the database.
 	 * 
-	 * @return Returns a non-null {@link Collection} of {@link CommandData} that
-	 *         this {@link Plugin} provides
+	 * @param name       - name of the property
+	 * @param modifiable - if this property can be modified by a user
+	 * @param type       - property storage type
+	 * 
+	 * @return Returns the {@link PropertyInfo} of the registered property
 	 */
-	@NotNull
-	protected Collection<CommandData> getCommands() {
-		return Collections.emptyList();
+	protected final PropertyInfo registerProperty(@NotNull String name, boolean modifiable,
+			@NotNull PropertyType type) {
+		return getPropertyProvider().registerProperty(this, name, modifiable, type);
 	}
 
 	/**
-	 * Register custom databases.
-	 * <p>
-	 * <b>** {@code needsDatabase} must be set to true in {@code plugin.properties}!
-	 * **</b>
-	 * </p>
+	 * Register a plugin property if it doesn't exist and resolve it into a
+	 * {@link PluginProperty}.
 	 * 
-	 * @param manager - database manager
+	 * @param name       - property name
+	 * @param modifiable - if this property can be modified by a user
+	 * @param type       - property storage type
+	 * 
+	 * @return Returns the resolved {@link PluginProperty}
 	 */
-	protected void registerDatabases(IDatabaseManager manager) {}
+	protected final PluginProperty upsertProperty(@NotNull String name, boolean modifiable,
+			@NotNull PropertyType type) {
+		return getPropertyProvider().upsertProperty(this, name, modifiable, type);
+	}
+
+	/**
+	 * Resolve a {@link PropertyInfo} into a usable {@link PluginProperty}.
+	 * 
+	 * @param info - property information
+	 * 
+	 * @return Returns the resolved {@link PluginProperty}
+	 */
+	protected final PluginProperty getProperty(PropertyInfo info) {
+		return getPropertyProvider().getProperty(info);
+	}
+
+	/**
+	 * Resolve the {@link PropertyInfo} by the specified {@code name} into a usable
+	 * {@link PluginProperty}.
+	 * 
+	 * @param name - property name
+	 * 
+	 * @return Returns the resolved {@link PluginProperty}
+	 */
+	protected final PluginProperty getProperty(String name) {
+		return getPropertyProvider().getProperty(this, name);
+	}
+
+	/**
+	 * Get the provider for registering and getting {@link PluginProperty
+	 * PluginProperties}.
+	 * 
+	 * @return Returns the {@link PluginPropertyProvider} used by {@link Plugins} to
+	 *         register plugin properties
+	 */
+	protected final PluginPropertyProvider getPropertyProvider() {
+		return WatameBot.INSTANCE.getPropertyProvider();
+	}
+
+	/**
+	 * Register an {@link AbstractDatabase} that this {@link Plugin} requires.
+	 * 
+	 * @param database - database to register
+	 * 
+	 * @throws IOException Thrown if there was an error while reading the database
+	 *                     setup files
+	 */
+	protected final void registerDatabase(AbstractDatabase database) throws IOException {
+		WatameBot.INSTANCE.getDatabaseManager().register(this, database);
+	}
 
 	// =========================================================================================================
 
 	/**
-	 * Startup method called during construction when the {@code plugin.properties}
-	 * file has been loaded.
+	 * Startup method called after the plugin loader has finished constructing all
+	 * the required data for this {@link Plugin}.
 	 * <p>
 	 * <b>DO NOT BLOCK IN THIS METHOD!</b>
 	 * </p>
 	 * 
-	 * @param properties - properties loaded from {@code plugin.properties}
-	 * 
-	 * @see #onConfigurationLoaded(String, Configuration)
+	 * @param meta    - properties from the {@code plugin.properties} file
+	 * @param configs - configurations loaded from {@link PluginConfiguration}
+	 *                annotations
 	 */
-	protected abstract void onPropertiesLoaded(Properties properties);
-
-	/**
-	 * Startup method called during construction when a {@link Configuration}
-	 * specified by a {@link PluginConfiguration} has been loaded.
-	 * <p>
-	 * <b>DO NOT BLOCK IN THIS METHOD!</b>
-	 * </p>
-	 * 
-	 * @param identifier - the {@link PluginConfiguration#identifier()}
-	 * @param properties - the loaded {@link Configuration}
-	 * 
-	 * @see #onPropertiesLoaded(Properties)
-	 */
-	protected abstract void onConfigurationLoaded(String identifier, Configuration properties);
+	protected abstract void onConstruct(Properties meta, Map<String, Configuration> configs);
 
 	/**
 	 * Startup method called when resources, needed for functionality

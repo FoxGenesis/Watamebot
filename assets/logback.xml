@@ -6,9 +6,10 @@
 	<conversionRule conversionWord="colorize" converterClass="net.foxgenesis.log.CustomHighlight" />
 	<property name="LOG_DIR" value="logs" />
 	<property name="LOG_FILE_NAME" value="logs" />
+	
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>
-			<pattern>%colorize(%d{HH:mm:ss.SSS} %-5level %-12X{watame.status} %marker [%thread] %logger{0} - %msg) %n</pattern>
+			<pattern>%colorize(%d{HH:mm:ss.SSS} %-5level %-12property{watame.status} %marker [%thread] %logger{0} - %msg) %n</pattern>
 		</encoder>
 	</appender>
 	<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -20,7 +21,7 @@
 			<totalSizeCap>100GB</totalSizeCap>
 		</rollingPolicy>
 		<encoder>
-			<pattern>%colorize([%d{HH:mm:ss.SSS}] %-5level {%-9X{watame.status}} %marker [%thread] %logger{0} - %msg) %n</pattern>
+			<pattern>%d{HH:mm:ss.SSS} %-5level %-12property{watame.status} %marker [%thread] %logger{0} - %msg %n</pattern>
 		</encoder>
 	</appender>
 	<appender name="ASYNC_CONSOLE"

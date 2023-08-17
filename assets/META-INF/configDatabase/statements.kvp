@@ -1,4 +1,15 @@
-########## PROPERTIES ############
-property_insert = INSERT INTO `{{database}}`.`{{table}}` (lookup, name, property, type) VALUES (?, ?, ?, 'string') AS v ON DUPLICATE KEY UPDATE `property` = v.property;
-property_get = SELECT * FROM `{{database}}`.`{{table}}` WHERE lookup = ? AND name = ?;
-property_delete = DELETE FROM `{{database}}`.`{{table}}` WHERE lookup = ? AND name = ?;
+########## PROPERTY INFO ############
+property_info_create = INSERT INTO `{{database}}`.`{{table2}}` (category, name, modifiable, type) VALUES (?, ?, ?, ?);
+property_info_read_by_id = SELECT * FROM `{{database}}`.`{{table2}}` WHERE `id` = ?;
+property_info_read = SELECT * FROM `{{database}}`.`{{table2}}` WHERE `category` = ? AND `name` = ?;
+property_info_delete = DELETE FROM `{{database}}`.`{{table2}}` WHERE `category` = ? AND `name` = ?;
+property_info_exists = SELECT 1 FROM `{{database}}`.`{{table2}}` WHERE `category` = ? AND `name` = ?;
+property_info_get_all = SELECT * FROM `{{database}}`.`{{table2}}`;
+
+########## CRUD ##########
+property_insert_update = INSERT INTO `{{database}}`.`{{table}}` (lookup, property_id, property) VALUES (?, ?, ?) AS v ON DUPLICATE KEY UPDATE `property` = v.property;
+property_create = INSERT INTO `{{database}}`.`{{table}}` (lookup, property_id, property) VALUES (?, ?, ?);
+property_read = SELECT * FROM `{{database}}`.`{{table}}` WHERE `lookup` = ? AND `property_id` = ?;
+property_update = UPDATE `{{database}}`.`{{table}}` SET `property` = ? WHERE `lookup` = ? AND `property_id` = ?;
+property_delete = DELETE FROM `{{database}}`.`{{table}}` WHERE `lookup` = ? AND `property_id` = ?;
+property_exists = SELECT 1 FROM `{{database}}`.`{{table}}` WHERE `lookup` = ? AND `property_id` = ?;

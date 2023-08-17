@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -14,19 +15,20 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
 
+import net.foxgenesis.util.CompletableFutureUtils;
+import net.foxgenesis.util.MethodTimer;
+import net.foxgenesis.watame.plugin.Plugin;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.dv8tion.jda.internal.utils.IOUtil;
-import net.foxgenesis.util.CompletableFutureUtils;
-import net.foxgenesis.util.MethodTimer;
-import net.foxgenesis.watame.plugin.Plugin;
 
 /**
  * NEED_JAVADOC
- * 
+ *
  * @author Ashley
  *
  */
@@ -49,7 +51,7 @@ public class DatabaseManager implements IDatabaseManager, AutoCloseable {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @param name
 	 */
 	public DatabaseManager(@NotNull String name) {
@@ -86,9 +88,9 @@ public class DatabaseManager implements IDatabaseManager, AutoCloseable {
 
 	/**
 	 * NEED_JAVADOC
-	 * 
+	 *
 	 * @param owner
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean unload(Plugin owner) {
@@ -117,7 +119,7 @@ public class DatabaseManager implements IDatabaseManager, AutoCloseable {
 	}
 
 	public synchronized CompletableFuture<Void> start(@NotNull AConnectionProvider provider, Executor executor) {
-		final Executor ex = executor == null? ForkJoinPool.commonPool() : executor;
+		final Executor ex = executor == null ? ForkJoinPool.commonPool() : executor;
 		long start = System.nanoTime();
 		return CompletableFuture.runAsync(() -> {
 			this.provider = Objects.requireNonNull(provider);
@@ -139,7 +141,7 @@ public class DatabaseManager implements IDatabaseManager, AutoCloseable {
 					return null;
 				}, error -> logger.error("Error while setting up database tables", error));
 			}
-		}, ex).thenComposeAsync((v) -> {
+		}, ex).thenComposeAsync(v -> {
 			synchronized (databases) {
 				return CompletableFutureUtils.allOf(databases.values().stream().flatMap(Set::stream)
 						.map(database -> CompletableFuture.runAsync(() -> {
@@ -153,7 +155,7 @@ public class DatabaseManager implements IDatabaseManager, AutoCloseable {
 							return null;
 						})));
 			}
-		}, ex).thenComposeAsync((v) -> {
+		}, ex).thenComposeAsync(v -> {
 			logger.debug("Calling database on ready");
 			ready = true;
 			synchronized (databases) {
@@ -218,7 +220,9 @@ public class DatabaseManager implements IDatabaseManager, AutoCloseable {
 
 	@Override
 	public void close() throws Exception {
-		databases.values().forEach(s -> s.forEach(IOUtil::silentClose));
+		synchronized (databases) {
+			databases.values().forEach(s -> s.forEach(IOUtil::silentClose));
+		}
 		if (provider != null)
 			provider.close();
 	}
@@ -230,8 +234,7 @@ public class DatabaseManager implements IDatabaseManager, AutoCloseable {
 			for (Set<AbstractDatabase> databases : this.databases.values())
 				for (AbstractDatabase database : databases)
 					try {
-						for (String line : database.getSetupLines())
-							lines.add(line);
+						Collections.addAll(lines, database.getSetupLines());
 					} catch (IOException e) {
 						logger.error("Error while reading setup lines from " + database.getName(), e);
 					}

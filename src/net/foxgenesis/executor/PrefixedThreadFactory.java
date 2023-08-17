@@ -11,7 +11,7 @@ public class PrefixedThreadFactory implements ThreadFactory {
 
 	@NotNull
 	private final String prefix;
-	
+
 	private final boolean daemon;
 
 	public PrefixedThreadFactory(@NotNull String prefix) { this(prefix, true); }

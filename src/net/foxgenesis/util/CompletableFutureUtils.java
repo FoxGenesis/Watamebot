@@ -8,7 +8,7 @@ public final class CompletableFutureUtils {
 	public static CompletableFuture<Void> allOf(Collection<CompletableFuture<?>> coll) {
 		return allOf(coll.stream());
 	}
-	
+
 	public static CompletableFuture<Void> allOf(Stream<CompletableFuture<?>> stream) {
 		return CompletableFuture.allOf(stream.toArray(CompletableFuture[]::new));
 	}

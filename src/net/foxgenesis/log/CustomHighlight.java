@@ -10,19 +10,13 @@ public class CustomHighlight extends ForegroundCompositeConverterBase<ILoggingEv
 	@Override
 	protected String getForegroundColorCode(ILoggingEvent event) {
 		Level level = event.getLevel();
-		switch (level.toInt()) {
-		case Level.ERROR_INT:
-			return "38;5;196";
-		case Level.WARN_INT:
-			return "38;5;226";
-		case Level.INFO_INT:
-			return "38;5;255";
-		case Level.DEBUG_INT:
-			return "36";
-		case Level.TRACE_INT:
-			return "38;5;117";
-		default:
-			return ANSIConstants.DEFAULT_FG;
-		}
+		return switch (level.toInt()) {
+			case Level.ERROR_INT -> "38;5;196";
+			case Level.WARN_INT -> "38;5;226";
+			case Level.INFO_INT -> "38;5;255";
+			case Level.DEBUG_INT -> "36";
+			case Level.TRACE_INT -> "38;5;117";
+			default -> ANSIConstants.DEFAULT_FG;
+		};
 	}
 }

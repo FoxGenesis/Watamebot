@@ -5,17 +5,17 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import net.foxgenesis.database.AConnectionProvider;
+
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-
-import net.foxgenesis.database.AConnectionProvider;
 
 public class MySQLConnectionProvider extends AConnectionProvider {
 
 	private final HikariDataSource source;
 
 	public MySQLConnectionProvider(Properties properties) throws ConnectException {
-		super(properties, "MySQL Connection Provider");
+		super("MySQL", properties);
 
 		properties.putIfAbsent("dataSource.cachePrepStmts", true);
 		properties.putIfAbsent("dataSource.prepStmtCacheSize", 250);

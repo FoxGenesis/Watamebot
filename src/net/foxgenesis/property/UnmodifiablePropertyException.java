@@ -1,14 +1,18 @@
 package net.foxgenesis.property;
 
-public class UnmodifiablePropertyException extends UnsupportedOperationException {
-	private static final long serialVersionUID = 6687883111943371434L;
+public class UnmodifiablePropertyException extends PropertyException {
 
-	private final ImmutableProperty<?, ?, ?> property;
+	private static final long serialVersionUID = 4796449383013631106L;
 
-	public UnmodifiablePropertyException(ImmutableProperty<?, ?, ?> property, String message) {
-		super(message);
-		this.property = property;
+	public UnmodifiablePropertyException(String msg, Throwable t) {
+		super(msg, t);
 	}
 
-	ImmutableProperty<?, ?, ?> getProperty() { return property; }
+	public UnmodifiablePropertyException(String msg) {
+		super(msg);
+	}
+	
+	public UnmodifiablePropertyException(Throwable t) {
+		super(t);
+	}
 }

@@ -4,7 +4,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+
+import net.foxgenesis.watame.WatameBot;
+import net.foxgenesis.watame.plugin.CommandProvider;
+import net.foxgenesis.watame.plugin.IEventStore;
+import net.foxgenesis.watame.plugin.Plugin;
 
 import org.apache.commons.configuration2.Configuration;
 
@@ -16,25 +22,24 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
-import net.foxgenesis.watame.WatameBot;
-import net.foxgenesis.watame.plugin.IEventStore;
-import net.foxgenesis.watame.plugin.Plugin;
 
-public class IntegratedCommands extends Plugin {
+public class IntegratedCommands extends Plugin implements CommandProvider {
 	@Override
-	protected void onPropertiesLoaded(Properties properties) {}
-
-	@Override
-	protected void onConfigurationLoaded(String identifier, Configuration properties) {}
+	protected void onConstruct(Properties meta, Map<String, Configuration> configs) {}
 
 	@Override
 	public void preInit() {}
 
 	@Override
-	public void init(IEventStore builder) { builder.registerListeners(this, new ConfigCommand(), new PingCommand()); }
+	public void init(IEventStore builder) {
+
+		builder.registerListeners(this, new ConfigCommand(), new PingCommand());
+	}
 
 	@Override
-	public void postInit(WatameBot bot) {}
+	public void postInit(WatameBot bot) {
+
+	}
 
 	@Override
 	public void onReady(WatameBot bot) {}

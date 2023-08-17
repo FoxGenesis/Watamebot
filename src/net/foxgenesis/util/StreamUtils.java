@@ -5,14 +5,14 @@ import java.util.stream.Stream;
 
 /**
  * Utility class that contains helpful methods for {@link Stream}.
- * 
+ *
  * @author Ashley
  *
  */
 public final class StreamUtils {
 	/**
 	 * Returns a possibly parallel stream if the amount of items exceed 1024.
-	 * 
+	 *
 	 * @param <T> - stream type
 	 * @param col - collection to get stream for
 	 * @return Returns a {@link Stream} that will be <i>possibly</i> parallel if
@@ -26,7 +26,7 @@ public final class StreamUtils {
 
 	/**
 	 * Returns a possibly parallel stream if the amount of items exceed 1024.
-	 * 
+	 *
 	 * @param <T>    - stream type
 	 * @param stream - stream to use
 	 * @return Returns a {@link Stream} that will be <i>possibly</i> parallel if

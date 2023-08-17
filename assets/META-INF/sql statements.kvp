@@ -1,9 +1,0 @@
-########## GUILD DATA #########
-guild_data_insert = INSERT INTO `WatameBot`.`Guild` (GuildID, GuildProperties) VALUES (?, '{}');
-guild_data_get = SELECT * FROM `WatameBot`.`Guild`;
-guild_data_get_id = SELECT * FROM `WatameBot`.`Guild` WHERE GuildID = ?;
-
-########## GUILD JSON DATA #########
-guild_json_select = SELECT JSON_EXTRACT(GuildProperties, ?) FROM `WatameBot`.`Guild` WHERE GuildID = ?;
-guild_json_update = UPDATE `WatameBot`.`Guild` SET GuildProperties = JSON_SET(GuildProperties, ?, ?) WHERE GuildID = ?;
-guild_json_remove = UPDATE `WatameBot`.`Guild` SET GuildProperties = JSON_REMOVE(GuildProperties, ?) WHERE GuildID = ?;

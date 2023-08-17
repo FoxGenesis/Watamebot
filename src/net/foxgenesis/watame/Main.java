@@ -5,19 +5,19 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.concurrent.ForkJoinPool;
 
+import net.foxgenesis.util.SingleInstanceUtil;
+
 import org.apache.commons.configuration2.ImmutableConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.fusesource.jansi.AnsiConsole;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.core.joran.spi.JoranException;
 import ch.qos.logback.core.util.StatusPrinter;
-import net.foxgenesis.util.SingleInstanceUtil;
 
 /**
  * Program main class.
@@ -34,11 +34,11 @@ public class Main {
 	 * Program entry point.
 	 *
 	 * @param args - program arguments
-	 * 
+	 *
 	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {
-		MDC.put("watame.status", "START-UP");
+		System.setProperty("watame.status", "START-UP");
 
 		Path configPath = Path.of("config/");
 		String logLevel = null;
