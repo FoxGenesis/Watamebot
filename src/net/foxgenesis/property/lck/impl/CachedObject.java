@@ -21,10 +21,8 @@ public class CachedObject<T> {
 
 	@Nullable
 	public synchronized T get() {
-		long currentTime = System.currentTimeMillis();
-		if (currentTime - lastCache.getAndUpdate(c -> currentTime) > cacheTime) {
-			return obj.updateAndGet(c -> updateFunction.get());
-		}
+		if (System.currentTimeMillis() - lastCache.get() > cacheTime)
+			return getNew();
 		return obj.get();
 	}
 
