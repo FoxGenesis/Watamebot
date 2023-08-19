@@ -141,6 +141,27 @@ public class LCKConfigurationDatabase extends AbstractDatabase implements LCKPro
 	}
 
 	@Override
+	public boolean removePropertyInfo(@NotNull String category, @NotNull String key) {
+		validate(category, key);
+		logger.debug("Deleting property: [{}] {}", category, key);
+		try {
+			return this.mapStatement("property_info_delete", statement -> {
+				statement.setString(1, category);
+				statement.setString(2, key);
+
+				return statement.executeUpdate() > 0;
+			}).orElse(false);
+		} catch (SQLException e) {
+			throw new PropertyException(e);
+		}
+	}
+
+	@Override
+	public boolean removePropertyInfo(@NotNull PropertyInfo info) {
+		return removePropertyInfo(info.category(), info.name());
+	}
+
+	@Override
 	public PropertyInfo getPropertyByID(int id) throws PropertyException, NoSuchElementException {
 		if (id < 0)
 			throw new PropertyException("Invalid property id");

@@ -47,6 +47,27 @@ public interface PropertyResolver<L, C, K> {
 			throws PropertyException, IllegalArgumentException;
 
 	/**
+	 * Remove a property inside the configuration.
+	 * 
+	 * @param category - category of the property
+	 * @param key      - property key
+	 * 
+	 * @return Returns {@code true} if the property was deleted. {@code false}
+	 *         otherwise
+	 */
+	boolean removePropertyInfo(@NotNull C category, @NotNull K key);
+
+	/**
+	 * Remove a property inside the configuration.
+	 * 
+	 * @param info - property information
+	 * 
+	 * @return Returns {@code true} if the property was deleted. {@code false}
+	 *         otherwise
+	 */
+	boolean removePropertyInfo(@NotNull PropertyInfo info);
+
+	/**
 	 * Check if the specified property exists inside the configuration.
 	 *
 	 * @param category - category of the property
