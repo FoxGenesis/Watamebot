@@ -350,9 +350,9 @@ public class WatameBot {
 		logger.debug("Creating JDA");
 		JDABuilder builder = JDABuilder
 				.create(token, GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MODERATION,
-						GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT)
-				.disableCache(CacheFlag.ACTIVITY, CacheFlag.VOICE_STATE, CacheFlag.EMOJI, CacheFlag.STICKER,
-						CacheFlag.CLIENT_STATUS, CacheFlag.ONLINE_STATUS, CacheFlag.SCHEDULED_EVENTS)
+						GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_VOICE_STATES)
+				.disableCache(CacheFlag.ACTIVITY, CacheFlag.EMOJI, CacheFlag.STICKER, CacheFlag.CLIENT_STATUS,
+						CacheFlag.ONLINE_STATUS, CacheFlag.SCHEDULED_EVENTS)
 				.setChunkingFilter(ChunkingFilter.ALL).setAutoReconnect(true)
 				.setActivity(Activity.playing(config.getString("WatameBot.Status.startup", "Initalizing...")))
 				.setMemberCachePolicy(MemberCachePolicy.ALL).setStatus(OnlineStatus.DO_NOT_DISTURB)
