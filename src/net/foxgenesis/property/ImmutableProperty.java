@@ -7,16 +7,35 @@ import java.util.function.Supplier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface ImutableProperty<L, M extends PropertyMapping> {
+public interface ImmutableProperty<L, M extends PropertyMapping> {
 	/**
 	 * Get the current value of this property.
 	 *
 	 * @param lookup - property lookup
 	 *
-	 * @return Returns a {@link PropertyMapping} containing the raw data retrieved
+	 * @return Returns an {@link Optional} {@link PropertyMapping} containing the
+	 *         raw data retrieved
 	 */
 	@NotNull
 	Optional<? extends M> get(@NotNull L lookup);
+
+	/**
+	 * Get the current value of this property if present. Otherwise get the current
+	 * value of the specified {@code fallback}.
+	 * 
+	 * @param lookup   - property lookup
+	 * @param fallback - fallback property
+	 * 
+	 * @return Returns a {@link Optional} {@link PropertyMapping} containing the raw
+	 *         data retrieved
+	 */
+	@NotNull
+	default Optional<? extends M> get(@NotNull L lookup, @NotNull ImmutableProperty<L, M> fallback) {
+		Optional<? extends M> r = get(lookup);
+		if (r.isPresent())
+			return r;
+		return fallback.get(lookup);
+	}
 
 	/**
 	 * Get the current value of this property and map it with the specified
@@ -68,8 +87,7 @@ public interface ImutableProperty<L, M extends PropertyMapping> {
 	 *         empty
 	 */
 	@Nullable
-	default <U> U get(@NotNull L lookup, @Nullable Supplier<U> defaultValue,
-			@NotNull Function<? super M, U> mapper) {
+	default <U> U get(@NotNull L lookup, @Nullable Supplier<U> defaultValue, @NotNull Function<? super M, U> mapper) {
 		return get(lookup).map(mapper).orElseGet(defaultValue != null ? defaultValue : () -> null);
 	}
 

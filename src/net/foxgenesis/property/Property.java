@@ -8,7 +8,7 @@ import java.nio.ByteBuffer;
 import org.apache.commons.lang3.SerializationUtils;
 import org.jetbrains.annotations.NotNull;
 
-public interface Property<L, M extends PropertyMapping> extends ImutableProperty<L, M> {
+public interface Property<L, M extends PropertyMapping> extends ImmutableProperty<L, M> {
 	/**
 	 * Set a {@link Serializable} object in the configuration.
 	 *
