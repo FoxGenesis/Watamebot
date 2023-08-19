@@ -28,12 +28,11 @@ public class CachedObject<T> {
 
 	@Nullable
 	public synchronized T getNew() {
-		lastCache.set(System.currentTimeMillis());
-		return obj.updateAndGet(c -> updateFunction.get());
+		return set(updateFunction.get());
 	}
 
 	@Nullable
-	public synchronized T update(T newValue) {
+	public synchronized T set(T newValue) {
 		lastCache.set(System.currentTimeMillis());
 		obj.set(newValue);
 		return newValue;

@@ -32,7 +32,7 @@ public class CachedPluginProperty extends PluginPropertyImpl {
 		checkUserInput(isUserInput);
 		init(lookup);
 		if (super.set(lookup, data, isUserInput)) {
-			cache.get(lookup.getIdLong()).update(createMapping(lookup, data, getInfo().type()));
+			cache.get(lookup.getIdLong()).set(createMapping(lookup, data, getInfo().type()));
 			return true;
 		}
 		return false;
@@ -42,7 +42,7 @@ public class CachedPluginProperty extends PluginPropertyImpl {
 	public boolean remove(Guild lookup, boolean isUserInput) {
 		checkUserInput(isUserInput);
 		if(super.remove(lookup, isUserInput)) {
-			cache.get(lookup.getIdLong()).update(null);
+			cache.get(lookup.getIdLong()).set(null);
 			return true;
 		}
 		return false;

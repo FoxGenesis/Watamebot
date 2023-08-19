@@ -33,7 +33,7 @@ public class CachedLCKProperty extends LCKPropertyImpl {
 		checkUserInput(isUserInput);
 		init(lookup);
 		if (super.set(lookup, data, isUserInput)) {
-			cache.get(lookup).update(Optional.ofNullable(createMapping(lookup, data)));
+			cache.get(lookup).set(Optional.ofNullable(createMapping(lookup, data)));
 			return true;
 		}
 		return false;
