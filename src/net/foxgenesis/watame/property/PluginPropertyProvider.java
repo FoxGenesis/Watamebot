@@ -22,8 +22,7 @@ public interface PluginPropertyProvider extends PropertyProvider<Plugin, String,
 	 *         {@link PropertyInfo}
 	 */
 	@Override
-	PluginProperty upsertProperty(Plugin plugin, String key, boolean modifiable,
-			PropertyType type);
+	PluginProperty upsertProperty(Plugin plugin, String key, boolean modifiable, PropertyType type);
 
 	/**
 	 * Get a {@link PluginProperty} based on the specified property information
