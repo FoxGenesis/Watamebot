@@ -2,6 +2,7 @@ package net.foxgenesis.watame;
 
 import java.io.IOException;
 import java.net.ConnectException;
+import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.Objects;
 import java.util.Properties;
@@ -64,6 +65,11 @@ public class WatameBot {
 	public static final WatameBot INSTANCE;
 
 	/**
+	 * Path pointing to the configuration directory
+	 */
+	public static final Path CONFIG_PATH;
+
+	/**
 	 * Settings that were parsed at startup
 	 */
 	private static final WatameBotSettings settings;
@@ -86,7 +92,10 @@ public class WatameBot {
 		RestAction.setDefaultFailure(
 				err -> pushbullet.pushPBMessage("An Error Occurred in Watame", ExceptionUtils.getStackTrace(err)));
 
-		// initialize the main bot object with token
+		// Initialize our configuration path
+		CONFIG_PATH = settings.configurationPath;
+
+		// Initialize the main bot object with token
 		INSTANCE = new WatameBot(settings.getToken());
 	}
 
