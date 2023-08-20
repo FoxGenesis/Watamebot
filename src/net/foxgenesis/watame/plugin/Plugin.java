@@ -3,17 +3,17 @@ package net.foxgenesis.watame.plugin;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.module.ModuleDescriptor.Version;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.function.BiConsumer;
 
 import net.foxgenesis.database.AbstractDatabase;
 import net.foxgenesis.property.PropertyInfo;
 import net.foxgenesis.property.PropertyType;
+import net.foxgenesis.util.resource.ConfigType;
 import net.foxgenesis.util.resource.ModuleResource;
 import net.foxgenesis.util.resource.ResourceUtils;
 import net.foxgenesis.watame.WatameBot;
@@ -38,24 +38,13 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData;
  *
  */
 public abstract class Plugin {
-	@NotNull
-	private static final Path CONFIG_PATH = Paths.get("config");
-
-	static {
-		try {
-			Files.createDirectories(CONFIG_PATH);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	// =========================================================================================================
 
 	/**
 	 * Plugin logger
 	 */
 	@NotNull
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
+
 	/**
 	 * Plugin configurations
 	 */
@@ -73,16 +62,19 @@ public abstract class Plugin {
 	 */
 	@NotNull
 	public final String name;
+
 	/**
 	 * Friendly identifier of the plugin.
 	 */
 	@NotNull
 	public final String friendlyName;
+
 	/**
 	 * Description of the plugin.
 	 */
 	@NotNull
 	public final String description;
+
 	/**
 	 * Version of the plugin.
 	 */
@@ -93,6 +85,7 @@ public abstract class Plugin {
 	 * Does this plugin provide commands.
 	 */
 	public final boolean providesCommands;
+
 	/**
 	 * Does this plugin require access to the database.
 	 */
@@ -127,7 +120,7 @@ public abstract class Plugin {
 			this.providesCommands = this instanceof CommandProvider;
 			this.needsDatabase = properties.getProperty("needsDatabase", "false").equalsIgnoreCase("true");
 
-			this.configurationPath = CONFIG_PATH.resolve(this.name);
+			this.configurationPath = WatameBot.CONFIG_PATH.resolve(this.name);
 		} catch (IOException e) {
 			throw new SeverePluginException(e, true);
 		}
@@ -144,9 +137,12 @@ public abstract class Plugin {
 					continue;
 
 				try {
-					logger.debug("Loading configuration for {}", pluginConfig.outputFile());
-					PropertiesConfiguration config = ResourceUtils.loadProperties(
-							new ModuleResource(module, pluginConfig.defaultFile()), this.configurationPath,
+					ConfigType type = pluginConfig.type();
+					ModuleResource defaults = new ModuleResource(module, pluginConfig.defaultFile());
+
+					// Parse the configuration
+					logger.debug("Loading {} configuration for {}", type.name(), pluginConfig.outputFile());
+					Configuration config = ResourceUtils.loadConfiguration(type, defaults, this.configurationPath,
 							pluginConfig.outputFile());
 
 					configs.put(id, config);
@@ -161,6 +157,16 @@ public abstract class Plugin {
 	}
 
 	// =========================================================================================================
+
+	/**
+	 * Loop through all loaded {@link Configuration} files.
+	 * 
+	 * @param consumer - {@link PluginConfiguration#identifier()} and the
+	 *                 constructed {@link Configuration}
+	 */
+	protected void forEachConfiguration(BiConsumer<String, Configuration> consumer) {
+		configs.entrySet().forEach(e -> consumer.accept(e.getKey(), e.getValue()));
+	}
 
 	/**
 	 * Check if a configuration file with the specified {@code identifier} exists.
@@ -184,7 +190,7 @@ public abstract class Plugin {
 	 *         {@code identifier}
 	 */
 	@Nullable
-	protected PropertiesConfiguration getConfiguration(String identifier) {
+	protected Configuration getConfiguration(String identifier) {
 		return configs.getOrDefault(identifier, null);
 	}
 
