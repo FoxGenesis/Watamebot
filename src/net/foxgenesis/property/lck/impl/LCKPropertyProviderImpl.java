@@ -3,10 +3,9 @@ package net.foxgenesis.property.lck.impl;
 import java.util.List;
 import java.util.Objects;
 
-import net.foxgenesis.property.Property;
 import net.foxgenesis.property.PropertyInfo;
-import net.foxgenesis.property.PropertyMapping;
 import net.foxgenesis.property.PropertyType;
+import net.foxgenesis.property.lck.LCKProperty;
 import net.foxgenesis.property.lck.LCKPropertyProvider;
 import net.foxgenesis.property.lck.LCKPropertyResolver;
 
@@ -26,17 +25,17 @@ public class LCKPropertyProviderImpl implements LCKPropertyProvider {
 	}
 
 	@Override
-	public Property<Long, PropertyMapping> getPropertyByID(int id) {
+	public LCKProperty getPropertyByID(int id) {
 		return getProperty(database.getPropertyByID(id));
 	}
 
 	@Override
-	public LCKPropertyImpl getProperty(String category, String key) {
+	public LCKProperty getProperty(String category, String key) {
 		return getProperty(database.getPropertyInfo(category, key));
 	}
 
 	@Override
-	public LCKPropertyImpl getProperty(PropertyInfo info) {
+	public LCKProperty getProperty(PropertyInfo info) {
 		return new LCKPropertyImpl(info, database);
 	}
 

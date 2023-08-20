@@ -17,7 +17,7 @@ public interface ImmutableProperty<L, M extends PropertyMapping> {
 	 *         raw data retrieved
 	 */
 	@NotNull
-	Optional<? extends M> get(@NotNull L lookup);
+	Optional<M> get(@NotNull L lookup);
 
 	/**
 	 * Get the current value of this property if present. Otherwise get the current
@@ -30,8 +30,8 @@ public interface ImmutableProperty<L, M extends PropertyMapping> {
 	 *         data retrieved
 	 */
 	@NotNull
-	default Optional<? extends M> get(@NotNull L lookup, @NotNull ImmutableProperty<L, M> fallback) {
-		Optional<? extends M> r = get(lookup);
+	default Optional<M> getOr(@NotNull L lookup, @NotNull ImmutableProperty<L, M> fallback) {
+		Optional<M> r = get(lookup);
 		if (r.isPresent())
 			return r;
 		return fallback.get(lookup);

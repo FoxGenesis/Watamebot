@@ -11,10 +11,10 @@ import java.util.Optional;
 import net.foxgenesis.property.Property;
 import net.foxgenesis.property.PropertyException;
 import net.foxgenesis.property.PropertyInfo;
-import net.foxgenesis.property.PropertyMapping;
+import net.foxgenesis.property.lck.LCKProperty;
 import net.foxgenesis.property.lck.LCKPropertyResolver;
 
-public class LCKPropertyImpl implements Property<Long, PropertyMapping> {
+public class LCKPropertyImpl implements LCKProperty {
 	private final PropertyInfo info;
 
 	protected final LCKPropertyResolver resolver;
