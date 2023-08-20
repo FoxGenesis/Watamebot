@@ -18,6 +18,7 @@ import net.foxgenesis.util.MethodTimer;
 import net.foxgenesis.watame.Context;
 import net.foxgenesis.watame.WatameBot;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -127,7 +128,8 @@ public class PluginHandler<@NotNull T extends Plugin> implements Closeable {
 	 * Pre-Initialize all plugins.
 	 */
 	public void preInit() {
-		plugins.values().forEach(Plugin::preInit);
+		forEach(Plugin::preInit);
+//		forEachPlugin(Plugin::preInit, null).join();
 	}
 
 	/**
@@ -135,7 +137,8 @@ public class PluginHandler<@NotNull T extends Plugin> implements Closeable {
 	 */
 	@NotNull
 	public void init() {
-		plugins.values().forEach(plugin -> plugin.init(context.getEventRegister()));
+		forEach(plugin -> plugin.init(context.getEventRegister()));
+//		forEachPlugin(plugin -> plugin.init(context.getEventRegister()), null).join();
 	}
 
 	/**
@@ -146,7 +149,8 @@ public class PluginHandler<@NotNull T extends Plugin> implements Closeable {
 	 */
 	@NotNull
 	public void postInit(WatameBot watamebot) {
-		plugins.values().forEach(plugin -> plugin.postInit(watamebot));
+		forEach(plugin -> plugin.postInit(watamebot));
+//		forEachPlugin(plugin -> plugin.postInit(watamebot), null).join();
 	}
 
 	/**
@@ -199,6 +203,22 @@ public class PluginHandler<@NotNull T extends Plugin> implements Closeable {
 					pluginError(plugin, error);
 					return null;
 				}, pluginExecutor)));
+	}
+
+	private void forEach(Consumer<? super T> task) {
+		forEach(null, task);
+	}
+
+	private void forEach(@Nullable Predicate<T> filter, Consumer<? super T> task) {
+		for (T t : plugins.values()) {
+			if (!(filter == null || filter.test(t)))
+				continue;
+			try {
+				task.accept(t);
+			} catch (Exception e) {
+				pluginError(t, e);
+			}
+		}
 	}
 
 	/**
