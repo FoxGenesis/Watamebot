@@ -21,6 +21,8 @@ module watamebot {
 	requires ch.qos.logback.classic;
 	requires java.sql.rowset;
 	requires java.sql;
+	requires com.fasterxml.jackson.databind;
+	requires okhttp3;
 
 	exports net.foxgenesis.config;
 	exports net.foxgenesis.database;

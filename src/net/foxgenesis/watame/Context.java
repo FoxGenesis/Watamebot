@@ -5,6 +5,7 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 
 import net.foxgenesis.database.DatabaseManager;
 import net.foxgenesis.watame.WatameBot.State;
@@ -27,9 +28,13 @@ public class Context implements Closeable {
 
 	private final ExecutorService executor;
 
-	public Context(@NotNull WatameBot bot, @NotNull JDABuilder builder, @Nullable ExecutorService executor) {
+	private final BiConsumer<String, String> pbConsumer;
+
+	public Context(@NotNull WatameBot bot, @NotNull JDABuilder builder, @Nullable ExecutorService executor,
+			@NotNull BiConsumer<String, String> pbConsumer) {
 		this.bot = Objects.requireNonNull(bot);
 		this.executor = Objects.requireNonNullElse(executor, ForkJoinPool.commonPool());
+		this.pbConsumer = Objects.requireNonNull(pbConsumer);
 		eventStore = new EventStore(builder);
 	}
 
@@ -46,6 +51,10 @@ public class Context implements Closeable {
 	@NotNull
 	public ExecutorService getAsynchronousExecutor() {
 		return executor;
+	}
+
+	public void pushNotification(String title, String message) {
+		pbConsumer.accept(title, message);
 	}
 
 	@Nullable

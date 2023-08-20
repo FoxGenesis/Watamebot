@@ -256,17 +256,23 @@ public class PluginHandler<@NotNull T extends Plugin> implements Closeable {
 		if (error instanceof CompletionException && error.getCause() instanceof SeverePluginException)
 			temp = error.getCause();
 
+		String header = "";
 		if (temp instanceof SeverePluginException) {
 			SeverePluginException pluginException = (SeverePluginException) temp;
 
 			Marker m = MarkerFactory.getMarker(pluginException.isFatal() ? "FATAL" : "SEVERE");
 
-			logger.error(m, "Exception in " + plugin.friendlyName, pluginException);
+			header = "Exception in " + plugin.friendlyName;
+			logger.error(m, header, pluginException);
 
 			if (pluginException.isFatal())
 				unloadPlugin(plugin);
-		} else
-			logger.error("Error in " + plugin.friendlyName, error);
+		} else {
+			header = "Error in " + plugin.friendlyName;
+			logger.error(header, temp);
+		}
+
+		context.pushNotification("An Error Occurred in Watame", header + "\n\n" + ExceptionUtils.getStackTrace(temp));
 	}
 
 	/**

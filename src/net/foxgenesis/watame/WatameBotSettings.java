@@ -25,11 +25,13 @@ public class WatameBotSettings {
 	 */
 	private final String token;
 
+	private final String pbToken;
+
 	WatameBotSettings(@NotNull Path configPath) throws Exception {
-		this(configPath, null);
+		this(configPath, null, null);
 	}
 
-	WatameBotSettings(@NotNull Path configPath, @Nullable Path tokenFile2) throws Exception {
+	WatameBotSettings(@NotNull Path configPath, @Nullable Path tokenFile2, String pbToken2) throws Exception {
 		configurationPath = Objects.requireNonNull(configPath);
 
 		if (!isValidDirectory(configPath))
@@ -47,6 +49,9 @@ public class WatameBotSettings {
 
 		// Read token
 		token = readToken(tokenFile);
+
+		String tmp = config.getString("PushBullet.token", pbToken2);
+		pbToken = !(tmp == null || tmp.isBlank()) ? tmp.trim() : null;
 	}
 
 	public ImmutableConfiguration getConfiguration() {
@@ -55,6 +60,10 @@ public class WatameBotSettings {
 
 	String getToken() {
 		return token;
+	}
+
+	String getPBToken() {
+		return pbToken;
 	}
 
 	/**

@@ -26,6 +26,7 @@ import net.foxgenesis.watame.property.PluginPropertyProvider;
 import net.foxgenesis.watame.property.impl.PluginPropertyProviderImpl;
 
 import org.apache.commons.configuration2.ImmutableConfiguration;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +40,7 @@ import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.exceptions.InvalidTokenException;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
@@ -71,9 +73,18 @@ public class WatameBot {
 	 */
 	private static final ImmutableConfiguration config;
 
+	/**
+	 * Push notifications helper
+	 */
+	private static final PushBullet pushbullet;
+
 	static {
 		settings = Main.getSettings();
 		config = settings.getConfiguration();
+
+		pushbullet = new PushBullet(settings.getPBToken());
+		RestAction.setDefaultFailure(
+				err -> pushbullet.pushPBMessage("An Error Occurred in Watame", ExceptionUtils.getStackTrace(err)));
 
 		// initialize the main bot object with token
 		INSTANCE = new WatameBot(settings.getToken());
@@ -166,42 +177,47 @@ public class WatameBot {
 		builder = createJDA(token, null);
 
 		// Set our instance context
-		context = new Context(this, builder, null);
+		context = new Context(this, builder, null, pushbullet::pushPBMessage);
 
 		// Create our plugin handler
 		pluginHandler = new PluginHandler<>(context, getClass().getModule().getLayer(), Plugin.class);
 	}
 
 	void start() throws Exception {
-		long start = System.nanoTime();
+		try {
+			long start = System.nanoTime();
 
-		// Update our state to constructing
-		updateState(State.CONSTRUCTING);
-		logger.info("Starting");
-		construct();
+			// Update our state to constructing
+			updateState(State.CONSTRUCTING);
+			logger.info("Starting");
+			construct();
 
-		// Set our state to pre-init
-		updateState(State.PRE_INIT);
-		logger.info("Calling pre-initialization");
-		preInit();
+			// Set our state to pre-init
+			updateState(State.PRE_INIT);
+			logger.info("Calling pre-initialization");
+			preInit();
 
-		// Set our state to init
-		updateState(State.INIT);
-		logger.info("Calling initialization");
-		init();
+			// Set our state to init
+			updateState(State.INIT);
+			logger.info("Calling initialization");
+			init();
 
-		// Set our state to post-init
-		updateState(State.POST_INIT);
-		logger.info("Calling post-initialization");
-		postInit();
+			// Set our state to post-init
+			updateState(State.POST_INIT);
+			logger.info("Calling post-initialization");
+			postInit();
 
-		long end = System.nanoTime();
+			long end = System.nanoTime();
 
-		// Set our state to running
-		updateState(State.RUNNING);
-		logger.info("Startup completed in {} seconds", MethodTimer.formatToSeconds(end - start));
-		logger.info("Calling on ready");
-		ready();
+			// Set our state to running
+			updateState(State.RUNNING);
+			logger.info("Startup completed in {} seconds", MethodTimer.formatToSeconds(end - start));
+			logger.info("Calling on ready");
+			ready();
+		} catch (Exception e) {
+			pushbullet.pushPBMessage("An Error Occurred in Watame", ExceptionUtils.getStackTrace(e));
+			throw e;
+		}
 	}
 
 	private void construct() throws Exception {
