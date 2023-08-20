@@ -1,4 +1,4 @@
-package net.foxgenesis.util;
+package net.foxgenesis.util.resource;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -15,24 +15,23 @@ import java.util.List;
 import java.util.Properties;
 import java.util.function.Function;
 
-import net.foxgenesis.util.resource.ModuleResource;
-
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.FileBasedConfiguration;
 import org.apache.commons.configuration2.INIConfiguration;
+import org.apache.commons.configuration2.JSONConfiguration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.configuration2.builder.BuilderParameters;
 import org.apache.commons.configuration2.builder.FileBasedBuilderProperties;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
-import org.apache.commons.configuration2.builder.fluent.PropertiesBuilderParameters;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * NEED_JAVADOC
+ * Utility class containing methods for handling resources.
  *
  * @author Ashley
  *
@@ -49,7 +48,7 @@ public final class ResourceUtils {
 	 *
 	 * @param path - {@link URL} path to the resource
 	 *
-	 * @return Returns all lines as a {@link List<String>}
+	 * @return Returns all lines as a {@link List}
 	 *
 	 * @throws IOException Thrown if an error occurs while reading the
 	 *                     {@link InputStream} of the resource
@@ -74,26 +73,6 @@ public final class ResourceUtils {
 			// Return list
 			return list;
 		}
-	}
-
-	/**
-	 * NEED_JAVADOC
-	 *
-	 * @param path
-	 *
-	 * @return
-	 *
-	 * @throws IOException
-	 */
-	public static Properties getProperties(URL path) throws IOException {
-		logger.trace("Attempting to read resource: " + path);
-
-		Properties properties = new Properties();
-		try (InputStream in = path.openStream()) {
-			properties.load(in);
-		}
-
-		return properties;
 	}
 
 	/**
@@ -132,33 +111,70 @@ public final class ResourceUtils {
 	}
 
 	/**
-	 * NEED_JAVADOC
+	 * Load a configuration file of the provided {@code type} from the specified
+	 * directory and file. If the file is not found, the provided
+	 * {@link ModuleResource} pointing to the configuration defaults will be used
+	 * instead.
+	 * <p>
+	 * This method is effectively equivalent to:
+	 * </p>
+	 * 
+	 * <pre>
+	 * Configuration configuration = switch (type) {
+	 * 	case PROPERTIES -> loadProperties(defaults, directory, output);
+	 * 	case INI -> loadINI(defaults, directory, output);
+	 * 	case JSON -> loadJSON(defaults, directory, output);
+	 * 	case XML -> loadXML(defaults, directory, output);
+	 * 	default -> throw new IllegalArgumentException("Unknown type: " + type);
+	 * };
+	 * </pre>
+	 * 
+	 * @param type      - configuration type
+	 * @param defaults  - resource containing the configuration defaults
+	 * @param directory - the directory containing the configuration file
+	 * @param output    - the name of the configuration file
 	 *
-	 * @param defaults
-	 * @param dir
-	 * @param output
+	 * @return Returns the parsed {@link Configuration}
 	 *
-	 * @return
+	 * @throws IOException            If an I/O error occurs
+	 * @throws ConfigurationException If an error occurs
+	 * @throws SecurityException      Thrown if the specified file is not readable
+	 * 
+	 * @see #loadProperties(ModuleResource, Path, String)
+	 * @see #loadINI(ModuleResource, Path, String)
+	 * @see #loadJSON(ModuleResource, Path, String)
+	 * @see #loadXML(ModuleResource, Path, String)
+	 */
+	public static Configuration loadConfiguration(ConfigType type, ModuleResource defaults, Path directory,
+			String output) throws IOException, ConfigurationException {
+		return switch (type) {
+			case PROPERTIES -> loadProperties(defaults, directory, output);
+			case INI -> loadINI(defaults, directory, output);
+			case JSON -> loadJSON(defaults, directory, output);
+			case XML -> loadXML(defaults, directory, output);
+			default -> throw new IllegalArgumentException("Unknown type: " + type);
+		};
+	}
+
+	/**
+	 * Load a {@code .properties} configuration file from the specified directory
+	 * and file. If the file is not found, the provided {@link ModuleResource}
+	 * pointing to the configuration defaults will be used instead.
 	 *
-	 * @throws IOException
-	 * @throws ConfigurationException
+	 * @param defaults - resource containing the configuration defaults
+	 * @param dir      - the directory containing the configuration file
+	 * @param output   - the name of the configuration file
+	 *
+	 * @return Returns the parsed {@link PropertiesConfiguration}
+	 *
+	 * @throws IOException            If an I/O error occurs
+	 * @throws ConfigurationException If an error occurs
+	 * @throws SecurityException      Thrown if the specified file is not readable
 	 */
 	public static PropertiesConfiguration loadProperties(ModuleResource defaults, Path dir, String output)
 			throws IOException, ConfigurationException {
-		// Save our default configuration file if not exist
-		Path outputPath = writeDefaults(defaults, dir, output);
-
-		// Load configuration file
-		PropertiesBuilderParameters propParams = new Parameters().properties();
-		propParams.setBasePath(dir.toString());
-		propParams.setPath(outputPath.toString());
-
-		FileBasedConfigurationBuilder<PropertiesConfiguration> builder = new FileBasedConfigurationBuilder<>(
-				PropertiesConfiguration.class);
-
-		builder.configure(propParams);
-
-		return builder.getConfiguration();
+		return loadConfig(defaults, dir, output, PropertiesConfiguration.class,
+				out -> new Parameters().properties().setBasePath(dir.toString()).setPath(out));
 	}
 
 	/**
@@ -180,6 +196,48 @@ public final class ResourceUtils {
 			throws IOException, ConfigurationException {
 		return loadConfig(defaults, dir, output, INIConfiguration.class,
 				out -> new Parameters().ini().setBasePath(dir.toString()).setPath(out));
+	}
+
+	/**
+	 * Load a {@code .json} configuration file from the specified directory and
+	 * file. If the file is not found, the provided {@link ModuleResource} pointing
+	 * to the configuration defaults will be used instead.
+	 *
+	 * @param defaults - resource containing the configuration defaults
+	 * @param dir      - the directory containing the configuration file
+	 * @param output   - the name of the configuration file
+	 *
+	 * @return Returns the parsed {@link JSONConfiguration}
+	 *
+	 * @throws IOException            If an I/O error occurs
+	 * @throws ConfigurationException If an error occurs
+	 * @throws SecurityException      Thrown if the specified file is not readable
+	 */
+	public static JSONConfiguration loadJSON(ModuleResource defaults, Path dir, String output)
+			throws IOException, ConfigurationException {
+		return loadConfig(defaults, dir, output, JSONConfiguration.class,
+				out -> new Parameters().hierarchical().setBasePath(dir.toString()).setPath(out));
+	}
+
+	/**
+	 * Load a {@code .xml} configuration file from the specified directory and file.
+	 * If the file is not found, the provided {@link ModuleResource} pointing to the
+	 * configuration defaults will be used instead.
+	 *
+	 * @param defaults - resource containing the configuration defaults
+	 * @param dir      - the directory containing the configuration file
+	 * @param output   - the name of the configuration file
+	 *
+	 * @return Returns the parsed {@link XMLConfiguration}
+	 *
+	 * @throws IOException            If an I/O error occurs
+	 * @throws ConfigurationException If an error occurs
+	 * @throws SecurityException      Thrown if the specified file is not readable
+	 */
+	public static XMLConfiguration loadXML(ModuleResource defaults, Path dir, String output)
+			throws IOException, ConfigurationException {
+		return loadConfig(defaults, dir, output, XMLConfiguration.class,
+				out -> new Parameters().xml().setBasePath(dir.toString()).setPath(out));
 	}
 
 	/**
@@ -293,13 +351,10 @@ public final class ResourceUtils {
 	 * <p>
 	 * This method is effectively equivalent to:
 	 * </p>
-	 * <blockquote>
 	 *
 	 * <pre>
 	 * toString(input).split("(\\r\\n|\\r|\\n)")
 	 * </pre>
-	 *
-	 * </blockquote>
 	 *
 	 * @param input - the input stream to read
 	 *

@@ -16,7 +16,7 @@ import net.foxgenesis.database.providers.MySQLConnectionProvider;
 import net.foxgenesis.property.PropertyType;
 import net.foxgenesis.property.database.LCKConfigurationDatabase;
 import net.foxgenesis.util.MethodTimer;
-import net.foxgenesis.util.ResourceUtils;
+import net.foxgenesis.util.resource.ResourceUtils;
 import net.foxgenesis.watame.plugin.Plugin;
 import net.foxgenesis.watame.plugin.PluginHandler;
 import net.foxgenesis.watame.plugin.SeverePluginException;

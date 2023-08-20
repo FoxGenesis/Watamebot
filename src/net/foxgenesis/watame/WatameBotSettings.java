@@ -5,8 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
-import net.foxgenesis.util.ResourceUtils;
 import net.foxgenesis.util.resource.ModuleResource;
+import net.foxgenesis.util.resource.ResourceUtils;
 
 import org.apache.commons.configuration2.INIConfiguration;
 import org.apache.commons.configuration2.ImmutableConfiguration;
