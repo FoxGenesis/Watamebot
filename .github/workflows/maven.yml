@@ -5,7 +5,7 @@ name: Deployment
 on:
   push:
     tags:
-      - "v*.*.*"
+      - "*"
 
 jobs:
   build:
