@@ -248,7 +248,6 @@ public class PluginHandler<@NotNull T extends Plugin> implements Closeable {
 	 * 
 	 * @param plugin - plugin in question
 	 * @param error  - the error that was thrown
-	 * @param marker - method marker
 	 */
 	private void pluginError(T plugin, Throwable error) {
 		Throwable temp = error;
@@ -312,7 +311,7 @@ public class PluginHandler<@NotNull T extends Plugin> implements Closeable {
 	 * 
 	 * @param identifier
 	 * 
-	 * @return
+	 * @return Returns the {@link Plugin} with the specified {@code identifier}
 	 */
 	@Nullable
 	public T getPlugin(String identifier) {
@@ -359,7 +358,7 @@ public class PluginHandler<@NotNull T extends Plugin> implements Closeable {
 	/**
 	 * NEED_JAVADOC
 	 * 
-	 * @return
+	 * @return Returns the thread pool used for asynchronous execution
 	 */
 	@NotNull
 	public ExecutorService getAsynchronousExecutor() {

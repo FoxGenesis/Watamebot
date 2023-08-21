@@ -91,7 +91,8 @@ public class DatabaseManager implements IDatabaseManager, AutoCloseable {
 	 *
 	 * @param owner
 	 *
-	 * @return
+	 * @return Returns {@code true} if all databases from the {@code owner} have
+	 *         been unloaded. {@code false} otherwise
 	 */
 	public boolean unload(Plugin owner) {
 		if (!owner.needsDatabase)

@@ -185,7 +185,7 @@ public final class MethodTimer {
 	 * NEED_JAVADOC
 	 *
 	 * @param time
-	 * @return
+	 * @return formatted string
 	 */
 	public static String formatToMilli(long time) { return formatToMilli(time, 2); }
 
@@ -194,7 +194,7 @@ public final class MethodTimer {
 	 *
 	 * @param time
 	 * @param decimals
-	 * @return
+	 * @return formatted string
 	 */
 	public static String formatToMilli(long time, int decimals) { return format(time, decimals, 1_000_000D); }
 
@@ -202,7 +202,7 @@ public final class MethodTimer {
 	 * NEED_JAVADOC
 	 *
 	 * @param time
-	 * @return
+	 * @return formatted string
 	 */
 	public static String formatToSeconds(long time) { return formatToSeconds(time, 2); }
 
@@ -211,7 +211,7 @@ public final class MethodTimer {
 	 *
 	 * @param time
 	 * @param decimals
-	 * @return
+	 * @return formatted string
 	 */
 	public static String formatToSeconds(long time, int decimals) { return format(time, decimals, 1_000_000_000D); }
 
@@ -221,7 +221,7 @@ public final class MethodTimer {
 	 * @param time
 	 * @param decimals
 	 * @param div
-	 * @return
+	 * @return formatted string
 	 */
 	public static String format(long time, int decimals, double div) {
 		return String.format("%,." + decimals + "f", time / div);

@@ -3,7 +3,6 @@ package net.foxgenesis.watame;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.nio.file.Path;
-import java.sql.SQLException;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
@@ -159,8 +158,6 @@ public class WatameBot {
 	 * Create a new instance with a specified login {@code token}.
 	 *
 	 * @param token - Token used to connect to discord
-	 *
-	 * @throws SQLException When failing to connect to the database file
 	 */
 	private WatameBot(String token) {
 		// Set shutdown thread
@@ -469,7 +466,8 @@ public class WatameBot {
 	/**
 	 * NEED_JAVADOC
 	 *
-	 * @return
+	 * @return Returns the {@link IDatabaseManager} used to register custom
+	 *         databases
 	 */
 	public IDatabaseManager getDatabaseManager() {
 		return manager;
@@ -486,7 +484,7 @@ public class WatameBot {
 	/**
 	 * NEED_JAVADOC
 	 *
-	 * @return
+	 * @return the current instance of {@link JDA}
 	 */
 	public JDA getJDA() {
 		return discord;

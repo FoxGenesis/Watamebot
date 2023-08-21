@@ -271,7 +271,7 @@ public abstract class Plugin {
 	 * Get the provider for registering and getting {@link PluginProperty
 	 * PluginProperties}.
 	 * 
-	 * @return Returns the {@link PluginPropertyProvider} used by {@link Plugins} to
+	 * @return Returns the {@link PluginPropertyProvider} used by {@link Plugin Plugins} to
 	 *         register plugin properties
 	 */
 	protected final PluginPropertyProvider getPropertyProvider() {
@@ -356,7 +356,7 @@ public abstract class Plugin {
 	/**
 	 * Startup method called when {@link net.dv8tion.jda.api.JDA JDA} is building a
 	 * connection to discord and all {@link CommandData} is being collected from
-	 * {@link #getCommands()}.
+	 * {@link CommandProvider#getCommands()}.
 	 * <p>
 	 * <b>Discord information might not be loaded at the time of this method!</b>
 	 * Use {@link #onReady(WatameBot)} for functionality that requires valid

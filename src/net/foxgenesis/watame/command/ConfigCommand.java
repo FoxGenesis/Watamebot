@@ -163,7 +163,8 @@ public class ConfigCommand extends ListenerAdapter {
 							case BOOLEAN -> property.set(guild, value.getAsBoolean(), true);
 							case CHANNEL -> property.set(guild, value.getAsChannel().getIdLong(), true);
 							case INTEGER -> property.set(guild, value.getAsInt(), true);
-							case ROLE, USER, MENTIONABLE -> property.set(guild, value.getAsMentionable().getIdLong(), true);
+							case ROLE, USER, MENTIONABLE ->
+								property.set(guild, value.getAsMentionable().getIdLong(), true);
 							case NUMBER -> property.set(guild, value.getAsLong(), true);
 							case STRING -> property.set(guild, value.getAsString(), true);
 						};
@@ -248,7 +249,7 @@ public class ConfigCommand extends ListenerAdapter {
 	/**
 	 * Ensure that a key is not null and is present inside the property provider.
 	 * 
-	 * @param key      - key to check
+	 * @param id       - key to check
 	 * @param provider - property provider
 	 * @param hook     - event hook
 	 * @param consumer - resolved property consumer

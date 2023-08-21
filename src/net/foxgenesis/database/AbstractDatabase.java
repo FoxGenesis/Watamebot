@@ -93,8 +93,6 @@ public abstract class AbstractDatabase implements AutoCloseable {
 	/**
 	 * NEED_JAVADOC
 	 *
-	 * @return
-	 *
 	 * @throws SQLException
 	 */
 	protected Connection openConnection() throws SQLException {
@@ -111,7 +109,6 @@ public abstract class AbstractDatabase implements AutoCloseable {
 	 *
 	 * @param id
 	 * @param func
-	 * @param error
 	 *
 	 * @throws SQLException
 	 */
@@ -130,7 +127,6 @@ public abstract class AbstractDatabase implements AutoCloseable {
 	 *
 	 * @param id
 	 * @param func
-	 * @param error
 	 *
 	 * @throws SQLException
 	 */
@@ -150,9 +146,6 @@ public abstract class AbstractDatabase implements AutoCloseable {
 	 * @param <U>
 	 * @param id
 	 * @param func
-	 * @param error
-	 *
-	 * @return
 	 *
 	 * @throws SQLException
 	 */
@@ -174,9 +167,6 @@ public abstract class AbstractDatabase implements AutoCloseable {
 	 * @param <U>
 	 * @param id
 	 * @param func
-	 * @param error
-	 *
-	 * @return
 	 *
 	 * @throws SQLException
 	 */
@@ -195,8 +185,6 @@ public abstract class AbstractDatabase implements AutoCloseable {
 	 * NEED_JAVADOC
 	 *
 	 * @param id
-	 *
-	 * @return
 	 */
 	protected final boolean hasStatementID(String id) {
 		return statements.containsKey(id);
@@ -206,8 +194,6 @@ public abstract class AbstractDatabase implements AutoCloseable {
 	 * NEED_JAVADOC
 	 *
 	 * @param id
-	 *
-	 * @return
 	 */
 	protected final String getRawStatement(String id) {
 		if (!hasStatementID(id))

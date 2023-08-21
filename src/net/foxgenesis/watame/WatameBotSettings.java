@@ -69,9 +69,9 @@ public class WatameBotSettings {
 	/**
 	 * NEED_JAVADOC
 	 *
-	 * @return
+	 * @return Returns the read token
 	 *
-	 * @throws Throwable
+	 * @throws Exception
 	 */
 	private static String readToken(Path filepath) throws Exception {
 		return Files.lines(filepath).filter(s -> !s.startsWith("#")).map(String::trim).findFirst().orElse("");
