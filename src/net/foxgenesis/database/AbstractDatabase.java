@@ -92,6 +92,8 @@ public abstract class AbstractDatabase implements AutoCloseable {
 
 	/**
 	 * NEED_JAVADOC
+	 * 
+	 * @return Returns the new {@link Connection}
 	 *
 	 * @throws SQLException
 	 */
@@ -109,6 +111,7 @@ public abstract class AbstractDatabase implements AutoCloseable {
 	 *
 	 * @param id
 	 * @param func
+	 * @param flags
 	 *
 	 * @throws SQLException
 	 */
@@ -146,6 +149,10 @@ public abstract class AbstractDatabase implements AutoCloseable {
 	 * @param <U>
 	 * @param id
 	 * @param func
+	 * @param flags
+	 * 
+	 * @return Returns the result of {@code func} otherwise an empty
+	 *         {@link Optional}
 	 *
 	 * @throws SQLException
 	 */
@@ -167,6 +174,9 @@ public abstract class AbstractDatabase implements AutoCloseable {
 	 * @param <U>
 	 * @param id
 	 * @param func
+	 * 
+	 * @return Returns the result of {@code func} otherwise an empty
+	 *         {@link Optional}
 	 *
 	 * @throws SQLException
 	 */
@@ -185,6 +195,9 @@ public abstract class AbstractDatabase implements AutoCloseable {
 	 * NEED_JAVADOC
 	 *
 	 * @param id
+	 * 
+	 * @return Returns {@code true} if the statement is registered. {@code false}
+	 *         otherwise
 	 */
 	protected final boolean hasStatementID(String id) {
 		return statements.containsKey(id);
@@ -194,6 +207,8 @@ public abstract class AbstractDatabase implements AutoCloseable {
 	 * NEED_JAVADOC
 	 *
 	 * @param id
+	 * 
+	 * @return Returns the raw SQL statement
 	 */
 	protected final String getRawStatement(String id) {
 		if (!hasStatementID(id))

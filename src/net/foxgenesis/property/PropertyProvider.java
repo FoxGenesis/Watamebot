@@ -12,6 +12,8 @@ import org.jetbrains.annotations.NotNull;
  *
  * @param <C> property category type
  * @param <K> property key type
+ * @param <G> lookup type
+ * @param <M> property mapping type
  *
  * @author Ashley
  */

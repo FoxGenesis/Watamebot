@@ -98,6 +98,7 @@ public interface Property<L, M extends PropertyMapping> extends ImmutablePropert
 	 * @return Returns the serialized data
 	 */
 	static byte[] serialize(@NotNull PropertyInfo info, @NotNull Serializable obj) {
+		// PLAIN TEXT
 		if (info.type() == PropertyType.PLAIN) {
 			if (obj.getClass().isArray()) {
 				Serializable[] a = (Serializable[]) obj;
@@ -112,6 +113,8 @@ public interface Property<L, M extends PropertyMapping> extends ImmutablePropert
 
 			return obj.toString().getBytes();
 		}
+
+		// NUMBERS
 		if (info.type() == PropertyType.NUMBER) {
 			if (obj instanceof Integer i)
 				return ByteBuffer.allocate(Integer.SIZE / Byte.SIZE).putInt(i).array();
@@ -128,6 +131,8 @@ public interface Property<L, M extends PropertyMapping> extends ImmutablePropert
 			else if (obj instanceof Byte b)
 				return new byte[] { b };
 		}
+
+		// JAVA OBJECTS
 		return SerializationUtils.serialize(obj);
 	}
 }

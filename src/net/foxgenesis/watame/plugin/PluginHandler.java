@@ -81,6 +81,7 @@ public class PluginHandler<@NotNull T extends Plugin> implements Closeable {
 	 * Construct a new {@link PluginHandler} with the specified {@link ModuleLayer}
 	 * and plugin {@link Class}.
 	 * 
+	 * @param context     - instance context
 	 * @param layer       - layer the {@link ServiceLoader} should use
 	 * @param pluginClass - the plugin {@link Class} to load
 	 */

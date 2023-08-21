@@ -68,6 +68,8 @@ public class WatameBotSettings {
 
 	/**
 	 * NEED_JAVADOC
+	 * 
+	 * @param filepath
 	 *
 	 * @return Returns the read token
 	 *

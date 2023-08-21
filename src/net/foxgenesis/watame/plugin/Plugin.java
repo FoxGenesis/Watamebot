@@ -33,12 +33,13 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 
 /**
  * A service providing functionality to {@link WatameBot}.
+ * <p>
+ * Providers should provide a <b>no-argument constructor</b> or a
+ * {@code public static Plugin provider()} method in accordance to
+ * {@link java.util.ServiceLoader.Provider#get() Provider.get()}
+ * </p>
  * 
  * @author Ashley
- * 
- * @implSpec Providers should provide a <b>no-argument constructor</b> or a
- *           {@code public static Plugin provider()} method in accordance to
- *           {@link java.util.ServiceLoader.Provider#get() Provider.get()}
  *
  */
 public abstract class Plugin {
@@ -100,13 +101,13 @@ public abstract class Plugin {
 	 * ServiceLoader} to load and initialize required plugin data.
 	 * <p>
 	 * Types of plugin data would include:
+	 * </p>
 	 * <ul>
 	 * <li>Configuration settings</li>
 	 * <li>Constants</li>
 	 * </ul>
 	 * Anything beyond the previous should be loaded in the {@link #preInit()}
 	 * method.
-	 * </p>
 	 * 
 	 * @throws SeverePluginException if the plugin is not in a named module or there
 	 *                               was a problem while loading the
@@ -271,8 +272,8 @@ public abstract class Plugin {
 	 * Get the provider for registering and getting {@link PluginProperty
 	 * PluginProperties}.
 	 * 
-	 * @return Returns the {@link PluginPropertyProvider} used by {@link Plugin Plugins} to
-	 *         register plugin properties
+	 * @return Returns the {@link PluginPropertyProvider} used by {@link Plugin
+	 *         Plugins} to register plugin properties
 	 */
 	protected final PluginPropertyProvider getPropertyProvider() {
 		return WatameBot.INSTANCE.getPropertyProvider();

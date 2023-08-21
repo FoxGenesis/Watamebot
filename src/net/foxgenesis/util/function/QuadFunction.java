@@ -12,6 +12,8 @@ import java.util.function.Function;
  *
  * @param <T> the type of the first argument to the function
  * @param <U> the type of the second argument to the function
+ * @param <V> 
+ * @param <W> 
  * @param <R> the type of the result of the function
  *
  * @see Function
@@ -25,6 +27,8 @@ public interface QuadFunction<T, U, V, W, R> {
      *
      * @param t the first function argument
      * @param u the second function argument
+     * @param v 
+     * @param w 
      * @return the function result
      */
     R apply(T t, U u, V v, W w);
