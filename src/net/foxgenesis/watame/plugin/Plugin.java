@@ -28,13 +28,16 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 
 /**
- * NEED_JAVADOC
+ * A service providing functionality to {@link WatameBot}.
  * 
  * @author Ashley
+ * 
+ * @implSpec Providers should provide a <b>no-argument constructor</b> or a
+ *           {@code public static Plugin provider()} method in accordance to
+ *           {@link java.util.ServiceLoader.Provider#get() Provider.get()}
  *
  */
 public abstract class Plugin {
@@ -92,7 +95,17 @@ public abstract class Plugin {
 	public final boolean needsDatabase;
 
 	/**
-	 * No-arg constructor to load and initialize required plugin data.
+	 * No-argument constructor called by the {@link java.util.ServiceLoader
+	 * ServiceLoader} to load and initialize required plugin data.
+	 * <p>
+	 * Types of plugin data would include:
+	 * <ul>
+	 * <li>Configuration settings</li>
+	 * <li>Constants</li>
+	 * </ul>
+	 * Anything beyond the previous should be loaded in the {@link #preInit()}
+	 * method.
+	 * </p>
 	 * 
 	 * @throws SeverePluginException if the plugin is not in a named module or there
 	 *                               was a problem while loading the
@@ -157,6 +170,16 @@ public abstract class Plugin {
 	}
 
 	// =========================================================================================================
+
+	/**
+	 * Get a list of all loaded configuration {@code ID}s.
+	 * 
+	 * @return Returns a {@link java.util.Set Set} containing the {@code ID}s of all
+	 *         configurations loaded
+	 */
+	protected Set<String> configurationKeySet() {
+		return configs.keySet();
+	}
 
 	/**
 	 * Loop through all loaded {@link Configuration} files.
@@ -289,9 +312,9 @@ public abstract class Plugin {
 	 * initialization, are to be loaded. Resources that do <b>not</b> require
 	 * connection to Discord or the database should be loaded here.
 	 * <p>
-	 * <b>Database (guild settings) and Discord information might not be loaded at
-	 * the time of this method!</b> Use {@link #onReady(WatameBot)} for
-	 * functionality that requires valid connections.
+	 * <b>The database and Discord information might not be loaded at the time of
+	 * this method!</b> Use {@link #init(IEventStore)} for functionality that
+	 * requires valid connections.
 	 * </p>
 	 * 
 	 * <p>
@@ -299,7 +322,6 @@ public abstract class Plugin {
 	 * </p>
 	 * <ul>
 	 * <li>Custom database registration</li>
-	 * <li>SQL compiled statements</li>
 	 * <li>System Data</li>
 	 * <li>Files</li>
 	 * <li>Images</li>
@@ -317,18 +339,19 @@ public abstract class Plugin {
 
 	/**
 	 * Startup method called when methods providing functionality are to be loaded.
-	 * Methods that require connection to Discord or the database should be called
-	 * here.
+	 * Methods that require connection the database should be called here.
 	 * <p>
-	 * <b>Database (guild settings) and Discord information might not be loaded at
-	 * the time of this method!</b> Use {@link #onReady(WatameBot)} for
-	 * functionality that requires valid connections.
+	 * <b>Discord information might not be loaded at the time of this method!</b>
+	 * Use {@link #onReady(WatameBot)} for functionality that requires valid
+	 * connections.
 	 * </p>
 	 * 
 	 * <p>
 	 * Typical methods to call here include:
 	 * </p>
 	 * <ul>
+	 * <li>Main chunk of program initialization</li>
+	 * <li>{@link PluginProperty} registration/retrieval</li>
 	 * <li>Event listener registration</li>
 	 * <li>Custom database operations</li>
 	 * </ul>
@@ -346,13 +369,20 @@ public abstract class Plugin {
 	protected abstract void init(IEventStore builder) throws SeverePluginException;
 
 	/**
-	 * Startup method called when {@link JDA} is building a connection to discord
-	 * and all {@link CommandData} is being collected from {@link #getCommands()}.
+	 * Startup method called when {@link net.dv8tion.jda.api.JDA JDA} is building a
+	 * connection to discord and all {@link CommandData} is being collected from
+	 * {@link #getCommands()}.
 	 * <p>
-	 * <b>Database (guild settings) and Discord information might not be loaded at
-	 * the time of this method!</b> Use {@link #onReady(WatameBot)} for
-	 * functionality that requires valid connections.
+	 * <b>Discord information might not be loaded at the time of this method!</b>
+	 * Use {@link #onReady(WatameBot)} for functionality that requires valid
+	 * connections.
 	 * </p>
+	 * <p>
+	 * Typical methods to call here include:
+	 * </p>
+	 * <ul>
+	 * <li>Initialization cleanup</li>
+	 * </ul>
 	 * 
 	 * @param bot - reference of {@link WatameBot}
 	 * 
@@ -363,8 +393,9 @@ public abstract class Plugin {
 	protected abstract void postInit(WatameBot bot) throws SeverePluginException;
 
 	/**
-	 * Called by the {@link PluginHandler} when {@link JDA} and all {@link Plugin
-	 * Plugins} have finished startup and have finished loading.
+	 * Called by the {@link PluginHandler} when {@link net.dv8tion.jda.api.JDA JDA}
+	 * and all {@link Plugin Plugins} have finished startup and have finished
+	 * loading.
 	 * 
 	 * @param bot - reference of {@link WatameBot}
 	 * 
