@@ -4,15 +4,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 
 import net.foxgenesis.watame.WatameBot;
 import net.foxgenesis.watame.plugin.CommandProvider;
 import net.foxgenesis.watame.plugin.IEventStore;
 import net.foxgenesis.watame.plugin.Plugin;
-
-import org.apache.commons.configuration2.Configuration;
 
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
@@ -24,8 +20,6 @@ import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
 
 public class IntegratedCommands extends Plugin implements CommandProvider {
-	@Override
-	protected void onConstruct(Properties meta, Map<String, Configuration> configs) {}
 
 	@Override
 	public void preInit() {}

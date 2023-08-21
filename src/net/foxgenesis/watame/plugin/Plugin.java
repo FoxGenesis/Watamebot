@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.Set;
 import java.util.function.BiConsumer;
 
 import net.foxgenesis.database.AbstractDatabase;
@@ -164,9 +165,6 @@ public abstract class Plugin {
 				}
 			}
 		}
-
-		// Fire construct finish event
-		onConstruct(properties, configs);
 	}
 
 	// =========================================================================================================
@@ -293,19 +291,6 @@ public abstract class Plugin {
 	}
 
 	// =========================================================================================================
-
-	/**
-	 * Startup method called after the plugin loader has finished constructing all
-	 * the required data for this {@link Plugin}.
-	 * <p>
-	 * <b>DO NOT BLOCK IN THIS METHOD!</b>
-	 * </p>
-	 * 
-	 * @param meta    - properties from the {@code plugin.properties} file
-	 * @param configs - configurations loaded from {@link PluginConfiguration}
-	 *                annotations
-	 */
-	protected abstract void onConstruct(Properties meta, Map<String, Configuration> configs);
 
 	/**
 	 * Startup method called when resources, needed for functionality
