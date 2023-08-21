@@ -11,7 +11,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
       
       
@@ -46,7 +46,7 @@ jobs:
         MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
         
         
-    - name: Setup Java
+    - name: Setup Java for GitHub
       uses: actions/setup-java@v3
       with:
         java-version: '17'
