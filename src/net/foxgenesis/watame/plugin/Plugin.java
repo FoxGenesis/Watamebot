@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.lang.module.ModuleDescriptor.Version;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
@@ -54,7 +53,7 @@ public abstract class Plugin {
 	 * Plugin configurations
 	 */
 	@NotNull
-	private final HashMap<String, PropertiesConfiguration> configs = new HashMap<>();
+	private final HashMap<String, Configuration> configs = new HashMap<>();
 
 	/**
 	 * Path to the plugin's configuration folder
@@ -141,7 +140,6 @@ public abstract class Plugin {
 		}
 
 		// Load configurations if they are present
-		Map<String, Configuration> configs = new HashMap<>();
 		if (c.isAnnotationPresent(PluginConfiguration.class)) {
 			PluginConfiguration[] configDeclares = c.getDeclaredAnnotationsByType(PluginConfiguration.class);
 
