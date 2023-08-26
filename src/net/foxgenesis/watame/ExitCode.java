@@ -29,14 +29,18 @@ public enum ExitCode {
 	 *
 	 * @param statusCode - exit code number
 	 */
-	ExitCode(int statusCode) { this.statusCode = statusCode; }
+	ExitCode(int statusCode) {
+		this.statusCode = statusCode;
+	}
 
 	/**
 	 * Returns the {@link ExitCode}'s number.
 	 *
 	 * @return exit code
 	 */
-	public Integer getCode() { return statusCode; }
+	public Integer getCode() {
+		return statusCode;
+	}
 
 	/**
 	 * Exit the program with a specific {@code message} and {@link Throwable}.
@@ -54,16 +58,17 @@ public enum ExitCode {
 	 *
 	 *
 	 * @see #programExit()
+	 * 
 	 * @param exitMessage - Exit message to log
 	 * @param thrown      - Throwable to log
+	 * 
 	 * @throws Exception
 	 */
 	public void programExit(String exitMessage, Exception thrown) throws Exception {
 		// if(exitMessage != null || thrown != null)
-		LoggerFactory.getLogger(Logger.GLOBAL_LOGGER_NAME).error(exitMessage == null ? name() : exitMessage,
-				thrown);
+		LoggerFactory.getLogger(Logger.GLOBAL_LOGGER_NAME).error(exitMessage == null ? name() : exitMessage, thrown);
 		programExit();
-		if(thrown != null)
+		if (thrown != null)
 			throw thrown;
 	}
 
@@ -82,10 +87,14 @@ public enum ExitCode {
 	 * </blockquote>
 	 *
 	 * @see #programExit(String, Exception)
+	 * 
 	 * @param thrown - Throwable to log
+	 * 
 	 * @throws Exception
 	 */
-	public void programExit(Exception thrown) throws Exception { programExit(null, thrown); }
+	public void programExit(Exception thrown) throws Exception {
+		programExit(null, thrown);
+	}
 
 	/**
 	 * Exit the program with a specific {@code message}.
@@ -103,10 +112,14 @@ public enum ExitCode {
 	 *
 	 *
 	 * @see #programExit(String, Exception)
+	 * 
 	 * @param exitMessage - Exit message to log
+	 * 
 	 * @throws Exception
 	 */
-	public void programExit(String exitMessage) throws Exception { programExit(exitMessage, null); }
+	public void programExit(String exitMessage) throws Exception {
+		programExit(exitMessage, null);
+	}
 
 	/**
 	 * Exit the program with this {@link ExitCode}'s {@code "exit code"}.
@@ -121,8 +134,11 @@ public enum ExitCode {
 	 *
 	 * </blockquote>
 	 *
-	 * @throws Exception
+	 * @throws RuntimeException
+	 * 
 	 * @see #programExit(String, Exception)
 	 */
-	public void programExit() throws Exception { System.exit(getCode()); }
+	public void programExit() throws RuntimeException {
+		System.exit(getCode());
+	}
 }

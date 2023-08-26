@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.lang.module.ModuleDescriptor.Version;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
@@ -17,6 +18,8 @@ import net.foxgenesis.util.resource.ConfigType;
 import net.foxgenesis.util.resource.ModuleResource;
 import net.foxgenesis.util.resource.ResourceUtils;
 import net.foxgenesis.watame.WatameBot;
+import net.foxgenesis.watame.plugin.require.CommandProvider;
+import net.foxgenesis.watame.plugin.require.PluginConfiguration;
 import net.foxgenesis.watame.property.PluginProperty;
 import net.foxgenesis.watame.property.PluginPropertyProvider;
 
@@ -28,8 +31,6 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.dv8tion.jda.api.interactions.commands.build.CommandData;
-
 /**
  * A service providing functionality to {@link WatameBot}.
  * <p>
@@ -37,11 +38,11 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData;
  * {@code public static Plugin provider()} method in accordance to
  * {@link java.util.ServiceLoader.Provider#get() Provider.get()}
  * </p>
- * 
+ *
  * @author Ashley
  *
  */
-public abstract class Plugin {
+public abstract class Plugin extends ServiceStartup {
 
 	/**
 	 * Plugin logger
@@ -56,44 +57,10 @@ public abstract class Plugin {
 	private final HashMap<String, Configuration> configs = new HashMap<>();
 
 	/**
-	 * Path to the plugin's configuration folder
+	 * Information about the plugin
 	 */
 	@NotNull
-	public final Path configurationPath;
-
-	/**
-	 * Name identifier of the plugin.
-	 */
-	@NotNull
-	public final String name;
-
-	/**
-	 * Friendly identifier of the plugin.
-	 */
-	@NotNull
-	public final String friendlyName;
-
-	/**
-	 * Description of the plugin.
-	 */
-	@NotNull
-	public final String description;
-
-	/**
-	 * Version of the plugin.
-	 */
-	@NotNull
-	public final Version version;
-
-	/**
-	 * Does this plugin provide commands.
-	 */
-	public final boolean providesCommands;
-
-	/**
-	 * Does this plugin require access to the database.
-	 */
-	public final boolean needsDatabase;
+	private final PluginInformation info;
 
 	/**
 	 * No-argument constructor called by the {@link java.util.ServiceLoader
@@ -107,7 +74,7 @@ public abstract class Plugin {
 	 * </ul>
 	 * Anything beyond the previous should be loaded in the {@link #preInit()}
 	 * method.
-	 * 
+	 *
 	 * @throws SeverePluginException if the plugin is not in a named module or there
 	 *                               was a problem while loading the
 	 *                               {@code plugin.properties} file
@@ -116,35 +83,27 @@ public abstract class Plugin {
 		Class<? extends Plugin> c = getClass();
 		Module module = c.getModule();
 
-		if (!module.isNamed())
-			throw new SeverePluginException("Plugin is not in a named module!");
-
 		// Load plugin properties
 		Properties properties = new Properties();
 		try (InputStream stream = module.getResourceAsStream("/plugin.properties")) {
 			properties.load(stream);
-
-			this.name = Objects.requireNonNull(properties.getProperty("name"), "name must not be null!");
-			this.friendlyName = Objects.requireNonNull(properties.getProperty("friendlyName"),
-					"friendlyName must not be null!");
-
-			this.version = Version
-					.parse(Objects.requireNonNull(properties.getProperty("version"), "version must not be null!"));
-			this.description = properties.getProperty("description", "No description provided");
-			this.providesCommands = this instanceof CommandProvider;
-			this.needsDatabase = properties.getProperty("needsDatabase", "false").equalsIgnoreCase("true");
-
-			this.configurationPath = WatameBot.CONFIG_PATH.resolve(this.name);
 		} catch (IOException e) {
 			throw new SeverePluginException(e, true);
 		}
+
+		// Parse properties file
+		info = parseInfo(properties, this);
 
 		// Load configurations if they are present
 		if (c.isAnnotationPresent(PluginConfiguration.class)) {
 			PluginConfiguration[] configDeclares = c.getDeclaredAnnotationsByType(PluginConfiguration.class);
 
 			for (PluginConfiguration pluginConfig : configDeclares) {
+
 				String id = pluginConfig.identifier();
+
+				// FIXME: sanitize PluginConfiguration IDs
+
 				// Skip over duplicate identifiers
 				if (configs.containsKey(id))
 					continue;
@@ -155,7 +114,7 @@ public abstract class Plugin {
 
 					// Parse the configuration
 					logger.debug("Loading {} configuration for {}", type.name(), pluginConfig.outputFile());
-					Configuration config = ResourceUtils.loadConfiguration(type, defaults, this.configurationPath,
+					Configuration config = ResourceUtils.loadConfiguration(type, defaults, info.getConfigurationPath(),
 							pluginConfig.outputFile());
 
 					configs.put(id, config);
@@ -170,7 +129,7 @@ public abstract class Plugin {
 
 	/**
 	 * Get a list of all loaded configuration {@code ID}s.
-	 * 
+	 *
 	 * @return Returns a {@link java.util.Set Set} containing the {@code ID}s of all
 	 *         configurations loaded
 	 */
@@ -180,7 +139,7 @@ public abstract class Plugin {
 
 	/**
 	 * Loop through all loaded {@link Configuration} files.
-	 * 
+	 *
 	 * @param consumer - {@link PluginConfiguration#identifier()} and the
 	 *                 constructed {@link Configuration}
 	 */
@@ -190,9 +149,9 @@ public abstract class Plugin {
 
 	/**
 	 * Check if a configuration file with the specified {@code identifier} exists.
-	 * 
+	 *
 	 * @param identifier - the {@link PluginConfiguration#identifier()}
-	 * 
+	 *
 	 * @return Returns {@code true} if the specified {@code identifier} points to a
 	 *         valid configuration
 	 */
@@ -201,26 +160,30 @@ public abstract class Plugin {
 	}
 
 	/**
-	 * Get the configuration file that is linked to an {@code identifier} or
-	 * {@code null} if not found.
-	 * 
+	 * Get the configuration file that is linked to an {@code identifier}.
+	 *
 	 * @param identifier - the {@link PluginConfiguration#identifier()}
-	 * 
+	 *
 	 * @return Returns the {@link PropertiesConfiguration} linked to the
 	 *         {@code identifier}
+	 * 
+	 * @throws NoSuchElementException Thrown if the configuration with the specified
+	 *                                {@code identifier} does not exist
 	 */
-	@Nullable
+	@NotNull
 	protected Configuration getConfiguration(String identifier) {
-		return configs.getOrDefault(identifier, null);
+		if (configs.containsKey(identifier))
+			return configs.get(identifier);
+		throw new NoSuchElementException();
 	}
 
 	/**
 	 * Register a plugin property inside the database.
-	 * 
+	 *
 	 * @param name       - name of the property
 	 * @param modifiable - if this property can be modified by a user
 	 * @param type       - property storage type
-	 * 
+	 *
 	 * @return Returns the {@link PropertyInfo} of the registered property
 	 */
 	protected final PropertyInfo registerProperty(@NotNull String name, boolean modifiable,
@@ -231,11 +194,11 @@ public abstract class Plugin {
 	/**
 	 * Register a plugin property if it doesn't exist and resolve it into a
 	 * {@link PluginProperty}.
-	 * 
+	 *
 	 * @param name       - property name
 	 * @param modifiable - if this property can be modified by a user
 	 * @param type       - property storage type
-	 * 
+	 *
 	 * @return Returns the resolved {@link PluginProperty}
 	 */
 	protected final PluginProperty upsertProperty(@NotNull String name, boolean modifiable,
@@ -245,9 +208,9 @@ public abstract class Plugin {
 
 	/**
 	 * Resolve a {@link PropertyInfo} into a usable {@link PluginProperty}.
-	 * 
+	 *
 	 * @param info - property information
-	 * 
+	 *
 	 * @return Returns the resolved {@link PluginProperty}
 	 */
 	protected final PluginProperty getProperty(PropertyInfo info) {
@@ -257,9 +220,9 @@ public abstract class Plugin {
 	/**
 	 * Resolve the {@link PropertyInfo} by the specified {@code name} into a usable
 	 * {@link PluginProperty}.
-	 * 
+	 *
 	 * @param name - property name
-	 * 
+	 *
 	 * @return Returns the resolved {@link PluginProperty}
 	 */
 	protected final PluginProperty getProperty(String name) {
@@ -269,173 +232,85 @@ public abstract class Plugin {
 	/**
 	 * Get the provider for registering and getting {@link PluginProperty
 	 * PluginProperties}.
-	 * 
+	 *
 	 * @return Returns the {@link PluginPropertyProvider} used by {@link Plugin
 	 *         Plugins} to register plugin properties
 	 */
 	protected final PluginPropertyProvider getPropertyProvider() {
-		return WatameBot.INSTANCE.getPropertyProvider();
+		return WatameBot.getPropertyProvider();
 	}
 
 	/**
 	 * Register an {@link AbstractDatabase} that this {@link Plugin} requires.
-	 * 
+	 *
 	 * @param database - database to register
-	 * 
+	 *
 	 * @throws IOException Thrown if there was an error while reading the database
 	 *                     setup files
 	 */
 	protected final void registerDatabase(AbstractDatabase database) throws IOException {
-		WatameBot.INSTANCE.getDatabaseManager().register(this, database);
+		WatameBot.getDatabaseManager().register(this, database);
 	}
 
 	// =========================================================================================================
 
 	/**
-	 * Startup method called when resources, needed for functionality
-	 * initialization, are to be loaded. Resources that do <b>not</b> require
-	 * connection to Discord or the database should be loaded here.
-	 * <p>
-	 * <b>The database and Discord information might not be loaded at the time of
-	 * this method!</b> Use {@link #init(IEventStore)} for functionality that
-	 * requires valid connections.
-	 * </p>
-	 * 
-	 * <p>
-	 * Typical resources to load here include:
-	 * </p>
-	 * <ul>
-	 * <li>Custom database registration</li>
-	 * <li>System Data</li>
-	 * <li>Files</li>
-	 * <li>Images</li>
-	 * </ul>
+	 * Get the information about this plugin.
 	 *
-	 * @throws SeverePluginException Thrown if the plugin has encountered a
-	 *                               <em>severe</em> exception. If the exception is
-	 *                               <em>fatal</em>, the plugin will be unloaded
-	 * 
-	 * @see #init(IEventStore)
-	 * @see #postInit(WatameBot)
-	 * @see #onReady(WatameBot)
+	 * @return Returns the {@link PluginInformation}
 	 */
-	protected abstract void preInit() throws SeverePluginException;
-
-	/**
-	 * Startup method called when methods providing functionality are to be loaded.
-	 * Methods that require connection the database should be called here.
-	 * <p>
-	 * <b>Discord information might not be loaded at the time of this method!</b>
-	 * Use {@link #onReady(WatameBot)} for functionality that requires valid
-	 * connections.
-	 * </p>
-	 * 
-	 * <p>
-	 * Typical methods to call here include:
-	 * </p>
-	 * <ul>
-	 * <li>Main chunk of program initialization</li>
-	 * <li>{@link PluginProperty} registration/retrieval</li>
-	 * <li>Event listener registration</li>
-	 * <li>Custom database operations</li>
-	 * </ul>
-	 * 
-	 * @param builder - discord event listener register
-	 * 
-	 * @throws SeverePluginException Thrown if the plugin has encountered a
-	 *                               <em>severe</em> exception. If the exception is
-	 *                               <em>fatal</em>, the plugin will be unloaded
-	 * 
-	 * @see #preInit()
-	 * @see #postInit(WatameBot)
-	 * @see #onReady(WatameBot)
-	 */
-	protected abstract void init(IEventStore builder) throws SeverePluginException;
-
-	/**
-	 * Startup method called when {@link net.dv8tion.jda.api.JDA JDA} is building a
-	 * connection to discord and all {@link CommandData} is being collected from
-	 * {@link CommandProvider#getCommands()}.
-	 * <p>
-	 * <b>Discord information might not be loaded at the time of this method!</b>
-	 * Use {@link #onReady(WatameBot)} for functionality that requires valid
-	 * connections.
-	 * </p>
-	 * <p>
-	 * Typical methods to call here include:
-	 * </p>
-	 * <ul>
-	 * <li>Initialization cleanup</li>
-	 * </ul>
-	 * 
-	 * @param bot - reference of {@link WatameBot}
-	 * 
-	 * @throws SeverePluginException Thrown if the plugin has encountered a
-	 *                               <em>severe</em> exception. If the exception is
-	 *                               <em>fatal</em>, the plugin will be unloaded
-	 */
-	protected abstract void postInit(WatameBot bot) throws SeverePluginException;
-
-	/**
-	 * Called by the {@link PluginHandler} when {@link net.dv8tion.jda.api.JDA JDA}
-	 * and all {@link Plugin Plugins} have finished startup and have finished
-	 * loading.
-	 * 
-	 * @param bot - reference of {@link WatameBot}
-	 * 
-	 * @throws SeverePluginException Thrown if the plugin has encountered a
-	 *                               <em>severe</em> exception. If the exception is
-	 *                               <em>fatal</em>, the plugin will be unloaded
-	 * 
-	 * @see #preInit()
-	 * @see #init(IEventStore)
-	 * @see #postInit(WatameBot)
-	 */
-	protected abstract void onReady(WatameBot bot) throws SeverePluginException;
-
-	/**
-	 * Called when the plugin is to be unloaded.
-	 * 
-	 * <p>
-	 * The shutdown sequence runs as followed:
-	 * </p>
-	 * <ul>
-	 * <li>Remove event listeners</li>
-	 * <li>{@link Plugin#close()}</li>
-	 * <li>Close databases</li>
-	 * </ul>
-	 * 
-	 * @throws Exception Thrown if an underlying exception is thrown during close
-	 */
-	protected abstract void close() throws Exception;
-
-	// =========================================================================================================
-
-	public String getDisplayInfo() {
-		return this.friendlyName + " v" + version;
+	public final PluginInformation getInfo() {
+		return info;
 	}
 
 	@Override
 	public String toString() {
-		return "Plugin [name=" + name + ", friendlyName=" + friendlyName + ", description=" + description + ", version="
-				+ version + ", providesCommands=" + providesCommands + ", needsDatabase=" + needsDatabase
-				+ ", configurationPath=" + configurationPath + "]";
+		return "Plugin [info=" + info + "]";
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(name, version);
+		return Objects.hash(info.getID(), info.getVersion());
 	}
 
 	@Override
 	public boolean equals(@Nullable Object obj) {
 		if (this == obj)
 			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
+		if ((obj == null) || (getClass() != obj.getClass()))
 			return false;
 		Plugin other = (Plugin) obj;
-		return Objects.equals(name, other.name) && Objects.equals(version, other.version);
+		return Objects.equals(info.getID(), other.info.getID())
+				&& Objects.equals(info.getVersion(), other.info.getVersion());
+	}
+
+	// =========================================================================================================
+
+	/**
+	 * Parse the {@link Properties} file of a {@link Plugin}.
+	 *
+	 * @param properties - plugin.properties file
+	 * @param instance   - instance of the plugin
+	 *
+	 * @return Returns the parsed {@link PluginInformation}
+	 */
+	private static PluginInformation parseInfo(Properties properties, Plugin instance) {
+		String id = Objects.requireNonNull(properties.getProperty("name"), "name must not be null!").trim();
+
+		// FIXME: sanitize plugin IDs
+
+		String friendlyName = Objects.requireNonNull(properties.getProperty("friendlyName"),
+				"friendlyName must not be null!");
+
+		Version version = Version
+				.parse(Objects.requireNonNull(properties.getProperty("version"), "version must not be null!"));
+		String description = properties.getProperty("description", "No description provided");
+		boolean providesCommands = instance instanceof CommandProvider;
+		boolean needsDatabase = properties.getProperty("needsDatabase", "false").equalsIgnoreCase("true");
+
+		Path configurationPath = WatameBot.CONFIG_PATH.resolve(id);
+
+		return new PluginInformation(id, friendlyName, version, description, providesCommands, needsDatabase,
+				configurationPath);
 	}
 }

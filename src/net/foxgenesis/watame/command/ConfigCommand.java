@@ -65,7 +65,7 @@ public class ConfigCommand extends ListenerAdapter {
 		Guild guild = event.getGuild();
 		if (event.isFromGuild() && guild != null) {
 			if (event.getFullCommandName().startsWith("options configuration") && option.getName().equals("key")) {
-				PluginPropertyProvider provider = WatameBot.INSTANCE.getPropertyProvider();
+				PluginPropertyProvider provider = WatameBot.getPropertyProvider();
 				String value = option.getValue().toLowerCase();
 
 				@SuppressWarnings("null") List<Command.Choice> choices = provider.getPropertyList().stream()
@@ -95,7 +95,7 @@ public class ConfigCommand extends ListenerAdapter {
 	 * @param event - slash command event
 	 */
 	private static void handleConfiguration(SlashCommandInteractionEvent event) {
-		PluginPropertyProvider provider = WatameBot.INSTANCE.getPropertyProvider();
+		PluginPropertyProvider provider = WatameBot.getPropertyProvider();
 		String sub = Objects.requireNonNull(event.getSubcommandName());
 		InteractionHook hook = event.getHook();
 
@@ -305,7 +305,7 @@ public class ConfigCommand extends ListenerAdapter {
 	 * @param value    - new property value
 	 */
 	private static void logChange(Member user, String key, String oldValue, String value) {
-		GuildMessageChannel channel = WatameBot.INSTANCE.getLoggingChannel().get(user.getGuild(),
+		GuildMessageChannel channel = WatameBot.getLoggingChannel().get(user.getGuild(),
 				PluginPropertyMapping::getAsMessageChannel);
 
 		if (channel != null) {

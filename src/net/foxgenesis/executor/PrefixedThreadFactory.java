@@ -14,7 +14,9 @@ public class PrefixedThreadFactory implements ThreadFactory {
 
 	private final boolean daemon;
 
-	public PrefixedThreadFactory(@NotNull String prefix) { this(prefix, true); }
+	public PrefixedThreadFactory(@NotNull String prefix) {
+		this(prefix, true);
+	}
 
 	@SuppressWarnings("null")
 	public PrefixedThreadFactory(@NotNull String prefix, boolean daemon) {
@@ -30,7 +32,11 @@ public class PrefixedThreadFactory implements ThreadFactory {
 	}
 
 	@NotNull
-	public String getPrefix() { return prefix; }
+	public String getPrefix() {
+		return prefix;
+	}
 
-	public boolean isDaemon() { return daemon; }
+	public boolean isDaemon() {
+		return daemon;
+	}
 }

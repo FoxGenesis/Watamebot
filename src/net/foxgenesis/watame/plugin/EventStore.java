@@ -1,5 +1,6 @@
 package net.foxgenesis.watame.plugin;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -34,7 +35,7 @@ public class EventStore implements IEventStore {
 
 		if (!(objs == null || objs.isEmpty())) {
 			Object[] l = objs.toArray();
-			logger.debug("Removing {} listeners from {}", l.length, plugin.friendlyName);
+			logger.debug("Removing {} listeners from {}", l.length, plugin.getInfo().getDisplayName());
 			builder.removeEventListeners(l);
 
 			if (jda != null)
@@ -49,41 +50,39 @@ public class EventStore implements IEventStore {
 		Objects.requireNonNull(plugin);
 		Objects.requireNonNull(listener);
 
-		if (store.containsKey(plugin)) {
-			Set<Object> listeners = store.get(plugin);
-			synchronized (listeners) {
-				logger.debug("Adding {} listeners from {}", listener.length, plugin.friendlyName);
-				for (Object l : listener)
-					listeners.add(l);
-				builder.addEventListeners(listener);
-
-				if (jda != null) {
-					logger.debug("Adding {} listeners from {} to JDA", listener.length, plugin.friendlyName);
-					jda.addEventListener(listener);
-				}
-			}
-		} else
+		if (!store.containsKey(plugin))
 			throw new IllegalArgumentException("Provided plugin is not registered!");
+		Set<Object> listeners = store.get(plugin);
+		synchronized (listeners) {
+			logger.debug("Adding {} listeners from {}", listener.length, plugin.getInfo().getDisplayName());
+			Collections.addAll(listeners, listener);
+			builder.addEventListeners(listener);
+
+			if (jda != null) {
+				logger.debug("Adding {} listeners from {} to JDA", listener.length, plugin.getInfo().getDisplayName());
+				jda.addEventListener(listener);
+			}
+		}
 	}
 
 	@Override
 	public void unregisterListeners(Plugin plugin, Object... listener) {
-		if (store.containsKey(plugin)) {
-			Set<Object> listeners = store.get(plugin);
-			synchronized (listeners) {
-				logger.debug("Removing {} listeners from {}", listener.length, plugin.friendlyName);
-				for (Object l : listener)
-					listeners.remove(l);
-				builder.removeEventListeners(listener);
-
-				if (jda != null) {
-					logger.debug("Removing {} listeners from {} in JDA", listener.length, plugin.friendlyName);
-					jda.removeEventListener(listener);
-				}
-
-			}
-		} else
+		if (!store.containsKey(plugin))
 			throw new IllegalArgumentException("Provided plugin is not registered!");
+		Set<Object> listeners = store.get(plugin);
+		synchronized (listeners) {
+			logger.debug("Removing {} listeners from {}", listener.length, plugin.getInfo().getDisplayName());
+			for (Object l : listener)
+				listeners.remove(l);
+			builder.removeEventListeners(listener);
+
+			if (jda != null) {
+				logger.debug("Removing {} listeners from {} in JDA", listener.length,
+						plugin.getInfo().getDisplayName());
+				jda.removeEventListener(listener);
+			}
+
+		}
 	}
 
 	public synchronized void setJDA(JDA jda) {

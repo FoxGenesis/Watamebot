@@ -32,6 +32,7 @@ module watamebot {
 	exports net.foxgenesis.log;
 	exports net.foxgenesis.watame;
 	exports net.foxgenesis.watame.plugin;
+	exports net.foxgenesis.watame.plugin.require;
 	exports net.foxgenesis.util;
 	exports net.foxgenesis.util.resource;
 	exports net.foxgenesis.util.function;

@@ -63,7 +63,7 @@ public interface Property<L, M extends PropertyMapping> extends ImmutablePropert
 
 	/**
 	 * Check if this property can be modified by user input.
-	 * 
+	 *
 	 * @return Returns {@code true} if the user is allowed to modify this property.
 	 *         {@code false} otherwise
 	 */
@@ -76,9 +76,9 @@ public interface Property<L, M extends PropertyMapping> extends ImmutablePropert
 	 * {@code user} is {@code true} and {@link #isUserModifiable()} is
 	 * {@code false}, this method will throw a {@link UnmodifiablePropertyException}
 	 * to stop further execution.
-	 * 
+	 *
 	 * @param user - if this call is from the user
-	 * 
+	 *
 	 * @throws UnmodifiablePropertyException Thrown if {@code user} is {@code true}
 	 *                                       and {@link #isUserModifiable()} is
 	 *                                       {@code false}
@@ -120,7 +120,7 @@ public interface Property<L, M extends PropertyMapping> extends ImmutablePropert
 				return ByteBuffer.allocate(Integer.SIZE / Byte.SIZE).putInt(i).array();
 			if (obj instanceof Long f)
 				return ByteBuffer.allocate(Long.SIZE / Byte.SIZE).putLong(f).array();
-			else if (obj instanceof Double d)
+			if (obj instanceof Double d)
 				return ByteBuffer.allocate(Double.SIZE / Byte.SIZE).putDouble(d).array();
 			else if (obj instanceof Float f)
 				return ByteBuffer.allocate(Float.SIZE / Byte.SIZE).putFloat(f).array();

@@ -64,7 +64,7 @@ public class DatabaseManager implements IDatabaseManager, AutoCloseable {
 	public boolean register(@NotNull Plugin plugin, @NotNull AbstractDatabase database) throws IOException {
 		Objects.requireNonNull(database);
 
-		if (!plugin.needsDatabase)
+		if (!plugin.getInfo().requiresDatabase())
 			throw new IllegalArgumentException("Plugin does not declare that it needs database connection!");
 
 		if (isDatabaseRegistered(database))
@@ -95,13 +95,13 @@ public class DatabaseManager implements IDatabaseManager, AutoCloseable {
 	 *         been unloaded. {@code false} otherwise
 	 */
 	public boolean unload(Plugin owner) {
-		if (!owner.needsDatabase)
+		if (!owner.getInfo().requiresDatabase())
 			return false;
 
 		if (databases.containsKey(owner)) {
 			synchronized (databases) {
 				if (databases.containsKey(owner)) {
-					logger.info("Unloading databases from {}", owner.friendlyName);
+					logger.info("Unloading databases from {}", owner.getInfo().getDisplayName());
 					Set<AbstractDatabase> databases = this.databases.remove(owner);
 
 					for (AbstractDatabase database : databases)

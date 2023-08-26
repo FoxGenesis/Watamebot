@@ -37,11 +37,11 @@ public class CachedPluginProperty extends PluginPropertyImpl {
 		}
 		return false;
 	}
-	
+
 	@Override
 	public boolean remove(Guild lookup, boolean isUserInput) {
 		checkUserInput(isUserInput);
-		if(super.remove(lookup, isUserInput)) {
+		if (super.remove(lookup, isUserInput)) {
 			cache.get(lookup.getIdLong()).set(null);
 			return true;
 		}

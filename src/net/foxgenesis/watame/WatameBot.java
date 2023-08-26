@@ -1,8 +1,11 @@
 package net.foxgenesis.watame;
 
+import static java.lang.StackWalker.Option.RETAIN_CLASS_REFERENCE;
+
 import java.io.IOException;
 import java.net.ConnectException;
 import java.nio.file.Path;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
@@ -16,6 +19,7 @@ import net.foxgenesis.database.providers.MySQLConnectionProvider;
 import net.foxgenesis.property.PropertyType;
 import net.foxgenesis.property.database.LCKConfigurationDatabase;
 import net.foxgenesis.util.MethodTimer;
+import net.foxgenesis.util.PushBullet;
 import net.foxgenesis.util.resource.ResourceUtils;
 import net.foxgenesis.watame.plugin.Plugin;
 import net.foxgenesis.watame.plugin.PluginHandler;
@@ -30,8 +34,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
-import org.slf4j.MarkerFactory;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDA.Status;
@@ -56,12 +58,7 @@ public class WatameBot {
 	/**
 	 * General purpose logger
 	 */
-	public static final Logger logger = LoggerFactory.getLogger(WatameBot.class);
-
-	/**
-	 * Singleton instance of class
-	 */
-	public static final WatameBot INSTANCE;
+	private static final Logger logger = LoggerFactory.getLogger(WatameBot.class);
 
 	/**
 	 * Path pointing to the configuration directory
@@ -69,9 +66,19 @@ public class WatameBot {
 	public static final Path CONFIG_PATH;
 
 	/**
+	 * Utility class to retrieve information from the stack
+	 */
+	private static final StackWalker walker = StackWalker.getInstance(RETAIN_CLASS_REFERENCE);
+
+	/**
+	 * Push notifications helper
+	 */
+	private static final PushBullet pushbullet;
+
+	/**
 	 * Settings that were parsed at startup
 	 */
-	private static final WatameBotSettings settings;
+	private static final Settings settings;
 
 	/**
 	 * watame.ini configuration file
@@ -79,23 +86,145 @@ public class WatameBot {
 	private static final ImmutableConfiguration config;
 
 	/**
-	 * Push notifications helper
+	 * Singleton instance of class
 	 */
-	private static final PushBullet pushbullet;
+	static final WatameBot INSTANCE;
 
 	static {
 		settings = Main.getSettings();
 		config = settings.getConfiguration();
 
-		pushbullet = new PushBullet(settings.getPBToken());
+		pushbullet = settings.getPushbullet();
 		RestAction.setDefaultFailure(
 				err -> pushbullet.pushPBMessage("An Error Occurred in Watame", ExceptionUtils.getStackTrace(err)));
 
 		// Initialize our configuration path
-		CONFIG_PATH = settings.configurationPath;
+		CONFIG_PATH = settings.getConfigPath();
 
 		// Initialize the main bot object with token
 		INSTANCE = new WatameBot(settings.getToken());
+	}
+
+	/**
+	 * Get the {@link Plugin} of the calling method.
+	 * <p>
+	 * This method uses a {@link StackWalker} to retrieve the calling class. As
+	 * such, it will only retrieve the loaded {@link Plugin} of the caller's
+	 * {@link Module}.
+	 * </p>
+	 * 
+	 * @param <U>         Wanted plugin type
+	 * @param pluginClass - class of the desired {@link Plugin}
+	 * 
+	 * @return Returns the found {@link Plugin}
+	 * 
+	 * @throws NoSuchElementException Thrown if there is no plugin loaded for the
+	 *                                calling module
+	 * @throws ClassCastException     Thrown if the found plugin is not assignable
+	 *                                to the specified {@code pluginClass}
+	 * 
+	 * @see #getSelfPlugin()
+	 */
+	public static <U extends Plugin> U getSelfPlugin(Class<U> pluginClass) {
+		Class<?> callerClass = walker.getCallerClass();
+		Module module = callerClass.getModule();
+		Plugin p = INSTANCE.pluginHandler.getPluginForModule(module);
+
+		if (p == null)
+			throw new NoSuchElementException("No plugin is loaded for module: " + module.getName());
+
+		return pluginClass.cast(p);
+	}
+
+	/**
+	 * Get the {@link Plugin} of the calling method.
+	 * <p>
+	 * This method uses a {@link StackWalker} to retrieve the calling class. As
+	 * such, it will only retrieve the loaded {@link Plugin} of the caller's
+	 * {@link Module}.
+	 * </p>
+	 * 
+	 * @return Returns the found {@link Plugin}
+	 * 
+	 * @see #getSelfPlugin(Class)
+	 */
+	public static Plugin getSelfPlugin() {
+		Class<?> callerClass = walker.getCallerClass();
+		Module module = callerClass.getModule();
+		return INSTANCE.pluginHandler.getPluginForModule(module);
+	}
+
+	/**
+	 * Get the plugin specified by the {@code identifier}.
+	 * 
+	 * @param identifier - plugin identifier
+	 * 
+	 * @return Returns the {@link Plugin} with the specified {@code identifier}
+	 */
+	public static Plugin getPlugin(String identifier) {
+		return INSTANCE.pluginHandler.getPlugin(identifier);
+	}
+
+	/**
+	 * Get a plugin by class.
+	 * 
+	 * @param pluginClass - plugin class
+	 * 
+	 * @return Returns the found {@link Plugin} if found, otherwise {@code null}
+	 */
+	public static Plugin getPluginByClass(Class<? extends Plugin> pluginClass) {
+		return INSTANCE.pluginHandler.getPlugin(pluginClass);
+	}
+
+	/**
+	 * Get the database manager used to register custom databases.
+	 *
+	 * @return Returns the {@link IDatabaseManager} used to register custom
+	 *         databases
+	 */
+	public static IDatabaseManager getDatabaseManager() {
+		return INSTANCE.manager;
+	}
+
+	/**
+	 * Get the {@link PluginPropertyProvider} used to register/retrieve
+	 * {@link PluginProperty PluginProperties}.
+	 * 
+	 * @return Returns the {@link PluginPropertyProvider}
+	 */
+	public static PluginPropertyProvider getPropertyProvider() {
+		return INSTANCE.propertyProvider;
+	}
+
+	/**
+	 * Get the <i>modlog</i> (Moderation Logging) channel property.
+	 * 
+	 * @return Returns the an {@link ImmutablePluginProperty} used to retrieve the
+	 *         set <i>modlog</i> for a {@link net.dv8tion.jda.api.entities.Guild
+	 *         Guild}
+	 */
+	public static ImmutablePluginProperty getLoggingChannel() {
+		return INSTANCE.loggingChannel;
+	}
+
+	/**
+	 * Get the current state of the bot.
+	 *
+	 * @return Returns the {@link State} of the bot
+	 *
+	 * @see State
+	 */
+	public static State getState() {
+		return INSTANCE.state;
+	}
+
+	/**
+	 * Get the {@link JDA} instance.
+	 *
+	 * @return the current instance of {@link JDA}
+	 */
+	public static JDA getJDA() {
+		return INSTANCE.discord;
 	}
 
 	// ------------------------------- INSTNACE ====================
@@ -183,7 +312,7 @@ public class WatameBot {
 		builder = createJDA(token, null);
 
 		// Set our instance context
-		context = new Context(this, builder, null, pushbullet::pushPBMessage);
+		context = new Context(builder, null, pushbullet::pushPBMessage);
 
 		// Create our plugin handler
 		pluginHandler = new PluginHandler<>(context, getClass().getModule().getLayer(), Plugin.class);
@@ -287,7 +416,7 @@ public class WatameBot {
 		 */
 
 		// Post-initialize all plugins
-		pluginHandler.postInit(this);
+		pluginHandler.postInit();
 
 		discord = buildJDA();
 		context.onJDABuilder(discord);
@@ -311,13 +440,13 @@ public class WatameBot {
 	}
 
 	private void ready() {
+		// Fire on ready event
+		pluginHandler.onReady();
+
 		// Display our game as ready
 		logger.debug("Setting presence to ready");
-		discord.getPresence().setPresence(OnlineStatus.ONLINE, Activity
-				.playing(config.getString("WatameBot.Status.online", "https://github.com/FoxGenesis/Watamebot")));
-
-		// Fire on ready event
-		pluginHandler.onReady(this);
+		discord.getPresence().setPresence(OnlineStatus.ONLINE,
+				Activity.playing(config.getString("Startup.Status.online", "https://github.com/FoxGenesis/Watamebot")));
 	}
 
 	/**
@@ -376,7 +505,7 @@ public class WatameBot {
 				.disableCache(CacheFlag.ACTIVITY, CacheFlag.EMOJI, CacheFlag.STICKER, CacheFlag.CLIENT_STATUS,
 						CacheFlag.ONLINE_STATUS, CacheFlag.SCHEDULED_EVENTS)
 				.setChunkingFilter(ChunkingFilter.ALL).setAutoReconnect(true)
-				.setActivity(Activity.playing(config.getString("WatameBot.Status.startup", "Initalizing...")))
+				.setActivity(Activity.playing(config.getString("Startup.Status.startup", "Initalizing...")))
 				.setMemberCachePolicy(MemberCachePolicy.ALL).setStatus(OnlineStatus.DO_NOT_DISTURB)
 				.setEnableShutdownHook(false);
 
@@ -387,10 +516,19 @@ public class WatameBot {
 	}
 
 	private JDA buildJDA() throws Exception {
-		JDA discordTmp = null;
+		// Finalize required intents and caches
+		logger.info("Collecting gateway intents");
+		builder.enableIntents(pluginHandler.getGatewayIntents());
+
+		logger.info("Setting up caches");
+		builder.enableCache(pluginHandler.getCaches());
+
+		logger.info("Getting all required cache policies");
+		builder.setMemberCachePolicy(pluginHandler.getRequiredCachePolicy());
 
 		// Attempt to connect to discord. If failed because no Internet, wait 5 seconds
 		// and retry.
+		JDA discordTmp = null;
 		int tries = 0;
 		int maxTries = 5;
 		double delay = 2;
@@ -429,7 +567,7 @@ public class WatameBot {
 		int tries = 0;
 		int maxTries = 5;
 		double delay = 2;
-		Properties properties = ResourceUtils.getProperties(settings.configurationPath.resolve("database.properties"),
+		Properties properties = ResourceUtils.getProperties(settings.getConfigPath().resolve("database.properties"),
 				Constants.DATABASE_SETTINGS_FILE);
 
 		while (tries < maxTries && provider == null) {
@@ -463,85 +601,9 @@ public class WatameBot {
 		return discord != null && discord.getStatus() == Status.CONNECTED;
 	}
 
-	/**
-	 * NEED_JAVADOC
-	 *
-	 * @return Returns the {@link IDatabaseManager} used to register custom
-	 *         databases
-	 */
-	public IDatabaseManager getDatabaseManager() {
-		return manager;
-	}
-
-	public PluginPropertyProvider getPropertyProvider() {
-		return propertyProvider;
-	}
-
-	public ImmutablePluginProperty getLoggingChannel() {
-		return loggingChannel;
-	}
-
-	/**
-	 * NEED_JAVADOC
-	 *
-	 * @return the current instance of {@link JDA}
-	 */
-	public JDA getJDA() {
-		return discord;
-	}
-
-	/**
-	 * Get the current state of the bot.
-	 *
-	 * @return Returns the {@link State} of the bot
-	 *
-	 * @see State
-	 */
-	public State getState() {
-		return state;
-	}
-
 	private void updateState(State state) {
 		this.state = state;
 		logger.trace("STATE = " + state);
 		System.setProperty("watame.status", state.name());
-	}
-
-	/**
-	 * States {@link WatameBot} goes through on startup.
-	 *
-	 * @author Ashley
-	 */
-	public enum State {
-		/**
-		 * NEED_JAVADOC
-		 */
-		CONSTRUCTING,
-		/**
-		 * NEED_JAVADOC
-		 */
-		PRE_INIT,
-		/**
-		 * NEED_JAVADOC
-		 */
-		INIT,
-		/**
-		 * NEED_JAVADOC
-		 */
-		POST_INIT,
-		/**
-		 * WatameBot has finished all loading stages and is running
-		 */
-		RUNNING,
-		/**
-		 * WatameBot is shutting down
-		 */
-		SHUTDOWN;
-
-		public final Marker marker;
-
-		State() {
-			marker = MarkerFactory.getMarker(name());
-		}
 	}
 }

@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.util.concurrent.ForkJoinPool;
 
 import net.foxgenesis.util.SingleInstanceUtil;
+import net.foxgenesis.watame.Settings.LogLevel;
 
 import org.apache.commons.configuration2.ImmutableConfiguration;
 import org.apache.commons.lang3.StringUtils;
@@ -29,7 +30,7 @@ public class Main {
 
 	private final static Logger logger = LoggerFactory.getLogger(Main.class);
 
-	private static WatameBotSettings settings;
+	private static Settings settings;
 
 	/**
 	 * Program entry point.
@@ -41,10 +42,8 @@ public class Main {
 	public static void main(String[] args) throws Exception {
 		System.setProperty("watame.status", "START-UP");
 
-		Path configPath = Path.of("config/");
-		String logLevel = null;
-		String pbToken = null;
-		Path tokenFile = null;
+		SettingsBuilder builder = new SettingsBuilder();
+		builder.setConfigPath(Path.of("config"));
 
 		int length = args.length;
 		for (int i = 0; i < args.length; i++) {
@@ -54,7 +53,7 @@ public class Main {
 				case "-config" -> {
 					if (hasArg(i, length, "-config")) {
 						i++;
-						configPath = Path.of(StringUtils.strip(args[i], "\""));
+						builder.setConfigPath(Path.of(StringUtils.strip(args[i], "\"")));
 					}
 				}
 
@@ -63,8 +62,10 @@ public class Main {
 						i++;
 						String tmp = args[i];
 						if (StringUtils.equalsAnyIgnoreCase(tmp, "info", "debug", "trace")) {
-							logLevel = tmp.toUpperCase();
-							logger.info("Setting logging level to: " + logLevel);
+							LogLevel level = LogLevel.valueOf(tmp.toUpperCase());
+
+							builder.setLogLevel(level);
+							logger.info("Setting logging level to: " + level);
 						}
 					}
 				}
@@ -72,49 +73,41 @@ public class Main {
 				case "-tokenfile" -> {
 					if (hasArg(i, length, "-tokenfile")) {
 						i++;
-						tokenFile = Path.of(StringUtils.strip(args[i], "\""));
+						builder.setTokenFile(StringUtils.strip(args[i], "\""));
 					}
 				}
 
 				case "-pbToken" -> {
 					if (hasArg(i, length, "-pbToken")) {
 						i++;
-						pbToken = args[i];
+						builder.setPushbulletToken(args[i]);
 					}
 				}
 			}
 		}
 
 		// Load settings
-		settings = new WatameBotSettings(configPath, tokenFile, pbToken);
+		settings = new Settings(builder);
 		ImmutableConfiguration config = settings.getConfiguration();
-		pbToken = settings.getPBToken();
 
 		try {
 			// Enable ANSI console
-			if (config.getBoolean("Runtime.ansiConsole", true)) {
+			if (config.getBoolean("Logging.ansiConsole", true)) {
 				logger.info("Installing ANSI console");
 				AnsiConsole.systemInstall();
 			}
 
-			// Set our log level
-			if (logLevel == null)
-				logLevel = config.getString("Logging.logLevel", "info");
-			System.setProperty("LOG_LEVEL", logLevel);
 			restartLogging();
 
 			// Attempt to obtain instance lock
-			if (config.getBoolean("SingleInstance.enabled", true))
-				getLock(config.getInt("SingleInstance.retries", 5));
+			if (config.getBoolean("Startup.SingleInstance.enabled", true))
+				getLock(config.getInt("Startup.SingleInstance.retries", 5));
 
 			// Print out our current multi-threading information
 			logger.info("Checking multi-threading");
 			logger.info("CPU Cores: {}  |  Parallelism: {}  |  CommonPool Common Parallelism: {}",
 					Runtime.getRuntime().availableProcessors(), ForkJoinPool.commonPool().getParallelism(),
 					ForkJoinPool.getCommonPoolParallelism());
-
-			if (pbToken != null)
-				logger.info("Loaded PushBullet token");
 
 			// First call of WatameBot class. Will cause instance creation
 			WatameBot watame = WatameBot.INSTANCE;
@@ -123,7 +116,7 @@ public class Main {
 
 			watame.start();
 		} catch (Exception e) {
-			new PushBullet(pbToken).pushPBMessage("An Error Occurred in Watame", ExceptionUtils.getStackTrace(e));
+			settings.getPushbullet().pushPBMessage("An Error Occurred in Watame", ExceptionUtils.getStackTrace(e));
 			throw e;
 		}
 	}
@@ -170,7 +163,7 @@ public class Main {
 	}
 
 	@NotNull
-	static WatameBotSettings getSettings() {
+	static Settings getSettings() {
 		return settings;
 	}
 }

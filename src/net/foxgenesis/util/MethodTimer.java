@@ -15,12 +15,15 @@ public final class MethodTimer {
 		r.run();
 		return System.nanoTime() - n;
 	}
+
 	/**
 	 * Time how long it takes to execute {@link Runnable} {@code r}. Time is
 	 * calculated in nano seconds and returned as milliseconds.
 	 *
 	 * @param r - {@link Runnable} to time
+	 * 
 	 * @return elapsed time in milliseconds
+	 * 
 	 * @see #run(Runnable, int)
 	 */
 	public static double run(Runnable r) {
@@ -33,7 +36,9 @@ public final class MethodTimer {
 	 *
 	 * @param r - {@link Runnable} to time
 	 * @param n - Amount of times to run
+	 * 
 	 * @return average elapsed time milliseconds
+	 * 
 	 * @see #run(Runnable)
 	 */
 	public static double run(Runnable r, int n) {
@@ -43,8 +48,8 @@ public final class MethodTimer {
 			s[i] = runNano(r);
 			System.out.printf("==== %,.2fms ====\n", s[i] / 1_000_000D);
 		}
-		return Arrays.stream(s).reduce((a,b) -> (a + b) / 2D).orElseThrow() / 1_000_000D;
-		//return (sum / n) / 1_000_000D;
+		return Arrays.stream(s).reduce((a, b) -> (a + b) / 2D).orElseThrow() / 1_000_000D;
+		// return (sum / n) / 1_000_000D;
 	}
 
 	/**
@@ -61,11 +66,15 @@ public final class MethodTimer {
 	 * </blockquote>
 	 *
 	 * @param r - {@link Runnable} to time
+	 * 
 	 * @return formatted string with two decimal places
+	 * 
 	 * @see #runFormatMS(Runnable, int)
 	 * @see #runFormatMS(Runnable, int, int)
 	 */
-	public static String runFormatMS(Runnable r) { return runFormatMS(r, 2); }
+	public static String runFormatMS(Runnable r) {
+		return runFormatMS(r, 2);
+	}
 
 	/**
 	 * Time how long it takes to execute {@link Runnable} {@code r}. Time is
@@ -82,7 +91,9 @@ public final class MethodTimer {
 	 *
 	 * @param r        - {@link Runnable} to time
 	 * @param decimals - Amount of decimal places to format
+	 * 
 	 * @return formatted string with {@code decimals} decimal places
+	 * 
 	 * @see #runFormatMS(Runnable)
 	 * @see #runFormatMS(Runnable, int, int)
 	 */
@@ -106,7 +117,9 @@ public final class MethodTimer {
 	 * @param r        - {@link Runnable} to time
 	 * @param n        - Amount of times to execute {@code r}
 	 * @param decimals - Amount of decimal places to format
+	 * 
 	 * @return formatted string with {@code decimals} decimal places
+	 * 
 	 * @see #runFormatMS(Runnable)
 	 * @see #runFormatMS(Runnable, int, int)
 	 */
@@ -128,11 +141,15 @@ public final class MethodTimer {
 	 * </blockquote>
 	 *
 	 * @param r - {@link Runnable} to time
+	 * 
 	 * @return formatted string with two decimal places
+	 * 
 	 * @see #runFormatMS(Runnable, int)
 	 * @see #runFormatMS(Runnable, int, int)
 	 */
-	public static String runFormatSec(Runnable r) { return runFormatSec(r, 2); }
+	public static String runFormatSec(Runnable r) {
+		return runFormatSec(r, 2);
+	}
 
 	/**
 	 * Time how long it takes to execute {@link Runnable} {@code r}. Time is
@@ -149,7 +166,9 @@ public final class MethodTimer {
 	 *
 	 * @param r        - {@link Runnable} to time
 	 * @param decimals - Amount of decimal places to format
+	 * 
 	 * @return formatted string with {@code decimals} decimal places
+	 * 
 	 * @see #runFormatMS(Runnable)
 	 * @see #runFormatMS(Runnable, int, int)
 	 */
@@ -173,7 +192,9 @@ public final class MethodTimer {
 	 * @param r        - {@link Runnable} to time
 	 * @param n        - Amount of times to execute {@code r}
 	 * @param decimals - Amount of decimal places to format
+	 * 
 	 * @return formatted string with {@code decimals} decimal places
+	 * 
 	 * @see #runFormatMS(Runnable)
 	 * @see #runFormatMS(Runnable, int, int)
 	 */
@@ -185,35 +206,47 @@ public final class MethodTimer {
 	 * NEED_JAVADOC
 	 *
 	 * @param time
+	 * 
 	 * @return formatted string
 	 */
-	public static String formatToMilli(long time) { return formatToMilli(time, 2); }
+	public static String formatToMilli(long time) {
+		return formatToMilli(time, 2);
+	}
 
 	/**
 	 * NEED_JAVADOC
 	 *
 	 * @param time
 	 * @param decimals
+	 * 
 	 * @return formatted string
 	 */
-	public static String formatToMilli(long time, int decimals) { return format(time, decimals, 1_000_000D); }
+	public static String formatToMilli(long time, int decimals) {
+		return format(time, decimals, 1_000_000D);
+	}
 
 	/**
 	 * NEED_JAVADOC
 	 *
 	 * @param time
+	 * 
 	 * @return formatted string
 	 */
-	public static String formatToSeconds(long time) { return formatToSeconds(time, 2); }
+	public static String formatToSeconds(long time) {
+		return formatToSeconds(time, 2);
+	}
 
 	/**
 	 * NEED_JAVADOC
 	 *
 	 * @param time
 	 * @param decimals
+	 * 
 	 * @return formatted string
 	 */
-	public static String formatToSeconds(long time, int decimals) { return format(time, decimals, 1_000_000_000D); }
+	public static String formatToSeconds(long time, int decimals) {
+		return format(time, decimals, 1_000_000_000D);
+	}
 
 	/**
 	 * NEED_JAVADOC
@@ -221,6 +254,7 @@ public final class MethodTimer {
 	 * @param time
 	 * @param decimals
 	 * @param div
+	 * 
 	 * @return formatted string
 	 */
 	public static String format(long time, int decimals, double div) {

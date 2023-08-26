@@ -33,11 +33,15 @@ public final class SingleInstanceUtil {
 	 * </blockquote>
 	 *
 	 * @param amt - Amount of retries before failing to obtain lock
+	 * 
 	 * @throws SingleInstanceLockException Thrown if try count equals or exceeds
 	 *                                     {@code amt}
+	 * 
 	 * @see #waitAndGetLock(File, int)
 	 */
-	public static void waitAndGetLock(int amt) { waitAndGetLock(new File(".pid"), amt, 10_000); }
+	public static void waitAndGetLock(int amt) {
+		waitAndGetLock(new File(".pid"), amt, 10_000);
+	}
 
 	/**
 	 * Attempt to obtain lock on {@code PID} with {@code amt} retries and 10 second
@@ -53,11 +57,15 @@ public final class SingleInstanceUtil {
 	 *
 	 * @param file - location of PID file should attempt to lock
 	 * @param amt  - Amount of retries before failing to obtain lock
+	 * 
 	 * @throws SingleInstanceLockException Thrown if try count equals or exceeds
 	 *                                     {@code amt}
+	 * 
 	 * @see #waitAndGetLock(File, int, int)
 	 */
-	public static void waitAndGetLock(File file, int amt) { waitAndGetLock(file, amt, 10_000); }
+	public static void waitAndGetLock(File file, int amt) {
+		waitAndGetLock(file, amt, 10_000);
+	}
 
 	/**
 	 * Attempt to obtain lock on PID file {@code pid}, {@code amt} times with
@@ -66,8 +74,10 @@ public final class SingleInstanceUtil {
 	 * @param file  - location of PID file
 	 * @param amt   - Amount of retries before failing to obtain lock
 	 * @param delay - Delay between retries
+	 * 
 	 * @throws SingleInstanceLockException Thrown if try count equals or exceeds
 	 *                                     {@code amt}
+	 * 
 	 * @see #waitAndGetLock(File, int)
 	 */
 	public static void waitAndGetLock(File file, int amt, int delay) {
@@ -192,10 +202,14 @@ public final class SingleInstanceUtil {
 		 * @return Returns {@code true} if the PID file channel is not {@code null} and
 		 *         is open
 		 */
-		public boolean isValid() { return channel != null && channel.isOpen(); }
+		public boolean isValid() {
+			return channel != null && channel.isOpen();
+		}
 
 		@Override
-		public void close() throws IOException { channel.close(); }
+		public void close() throws IOException {
+			channel.close();
+		}
 	}
 
 	/**

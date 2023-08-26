@@ -1,4 +1,4 @@
-package net.foxgenesis.watame;
+package net.foxgenesis.util;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -32,7 +32,7 @@ public class PushBullet {
 		this(new OkHttpClient().newBuilder().build(), token);
 	}
 
-	public PushBullet(@NotNull OkHttpClient client, String token) {
+	public PushBullet(@SuppressWarnings("exports") @NotNull OkHttpClient client, String token) {
 		this.client = Objects.requireNonNull(client);
 		this.token = token;
 	}

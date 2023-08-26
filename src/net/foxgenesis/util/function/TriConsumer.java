@@ -4,9 +4,9 @@ import java.util.Objects;
 
 /**
  * Represents an operation that accepts three input arguments and returns no
- * result. This is the three-arity specialization of Consumer. Unlike
- * most other functional interfaces, {@code TriConsumer} is expected to operate
- * via side-effects.
+ * result. This is the three-arity specialization of Consumer. Unlike most other
+ * functional interfaces, {@code TriConsumer} is expected to operate via
+ * side-effects.
  *
  * <p>
  * This is a <a href="package-summary.html">functional interface</a> whose
@@ -17,6 +17,7 @@ import java.util.Objects;
  * @param <R> the type of the third argument to the operation
  *
  * @since 1.8
+ * 
  * @author Seth Steinberg
  */
 @FunctionalInterface
@@ -39,8 +40,10 @@ public interface TriConsumer<T, U, R> {
 	 * {@code after} operation will not be performed.
 	 *
 	 * @param after the operation to perform after this operation
+	 * 
 	 * @return a composed {@code TriConsumer} that performs in sequence this
 	 *         operation followed by the {@code after} operation
+	 * 
 	 * @throws NullPointerException if {@code after} is null
 	 */
 	default TriConsumer<T, U, R> andThen(TriConsumer<? super T, ? super U, ? super R> after) {

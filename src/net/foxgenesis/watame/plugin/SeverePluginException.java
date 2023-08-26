@@ -3,7 +3,7 @@ package net.foxgenesis.watame.plugin;
 public class SeverePluginException extends RuntimeException {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = -1101112080896880561L;
 
@@ -12,11 +12,17 @@ public class SeverePluginException extends RuntimeException {
 	 */
 	private final boolean fatal;
 
-	public SeverePluginException(String message, Throwable thrown) { this(message, thrown, true); }
+	public SeverePluginException(String message, Throwable thrown) {
+		this(message, thrown, true);
+	}
 
-	public SeverePluginException(String message) { this(message, true); }
+	public SeverePluginException(String message) {
+		this(message, true);
+	}
 
-	public SeverePluginException(Throwable thrown) { this(thrown, true); }
+	public SeverePluginException(Throwable thrown) {
+		this(thrown, true);
+	}
 
 	public SeverePluginException(String message, boolean fatal) {
 		super(message);
@@ -35,8 +41,10 @@ public class SeverePluginException extends RuntimeException {
 
 	/**
 	 * Check if this exception was fatal.
-	 * 
+	 *
 	 * @return Returns {@code true} if this exception results in a fatal error
 	 */
-	public boolean isFatal() { return fatal; }
+	public boolean isFatal() {
+		return fatal;
+	}
 }

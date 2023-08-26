@@ -11,7 +11,7 @@ public class UnmodifiablePropertyException extends PropertyException {
 	public UnmodifiablePropertyException(String msg) {
 		super(msg);
 	}
-	
+
 	public UnmodifiablePropertyException(Throwable t) {
 		super(t);
 	}

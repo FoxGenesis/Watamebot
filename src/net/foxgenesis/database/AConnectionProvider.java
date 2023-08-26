@@ -19,7 +19,7 @@ public abstract class AConnectionProvider implements AutoCloseable {
 	private final String name;
 	private final String database;
 
-	public AConnectionProvider( @NotNull String name, @NotNull Properties properties) {
+	public AConnectionProvider(@NotNull String name, @NotNull Properties properties) {
 		this.name = Objects.requireNonNull(name);
 		logger = LoggerFactory.getLogger(name);
 		this.properties = Objects.requireNonNull(properties);
@@ -43,16 +43,17 @@ public abstract class AConnectionProvider implements AutoCloseable {
 
 	@NotNull
 	protected abstract Connection openConnection() throws SQLException;
-	
+
 	@NotNull
 	protected <U> Optional<U> openAutoClosedConnection(@NotNull ConnectionConsumer<U> consumer) throws SQLException {
-		try(Connection conn = openConnection()) {
+		try (Connection conn = openConnection()) {
 			return Optional.ofNullable(consumer.applyConnection(conn));
 		}
 	}
 
 	@NotNull
-	protected <U> Optional<U> openAutoClosedConnection(@NotNull ConnectionConsumer<U> consumer, Consumer<Throwable> error) {
+	protected <U> Optional<U> openAutoClosedConnection(@NotNull ConnectionConsumer<U> consumer,
+			Consumer<Throwable> error) {
 		try (Connection conn = openConnection()) {
 			return Optional.ofNullable(consumer.applyConnection(conn));
 		} catch (Exception e) {
@@ -78,6 +79,7 @@ public abstract class AConnectionProvider implements AutoCloseable {
 
 	@FunctionalInterface
 	public interface ConnectionConsumer<U> {
-		@SuppressWarnings("exports") U applyConnection(@NotNull Connection connection) throws SQLException;
+		@SuppressWarnings("exports")
+		U applyConnection(@NotNull Connection connection) throws SQLException;
 	}
 }

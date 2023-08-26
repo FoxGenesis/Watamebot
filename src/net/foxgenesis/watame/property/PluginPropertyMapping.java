@@ -28,12 +28,14 @@ public class PluginPropertyMapping extends BlobMapping {
 	}
 
 	@SuppressWarnings("exports")
-	public PluginPropertyMapping(long lookup, @NotNull Blob blob, @NotNull PropertyType type) throws IOException, SQLException {
+	public PluginPropertyMapping(long lookup, @NotNull Blob blob, @NotNull PropertyType type)
+			throws IOException, SQLException {
 		super(lookup, blob, type);
 	}
 
 	@SuppressWarnings("exports")
-	public PluginPropertyMapping(@NotNull Guild guild, @NotNull Blob blob, @NotNull PropertyType type) throws IOException, SQLException {
+	public PluginPropertyMapping(@NotNull Guild guild, @NotNull Blob blob, @NotNull PropertyType type)
+			throws IOException, SQLException {
 		super(guild.getIdLong(), blob, type);
 	}
 
@@ -58,6 +60,6 @@ public class PluginPropertyMapping extends BlobMapping {
 
 	public Guild getGuild() {
 		// Hard coded to reduce work on end user
-		return WatameBot.INSTANCE.getJDA().getGuildById(getLookup());
+		return WatameBot.getJDA().getGuildById(getLookup());
 	}
 }

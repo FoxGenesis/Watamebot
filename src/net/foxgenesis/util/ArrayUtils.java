@@ -12,7 +12,7 @@ public final class ArrayUtils {
 
 	@SuppressWarnings("rawtypes")
 	public static String commaSeparated(int[] arr) {
-		return arr == null ? null : sep((Stream)Arrays.stream(arr));
+		return arr == null ? null : sep((Stream) Arrays.stream(arr));
 	}
 
 	private static String sep(Stream<?> s) {
