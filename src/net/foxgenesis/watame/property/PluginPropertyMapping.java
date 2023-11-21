@@ -44,6 +44,14 @@ public class PluginPropertyMapping extends BlobMapping {
 		return getGuild().getRoleById(getAsLong());
 	}
 
+	public Role[] getAsRoleArray() {
+		long[] arr = getAsLongArray();
+		Role[] out = new Role[arr.length];
+		for (int i = 0; i < arr.length; i++)
+			out[i] = getGuild().getRoleById(arr[i]);
+		return out;
+	}
+
 	@Nullable
 	public GuildMessageChannel getAsMessageChannel() {
 		return getGuild().getChannelById(GuildMessageChannel.class, getAsLong());
