@@ -177,6 +177,36 @@ public class WatameBot {
 	}
 
 	/**
+	 * Register event listeners to the calling {@link Plugin}.
+	 * 
+	 * @param listeners - event listeners to register
+	 * 
+	 * @see #removeEventListeners(Object...)
+	 */
+	public static void addEventListeners(Object... listeners) {
+		Class<?> callerClass = walker.getCallerClass();
+		Module module = callerClass.getModule();
+		Plugin plugin = INSTANCE.pluginHandler.getPluginForModule(module);
+
+		INSTANCE.context.getEventRegister().registerListeners(plugin, listeners);
+	}
+
+	/**
+	 * Unregister event listeners from the calling {@link Plugin}.
+	 * 
+	 * @param listeners - event listeners to unregister
+	 * 
+	 * @see #addEventListeners(Object...)
+	 */
+	public static void removeEventListeners(Object... listeners) {
+		Class<?> callerClass = walker.getCallerClass();
+		Module module = callerClass.getModule();
+		Plugin plugin = INSTANCE.pluginHandler.getPluginForModule(module);
+
+		INSTANCE.context.getEventRegister().unregisterListeners(plugin, listeners);
+	}
+
+	/**
 	 * Get the database manager used to register custom databases.
 	 *
 	 * @return Returns the {@link IDatabaseManager} used to register custom

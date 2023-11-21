@@ -23,10 +23,12 @@ module watamebot {
 	requires java.sql;
 	requires com.fasterxml.jackson.databind;
 	requires okhttp3;
+	requires java.management;
 
 	exports net.foxgenesis.config;
 	exports net.foxgenesis.database;
 	exports net.foxgenesis.executor;
+	exports net.foxgenesis.http;
 	exports net.foxgenesis.property;
 	exports net.foxgenesis.property.lck;
 	exports net.foxgenesis.log;

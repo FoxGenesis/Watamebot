@@ -25,38 +25,25 @@ import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
 @PluginConfiguration(defaultFile = "/META-INF/integrated.ini", identifier = "integrated", outputFile = "integrated.ini", type = ConfigType.INI)
 public class IntegratedCommands extends Plugin implements CommandProvider {
 
-	private final boolean enableConfigCommand;
-	private final boolean enablePingCommand;
-
-	public IntegratedCommands() {
-		super();
-
-		if (hasConfiguration("integrated")) {
-			Configuration config = getConfiguration("integrated");
-			enableConfigCommand = config.getBoolean("IntegratedPlugin.enableOptionsCommand", false);
-			enablePingCommand = config.getBoolean("IntegratedPlugin.enablePingCommand", true);
-		} else {
-			enableConfigCommand = false;
-			enablePingCommand = true;
-		}
-	}
-
 	@Override
 	public void preInit() {}
 
 	@Override
 	public void init(IEventStore builder) {
-		if (enableConfigCommand)
-			builder.registerListeners(this, new ConfigCommand());
+		if (hasConfiguration("integrated")) {
+			Configuration config = getConfiguration("integrated");
 
-		if (enablePingCommand)
-			builder.registerListeners(this, new PingCommand());
+			if (config.getBoolean("IntegratedPlugin.enableOptionsCommand", false))
+				builder.registerListeners(this, new ConfigCommand());
+			if (config.getBoolean("IntegratedPlugin.enablePingCommand", true))
+				builder.registerListeners(this, new PingCommand());
+			if (config.getBoolean("IntegratedPlugin.enableUptimeCommand", true))
+				builder.registerListeners(this, new UptimeCommand());
+		}
 	}
 
 	@Override
-	public void postInit() {
-
-	}
+	public void postInit() {}
 
 	@Override
 	public void onReady() {}
@@ -66,7 +53,20 @@ public class IntegratedCommands extends Plugin implements CommandProvider {
 
 	@Override
 	public Collection<CommandData> getCommands() {
-		return List.of(Commands.slash("ping", "Ping the bot to test the connection"), getOptionsCommand());
+		List<CommandData> commands = new ArrayList<>();
+
+		if (hasConfiguration("integrated")) {
+			Configuration config = getConfiguration("integrated");
+
+			if (config.getBoolean("IntegratedPlugin.enableOptionsCommand", false))
+				commands.add(getOptionsCommand());
+			if (config.getBoolean("IntegratedPlugin.enablePingCommand", true))
+				commands.add(Commands.slash("ping", "Ping the bot to test the connection"));
+			if (config.getBoolean("IntegratedPlugin.enableUptimeCommand", true))
+				commands.add(Commands.slash("uptime", "Get the uptime of the application"));
+		}
+
+		return commands;
 
 	}
 

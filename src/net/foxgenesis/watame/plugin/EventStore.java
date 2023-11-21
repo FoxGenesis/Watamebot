@@ -25,7 +25,7 @@ public class EventStore implements IEventStore {
 	}
 
 	public void register(Plugin plugin) {
-		store.putIfAbsent(plugin, new HashSet<>());
+		store.putIfAbsent(plugin, Collections.synchronizedSet(new HashSet<>()));
 	}
 
 	public void unregister(Plugin plugin) {
@@ -53,15 +53,14 @@ public class EventStore implements IEventStore {
 		if (!store.containsKey(plugin))
 			throw new IllegalArgumentException("Provided plugin is not registered!");
 		Set<Object> listeners = store.get(plugin);
-		synchronized (listeners) {
-			logger.debug("Adding {} listeners from {}", listener.length, plugin.getInfo().getDisplayName());
-			Collections.addAll(listeners, listener);
-			builder.addEventListeners(listener);
 
-			if (jda != null) {
-				logger.debug("Adding {} listeners from {} to JDA", listener.length, plugin.getInfo().getDisplayName());
-				jda.addEventListener(listener);
-			}
+		logger.debug("Adding {} listeners from {}", listener.length, plugin.getInfo().getDisplayName());
+		Collections.addAll(listeners, listener);
+		
+		builder.addEventListeners(listener);
+		if (jda != null) {
+			logger.debug("Adding {} listeners from {} to JDA", listener.length, plugin.getInfo().getDisplayName());
+			jda.addEventListener(listener);
 		}
 	}
 
@@ -70,18 +69,15 @@ public class EventStore implements IEventStore {
 		if (!store.containsKey(plugin))
 			throw new IllegalArgumentException("Provided plugin is not registered!");
 		Set<Object> listeners = store.get(plugin);
-		synchronized (listeners) {
-			logger.debug("Removing {} listeners from {}", listener.length, plugin.getInfo().getDisplayName());
-			for (Object l : listener)
-				listeners.remove(l);
-			builder.removeEventListeners(listener);
-
-			if (jda != null) {
-				logger.debug("Removing {} listeners from {} in JDA", listener.length,
-						plugin.getInfo().getDisplayName());
-				jda.removeEventListener(listener);
-			}
-
+		
+		logger.debug("Removing {} listeners from {}", listener.length, plugin.getInfo().getDisplayName());
+		for (Object l : listener)
+			listeners.remove(l);
+		
+		builder.removeEventListeners(listener);
+		if (jda != null) {
+			logger.debug("Removing {} listeners from {} in JDA", listener.length, plugin.getInfo().getDisplayName());
+			jda.removeEventListener(listener);
 		}
 	}
 

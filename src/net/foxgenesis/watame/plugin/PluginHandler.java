@@ -151,6 +151,13 @@ public class PluginHandler<@NotNull T extends Plugin> implements Closeable {
 		return providers.values();
 	}
 
+	/**
+	 * Construct all plugins from the provided list of providers.
+	 * 
+	 * @param providers - collection of plugin providers
+	 * 
+	 * @return Returns a collection of all constructed plugins
+	 */
 	private Collection<@NotNull T> construct(Collection<Provider<T>> providers) {
 		// Copy list
 		List<Provider<T>> list = new ArrayList<>(providers);
