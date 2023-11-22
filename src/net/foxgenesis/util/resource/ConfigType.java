@@ -2,9 +2,9 @@ package net.foxgenesis.util.resource;
 
 /**
  * Enumeration of all supported configuration file types.
- * 
+ *
  * @author Ashley
- * 
+ *
  * @since 1.1.1
  */
 public enum ConfigType {

@@ -30,11 +30,13 @@ public class MySQLConnectionProvider extends AConnectionProvider {
 
 		try {
 			source = new HikariDataSource(new HikariConfig(properties));
-		} catch(Exception e) {
+		} catch (Exception e) {
 			throw new ConnectException("Failed to connect to database");
 		}
 	}
 
 	@Override
-	protected Connection openConnection() throws SQLException { return source.getConnection(); }
+	protected Connection openConnection() throws SQLException {
+		return source.getConnection();
+	}
 }

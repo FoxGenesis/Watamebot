@@ -118,7 +118,7 @@ public final class ResourceUtils {
 	 * <p>
 	 * This method is effectively equivalent to:
 	 * </p>
-	 * 
+	 *
 	 * <pre>
 	 * Configuration configuration = switch (type) {
 	 * 	case PROPERTIES -> loadProperties(defaults, directory, output);
@@ -128,7 +128,7 @@ public final class ResourceUtils {
 	 * 	default -> throw new IllegalArgumentException("Unknown type: " + type);
 	 * };
 	 * </pre>
-	 * 
+	 *
 	 * @param type      - configuration type
 	 * @param defaults  - resource containing the configuration defaults
 	 * @param directory - the directory containing the configuration file
@@ -139,7 +139,7 @@ public final class ResourceUtils {
 	 * @throws IOException            If an I/O error occurs
 	 * @throws ConfigurationException If an error occurs
 	 * @throws SecurityException      Thrown if the specified file is not readable
-	 * 
+	 *
 	 * @see #loadProperties(ModuleResource, Path, String)
 	 * @see #loadINI(ModuleResource, Path, String)
 	 * @see #loadJSON(ModuleResource, Path, String)

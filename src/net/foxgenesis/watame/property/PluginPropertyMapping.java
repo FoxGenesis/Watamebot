@@ -28,18 +28,28 @@ public class PluginPropertyMapping extends BlobMapping {
 	}
 
 	@SuppressWarnings("exports")
-	public PluginPropertyMapping(long lookup, @NotNull Blob blob, @NotNull PropertyType type) throws IOException, SQLException {
+	public PluginPropertyMapping(long lookup, @NotNull Blob blob, @NotNull PropertyType type)
+			throws IOException, SQLException {
 		super(lookup, blob, type);
 	}
 
 	@SuppressWarnings("exports")
-	public PluginPropertyMapping(@NotNull Guild guild, @NotNull Blob blob, @NotNull PropertyType type) throws IOException, SQLException {
+	public PluginPropertyMapping(@NotNull Guild guild, @NotNull Blob blob, @NotNull PropertyType type)
+			throws IOException, SQLException {
 		super(guild.getIdLong(), blob, type);
 	}
 
 	@Nullable
 	public Role getAsRole() {
 		return getGuild().getRoleById(getAsLong());
+	}
+
+	public Role[] getAsRoleArray() {
+		long[] arr = getAsLongArray();
+		Role[] out = new Role[arr.length];
+		for (int i = 0; i < arr.length; i++)
+			out[i] = getGuild().getRoleById(arr[i]);
+		return out;
 	}
 
 	@Nullable
@@ -58,6 +68,6 @@ public class PluginPropertyMapping extends BlobMapping {
 
 	public Guild getGuild() {
 		// Hard coded to reduce work on end user
-		return WatameBot.INSTANCE.getJDA().getGuildById(getLookup());
+		return WatameBot.getJDA().getGuildById(getLookup());
 	}
 }

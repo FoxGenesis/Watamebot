@@ -27,8 +27,8 @@ public class PluginPropertyProviderImpl implements PluginPropertyProvider {
 	@Override
 	public PropertyInfo registerProperty(Plugin plugin, String key, boolean modifiable, PropertyType type) {
 		if (!propertyExists(plugin, key))
-			return database.createPropertyInfo(plugin.name, key, modifiable, type);
-		return database.getPropertyInfo(plugin.name, key);
+			return database.createPropertyInfo(plugin.getInfo().getID(), key, modifiable, type);
+		return database.getPropertyInfo(plugin.getInfo().getID(), key);
 	}
 
 	@Override
@@ -41,7 +41,7 @@ public class PluginPropertyProviderImpl implements PluginPropertyProvider {
 		PluginProperty cached = inCache(plugin, key);
 		if (cached != null)
 			return cached;
-		return getProperty(database.getPropertyInfo(plugin.name, key));
+		return getProperty(database.getPropertyInfo(plugin.getInfo().getID(), key));
 	}
 
 	@Override
@@ -58,7 +58,7 @@ public class PluginPropertyProviderImpl implements PluginPropertyProvider {
 	public boolean propertyExists(Plugin plugin, String key) {
 		if (inCache(plugin, key) != null)
 			return true;
-		return database.isRegistered(plugin.name, key);
+		return database.isRegistered(plugin.getInfo().getID(), key);
 	}
 
 	@SuppressWarnings("null")
@@ -85,7 +85,8 @@ public class PluginPropertyProviderImpl implements PluginPropertyProvider {
 	 */
 	private PluginProperty inCache(Plugin plugin, String key) {
 		for (PluginProperty pair : map)
-			if (pair.getInfo().category().equalsIgnoreCase(plugin.name) && pair.getInfo().name().equalsIgnoreCase(key))
+			if (pair.getInfo().category().equalsIgnoreCase(plugin.getInfo().getID())
+					&& pair.getInfo().name().equalsIgnoreCase(key))
 				return pair;
 		return null;
 	}

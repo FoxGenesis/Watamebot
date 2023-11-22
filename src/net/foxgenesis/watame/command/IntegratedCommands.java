@@ -5,10 +5,13 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import net.foxgenesis.watame.WatameBot;
-import net.foxgenesis.watame.plugin.CommandProvider;
+import net.foxgenesis.util.resource.ConfigType;
 import net.foxgenesis.watame.plugin.IEventStore;
 import net.foxgenesis.watame.plugin.Plugin;
+import net.foxgenesis.watame.plugin.require.CommandProvider;
+import net.foxgenesis.watame.plugin.require.PluginConfiguration;
+
+import org.apache.commons.configuration2.Configuration;
 
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
@@ -19,6 +22,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
 
+@PluginConfiguration(defaultFile = "/META-INF/integrated.ini", identifier = "integrated", outputFile = "integrated.ini", type = ConfigType.INI)
 public class IntegratedCommands extends Plugin implements CommandProvider {
 
 	@Override
@@ -26,24 +30,43 @@ public class IntegratedCommands extends Plugin implements CommandProvider {
 
 	@Override
 	public void init(IEventStore builder) {
+		if (hasConfiguration("integrated")) {
+			Configuration config = getConfiguration("integrated");
 
-		builder.registerListeners(this, new ConfigCommand(), new PingCommand());
+			if (config.getBoolean("IntegratedPlugin.enableOptionsCommand", false))
+				builder.registerListeners(this, new ConfigCommand());
+			if (config.getBoolean("IntegratedPlugin.enablePingCommand", true))
+				builder.registerListeners(this, new PingCommand());
+			if (config.getBoolean("IntegratedPlugin.enableUptimeCommand", true))
+				builder.registerListeners(this, new UptimeCommand());
+		}
 	}
 
 	@Override
-	public void postInit(WatameBot bot) {
-
-	}
+	public void postInit() {}
 
 	@Override
-	public void onReady(WatameBot bot) {}
+	public void onReady() {}
 
 	@Override
 	public void close() {}
 
 	@Override
 	public Collection<CommandData> getCommands() {
-		return List.of(Commands.slash("ping", "Ping the bot to test the connection"), getOptionsCommand());
+		List<CommandData> commands = new ArrayList<>();
+
+		if (hasConfiguration("integrated")) {
+			Configuration config = getConfiguration("integrated");
+
+			if (config.getBoolean("IntegratedPlugin.enableOptionsCommand", false))
+				commands.add(getOptionsCommand());
+			if (config.getBoolean("IntegratedPlugin.enablePingCommand", true))
+				commands.add(Commands.slash("ping", "Ping the bot to test the connection"));
+			if (config.getBoolean("IntegratedPlugin.enableUptimeCommand", true))
+				commands.add(Commands.slash("uptime", "Get the uptime of the application"));
+		}
+
+		return commands;
 
 	}
 

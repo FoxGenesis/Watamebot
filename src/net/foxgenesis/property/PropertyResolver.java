@@ -48,10 +48,10 @@ public interface PropertyResolver<L, C, K> {
 
 	/**
 	 * Remove a property inside the configuration.
-	 * 
+	 *
 	 * @param category - category of the property
 	 * @param key      - property key
-	 * 
+	 *
 	 * @return Returns {@code true} if the property was deleted. {@code false}
 	 *         otherwise
 	 */
@@ -59,9 +59,9 @@ public interface PropertyResolver<L, C, K> {
 
 	/**
 	 * Remove a property inside the configuration.
-	 * 
+	 *
 	 * @param info - property information
-	 * 
+	 *
 	 * @return Returns {@code true} if the property was deleted. {@code false}
 	 *         otherwise
 	 */

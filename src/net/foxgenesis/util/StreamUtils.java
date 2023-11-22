@@ -15,9 +15,11 @@ public final class StreamUtils {
 	 *
 	 * @param <T> - stream type
 	 * @param col - collection to get stream for
+	 * 
 	 * @return Returns a {@link Stream} that will be <i>possibly</i> parallel if
 	 *         {@link Collection#size()} is greater than 1024. Otherwise returns a
 	 *         sequential stream
+	 * 
 	 * @see #getEffectiveStream(Stream)
 	 */
 	public static <T> Stream<T> getEffectiveStream(Collection<T> col) {
@@ -29,9 +31,11 @@ public final class StreamUtils {
 	 *
 	 * @param <T>    - stream type
 	 * @param stream - stream to use
+	 * 
 	 * @return Returns a {@link Stream} that will be <i>possibly</i> parallel if
 	 *         {@link Stream#count()} is greater than 1024. Otherwise returns the
 	 *         input stream
+	 * 
 	 * @see #getEffectiveStream(Collection)
 	 */
 	public static <T> Stream<T> getEffectiveStream(Stream<T> stream) {

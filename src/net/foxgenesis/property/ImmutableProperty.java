@@ -22,10 +22,10 @@ public interface ImmutableProperty<L, M extends PropertyMapping> {
 	/**
 	 * Get the current value of this property if present. Otherwise get the current
 	 * value of the specified {@code fallback}.
-	 * 
+	 *
 	 * @param lookup   - property lookup
 	 * @param fallback - fallback property
-	 * 
+	 *
 	 * @return Returns a {@link Optional} {@link PropertyMapping} containing the raw
 	 *         data retrieved
 	 */
