@@ -3,7 +3,6 @@ package net.foxgenesis.watame;
 import static java.lang.StackWalker.Option.RETAIN_CLASS_REFERENCE;
 
 import java.io.IOException;
-import java.net.ConnectException;
 import java.nio.file.Path;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -556,33 +555,16 @@ public class WatameBot {
 		logger.info("Getting all required cache policies");
 		builder.setMemberCachePolicy(pluginHandler.getRequiredCachePolicy());
 
-		// Attempt to connect to discord. If failed because no Internet, wait 5 seconds
-		// and retry.
-		JDA discordTmp = null;
-		int tries = 0;
+		// Attempt to connect to discord
 		int maxTries = 5;
-		double delay = 2;
-
-		while (++tries < maxTries) {
-			if (tries > 1) {
-				delay = Math.pow(delay, tries);
-				logger.warn("Retrying in " + delay + " seconds...");
-				Thread.sleep((long) delay * 1000);
-			}
+		JDA discordTmp = attemptConnection(() -> {
 			try {
-				// Attempt to login to discord
-				logger.info("Attempting to login to discord");
-				discordTmp = builder.build();
-
-				// We connected. Stop loop.
-				break;
+				return builder.build();
 			} catch (InvalidTokenException e) {
-				ExitCode.INVALID_TOKEN.programExit(e.getLocalizedMessage());
-			} catch (Exception ex) {
-				// Failed to connect. Log error
-				logger.error("Failed to connect: " + ex.getLocalizedMessage());
+				ExitCode.INVALID_TOKEN.programExit(e.getMessage());
+				return null;
 			}
-		}
+		}, 2000, maxTries, "Discord");
 
 		if (discordTmp == null) {
 			ExitCode.JDA_BUILD_FAIL.programExit("Failed to build JDA after " + maxTries + " tries");
@@ -593,29 +575,12 @@ public class WatameBot {
 	}
 
 	private AConnectionProvider getConnectionProvider() throws Exception {
-		AConnectionProvider provider = null;
-		int tries = 0;
-		int maxTries = 5;
-		double delay = 2;
 		Properties properties = ResourceUtils.getProperties(settings.getConfigPath().resolve("database.properties"),
 				Constants.DATABASE_SETTINGS_FILE);
 
-		while (tries < maxTries && provider == null) {
-			delay = Math.pow(delay, tries);
-			if (delay > 1) {
-				try {
-					logger.info("Retrying in {} seconds...", delay);
-					Thread.sleep((long) delay * 1000);
-				} catch (InterruptedException e) {}
-			}
-			try {
-				tries++;
-				provider = new MySQLConnectionProvider(properties);
-			} catch (ConnectException e) {
-				logger.error("Failed to connect to database: {}", e.getLocalizedMessage());
-			}
-		}
-
+		int maxTries = 5;
+		AConnectionProvider provider = attemptConnection(() -> new MySQLConnectionProvider(properties), 2000, maxTries,
+				"database");
 		if (provider == null)
 			ExitCode.DATABASE_SETUP_ERROR.programExit("Failed to connect to the database after " + maxTries + " tries");
 		return provider;
@@ -635,5 +600,48 @@ public class WatameBot {
 		this.state = state;
 		logger.trace("STATE = " + state);
 		System.setProperty("watame.status", state.name());
+	}
+
+	/**
+	 * Attempt to establish a connection. This method will try to connect
+	 * {@code maxTries} times with a delay of <i>d * 2<sup>x</sup></i> between
+	 * failures where {@code d} is {@code delay} and {@code x} is the try count.
+	 * 
+	 * @param <T>      connection result type
+	 * @param supplier - connection supplier
+	 * @param delay    - initial delay that will increase exponentially
+	 * @param maxTries - max amount of attempts to connect
+	 * @param msg      - string to add to logging (i.e. "the database" or "web
+	 *                 server")
+	 * 
+	 * @return Returns the created connection or {@code null} if connection was
+	 *         unable to be established after {@code maxTries} attempts
+	 */
+	private static <T> T attemptConnection(ConnectionSupplier<T> supplier, long delay, int maxTries, String msg) {
+		T out = null;
+		int tries = 0;
+
+		while (++tries < maxTries) {
+			if (tries > 1) {
+				delay *= 2;
+				logger.warn("Retrying in {} seconds...", delay / 1000);
+				try {
+					Thread.sleep(delay);
+				} catch (Exception e) {}
+			}
+			try {
+				logger.info("Attempting to connect to {}", msg);
+				out = supplier.connect();
+
+				break;
+			} catch (Exception e) {
+				logger.error("Failed to connect to {}: {}", msg, e.getMessage());
+			}
+		}
+		return out;
+	}
+
+	private static interface ConnectionSupplier<T> {
+		T connect() throws Exception;
 	}
 }
