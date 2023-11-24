@@ -544,6 +544,13 @@ public class WatameBot {
 		return builder;
 	}
 
+	/**
+	 * Finish building JDA and attempt connection to Discord.
+	 * 
+	 * @return Returns the created {@link JDA} or {@code null} if connection failed
+	 * 
+	 * @throws Exception
+	 */
 	private JDA buildJDA() throws Exception {
 		// Finalize required intents and caches
 		logger.info("Collecting gateway intents");
@@ -596,6 +603,11 @@ public class WatameBot {
 		return discord != null && discord.getStatus() == Status.CONNECTED;
 	}
 
+	/**
+	 * Update the state of the application.
+	 * 
+	 * @param state - new state
+	 */
 	private void updateState(State state) {
 		this.state = state;
 		logger.trace("STATE = " + state);
