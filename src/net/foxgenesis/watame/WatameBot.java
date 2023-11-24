@@ -644,8 +644,8 @@ public class WatameBot {
 			try {
 				logger.info("Attempting to connect to {}", msg);
 				out = supplier.connect();
-
-				break;
+				if (out != null)
+					break;
 			} catch (Exception e) {
 				logger.error("Failed to connect to {}: {}", msg, e.getMessage());
 			}
