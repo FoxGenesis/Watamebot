@@ -36,6 +36,10 @@ public class PushBullet {
 		this.client = Objects.requireNonNull(client);
 		this.token = token;
 	}
+	
+	public boolean hasToken() {
+		return !(token == null || token.isBlank());
+	}
 
 	public void pushPBMessage(String title, String message) {
 		if (token != null) {
