@@ -32,7 +32,7 @@ public class PushBullet {
 		this(new OkHttpClient().newBuilder().build(), token);
 	}
 
-	public PushBullet(@SuppressWarnings("exports") @NotNull OkHttpClient client, String token) {
+	public PushBullet(@NotNull OkHttpClient client, String token) {
 		this.client = Objects.requireNonNull(client);
 		this.token = token;
 	}
