@@ -64,7 +64,37 @@ public enum ExitCode {
 	 * 
 	 * @throws Exception
 	 */
-	public void programExit(String exitMessage, Exception thrown) throws RuntimeException {
+	public void programExit(String exitMessage, Exception thrown) throws Exception {
+		// if(exitMessage != null || thrown != null)
+		LoggerFactory.getLogger(Logger.GLOBAL_LOGGER_NAME).error(exitMessage == null ? name() : exitMessage, thrown);
+		programExit();
+		if (thrown != null)
+			throw thrown;
+	}
+	
+	/**
+	 * Exit the program silently with a specific {@code message} and {@link Throwable}.
+	 * <p>
+	 * The call {@code exitCode.exitProgram(null, null)} is effectively equivalent
+	 * to the call:
+	 * </p>
+	 * <blockquote>
+	 *
+	 * <pre>
+	 * exitCode.exitProgram()
+	 * </pre>
+	 *
+	 * </blockquote>
+	 *
+	 *
+	 * @see #programExit()
+	 * 
+	 * @param exitMessage - Exit message to log
+	 * @param thrown      - Throwable to log
+	 * 
+	 * @throws Exception
+	 */
+	public void programExitSilent(String exitMessage, Exception thrown) throws RuntimeException {
 		// if(exitMessage != null || thrown != null)
 		LoggerFactory.getLogger(Logger.GLOBAL_LOGGER_NAME).error(exitMessage == null ? name() : exitMessage, thrown);
 		programExit();
@@ -92,7 +122,7 @@ public enum ExitCode {
 	 * 
 	 * @throws Exception
 	 */
-	public void programExit(Exception thrown) throws RuntimeException {
+	public void programExit(Exception thrown) throws Exception {
 		programExit(null, thrown);
 	}
 
@@ -117,8 +147,33 @@ public enum ExitCode {
 	 * 
 	 * @throws Exception
 	 */
-	public void programExit(String exitMessage) throws RuntimeException {
+	public void programExit(String exitMessage) throws Exception {
 		programExit(exitMessage, null);
+	}
+	
+	/**
+	 * Exit the program silently with a specific {@code message}.
+	 * <p>
+	 * The call {@code exitCode.exitProgram(message)} is effectively equivalent to
+	 * the call:
+	 * </p>
+	 * <blockquote>
+	 *
+	 * <pre>
+	 * exitCode.exitProgram(message, null)
+	 * </pre>
+	 *
+	 * </blockquote>
+	 *
+	 *
+	 * @see #programExit(String, Exception)
+	 * 
+	 * @param exitMessage - Exit message to log
+	 * 
+	 * @throws Exception
+	 */
+	public void programExitSilent(String exitMessage) throws RuntimeException {
+		programExitSilent(exitMessage, null);
 	}
 
 	/**

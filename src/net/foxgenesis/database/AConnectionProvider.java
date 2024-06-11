@@ -71,12 +71,6 @@ public abstract class AConnectionProvider implements AutoCloseable {
 		return database;
 	}
 
-	@Override
-	public void close() throws Exception {
-		logger.debug("Shutting down {}", name);
-
-	}
-
 	@FunctionalInterface
 	public interface ConnectionConsumer<U> {
 		@SuppressWarnings("exports")

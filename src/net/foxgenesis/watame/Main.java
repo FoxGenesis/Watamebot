@@ -5,9 +5,6 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.concurrent.ForkJoinPool;
 
-import net.foxgenesis.util.SingleInstanceUtil;
-import net.foxgenesis.watame.Settings.LogLevel;
-
 import org.apache.commons.configuration2.ImmutableConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -19,7 +16,8 @@ import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.core.joran.spi.JoranException;
-import ch.qos.logback.core.util.StatusPrinter;
+import net.foxgenesis.util.SingleInstanceUtil;
+import net.foxgenesis.watame.Settings.LogLevel;
 
 /**
  * Program main class.
@@ -50,39 +48,39 @@ public class Main {
 			String arg = args[i];
 			switch (arg.toLowerCase()) {
 
-				case "-config" -> {
-					if (hasArg(i, length, "-config")) {
-						i++;
-						builder.setConfigPath(Path.of(StringUtils.strip(args[i], "\"")));
+			case "-config" -> {
+				if (hasArg(i, length, "-config")) {
+					i++;
+					builder.setConfigPath(Path.of(StringUtils.strip(args[i], "\"")));
+				}
+			}
+
+			case "-loglevel" -> {
+				if (hasArg(i, length, "-loglevel")) {
+					i++;
+					String tmp = args[i];
+					if (StringUtils.equalsAnyIgnoreCase(tmp, "info", "debug", "trace")) {
+						LogLevel level = LogLevel.valueOf(tmp.toUpperCase());
+
+						builder.setLogLevel(level);
+						logger.info("Setting logging level to: " + level);
 					}
 				}
+			}
 
-				case "-loglevel" -> {
-					if (hasArg(i, length, "-loglevel")) {
-						i++;
-						String tmp = args[i];
-						if (StringUtils.equalsAnyIgnoreCase(tmp, "info", "debug", "trace")) {
-							LogLevel level = LogLevel.valueOf(tmp.toUpperCase());
-
-							builder.setLogLevel(level);
-							logger.info("Setting logging level to: " + level);
-						}
-					}
+			case "-tokenfile" -> {
+				if (hasArg(i, length, "-tokenfile")) {
+					i++;
+					builder.setTokenFile(StringUtils.strip(args[i], "\""));
 				}
+			}
 
-				case "-tokenfile" -> {
-					if (hasArg(i, length, "-tokenfile")) {
-						i++;
-						builder.setTokenFile(StringUtils.strip(args[i], "\""));
-					}
+			case "-pbToken" -> {
+				if (hasArg(i, length, "-pbToken")) {
+					i++;
+					builder.setPushbulletToken(args[i]);
 				}
-
-				case "-pbToken" -> {
-					if (hasArg(i, length, "-pbToken")) {
-						i++;
-						builder.setPushbulletToken(args[i]);
-					}
-				}
+			}
 			}
 		}
 
@@ -158,8 +156,6 @@ public class Main {
 		} catch (IOException | JoranException e) {
 
 		}
-
-		StatusPrinter.printInCaseOfErrorsOrWarnings(context);
 	}
 
 	@NotNull

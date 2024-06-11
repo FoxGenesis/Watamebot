@@ -1,20 +1,19 @@
 package net.foxgenesis.database.providers;
 
-import java.net.ConnectException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import net.foxgenesis.database.AConnectionProvider;
-
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+
+import net.foxgenesis.database.AConnectionProvider;
 
 public class MySQLConnectionProvider extends AConnectionProvider {
 
 	private final HikariDataSource source;
 
-	public MySQLConnectionProvider(Properties properties) throws ConnectException {
+	public MySQLConnectionProvider(Properties properties) {
 		super("MySQL", properties);
 
 		properties.putIfAbsent("dataSource.cachePrepStmts", true);
@@ -28,15 +27,17 @@ public class MySQLConnectionProvider extends AConnectionProvider {
 		properties.putIfAbsent("dataSource.elideSetAutoCommits", false);
 		properties.putIfAbsent("dataSource.maintainTimeStats", true);
 
-		try {
-			source = new HikariDataSource(new HikariConfig(properties));
-		} catch (Exception e) {
-			throw new ConnectException("Failed to connect to database");
-		}
+		source = new HikariDataSource(new HikariConfig(properties));
 	}
 
 	@Override
 	protected Connection openConnection() throws SQLException {
 		return source.getConnection();
+	}
+
+	@Override
+	public void close() throws Exception {
+		logger.info("Shutting down connection pool");
+		source.close();
 	}
 }

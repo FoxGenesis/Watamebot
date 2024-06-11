@@ -11,23 +11,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 
-import net.foxgenesis.database.AConnectionProvider;
-import net.foxgenesis.database.DatabaseManager;
-import net.foxgenesis.database.IDatabaseManager;
-import net.foxgenesis.database.providers.MySQLConnectionProvider;
-import net.foxgenesis.property.PropertyType;
-import net.foxgenesis.property.database.LCKConfigurationDatabase;
-import net.foxgenesis.util.MethodTimer;
-import net.foxgenesis.util.PushBullet;
-import net.foxgenesis.util.resource.ResourceUtils;
-import net.foxgenesis.watame.plugin.Plugin;
-import net.foxgenesis.watame.plugin.PluginHandler;
-import net.foxgenesis.watame.plugin.SeverePluginException;
-import net.foxgenesis.watame.property.ImmutablePluginProperty;
-import net.foxgenesis.watame.property.PluginProperty;
-import net.foxgenesis.watame.property.PluginPropertyProvider;
-import net.foxgenesis.watame.property.impl.PluginPropertyProviderImpl;
-
 import org.apache.commons.configuration2.ImmutableConfiguration;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jetbrains.annotations.NotNull;
@@ -46,6 +29,22 @@ import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.dv8tion.jda.internal.utils.IOUtil;
+import net.foxgenesis.database.AConnectionProvider;
+import net.foxgenesis.database.DatabaseManager;
+import net.foxgenesis.database.IDatabaseManager;
+import net.foxgenesis.database.providers.MySQLConnectionProvider;
+import net.foxgenesis.property.PropertyType;
+import net.foxgenesis.property.database.LCKConfigurationDatabase;
+import net.foxgenesis.util.MethodTimer;
+import net.foxgenesis.util.PushBullet;
+import net.foxgenesis.util.resource.ResourceUtils;
+import net.foxgenesis.watame.plugin.Plugin;
+import net.foxgenesis.watame.plugin.PluginHandler;
+import net.foxgenesis.watame.plugin.SeverePluginException;
+import net.foxgenesis.watame.property.ImmutablePluginProperty;
+import net.foxgenesis.watame.property.PluginProperty;
+import net.foxgenesis.watame.property.PluginPropertyProvider;
+import net.foxgenesis.watame.property.impl.PluginPropertyProviderImpl;
 
 /**
  * Class containing WatameBot implementation
@@ -90,23 +89,19 @@ public class WatameBot {
 	static final WatameBot INSTANCE;
 
 	static {
-		logger.debug("Retrieving settings...");
 		settings = Main.getSettings();
 		config = settings.getConfiguration();
 
 		pushbullet = settings.getPushbullet();
-		if(pushbullet.hasToken()) {
-			logger.debug("Setting default failure to PushBullet...");
+		if (pushbullet.hasToken()) 
 			RestAction.setDefaultFailure(
-				err -> pushbullet.pushPBMessage("An Error Occurred in Watame", ExceptionUtils.getStackTrace(err)));
-		}
+					err -> pushbullet.pushPBMessage("An Error Occurred in Watame", ExceptionUtils.getStackTrace(err)));
 
 		// Initialize our configuration path
 		CONFIG_PATH = settings.getConfigPath();
 
 		// Initialize the main bot object with token
-		logger.debug("Creating WatameBot static instance...");
-		INSTANCE = new WatameBot();
+		INSTANCE = new WatameBot(settings.getToken());
 	}
 
 	/**
@@ -322,7 +317,7 @@ public class WatameBot {
 	 *
 	 * @param token - Token used to connect to discord
 	 */
-	private WatameBot() {
+	private WatameBot(String token) {
 		// Set shutdown thread
 		logger.debug("Adding shutdown hook");
 		Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "WatameBot Shutdown Thread"));
@@ -343,7 +338,7 @@ public class WatameBot {
 		propertyProvider = new PluginPropertyProviderImpl(propertyDatabase, Constants.PLUGIN_PROPERTY_CACHE_TIME);
 
 		// Create discord connection builder
-		builder = createJDA(null);
+		builder = createJDA(token, null);
 
 		// Set our instance context
 		context = new Context(builder, null, pushbullet::pushPBMessage);
@@ -469,7 +464,8 @@ public class WatameBot {
 				// Wait for JDA to be ready for use (BLOCKING!).
 				logger.info("Waiting for JDA to be ready...");
 				discord.awaitReady();
-			} catch (InterruptedException e) {}
+			} catch (InterruptedException e) {
+			}
 		logger.info("Connected to discord!");
 	}
 
@@ -528,9 +524,8 @@ public class WatameBot {
 	 *
 	 * @return connected JDA object
 	 */
-	private JDABuilder createJDA(ExecutorService eventExecutor) {
-		logger.info("Getting token...");
-		String token = settings.getToken();
+	private JDABuilder createJDA(String token, ExecutorService eventExecutor) {
+		Objects.requireNonNull(token, "Login token must not be null");
 
 		// Setup our JDA with wanted values
 		logger.debug("Creating JDA");
@@ -587,6 +582,7 @@ public class WatameBot {
 		return discordTmp;
 	}
 
+	@SuppressWarnings("resource")
 	private AConnectionProvider getConnectionProvider() throws Exception {
 		Properties properties = ResourceUtils.getProperties(settings.getConfigPath().resolve("database.properties"),
 				Constants.DATABASE_SETTINGS_FILE);
@@ -645,7 +641,8 @@ public class WatameBot {
 				logger.warn("Retrying in {} seconds...", delay / 1000);
 				try {
 					Thread.sleep(delay);
-				} catch (Exception e) {}
+				} catch (Exception e) {
+				}
 			}
 			try {
 				logger.info("Attempting to connect to {}", msg);

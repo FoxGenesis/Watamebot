@@ -6,12 +6,12 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.Objects;
 
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+
 import net.foxgenesis.util.PushBullet;
 import net.foxgenesis.util.resource.ModuleResource;
 import net.foxgenesis.util.resource.ResourceUtils;
-
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 
 public class Settings {
 
@@ -59,12 +59,7 @@ public class Settings {
 	}
 
 	public String getToken() {
-		try {
-			return readToken(tokenFile);
-		} catch (Exception e) {
-			ExitCode.NO_TOKEN.programExit("Failed to get token", e);
-		}
-		return null;
+		return readToken(tokenFile);
 	}
 
 	/**
@@ -75,17 +70,24 @@ public class Settings {
 	 * @return Returns the read token
 	 *
 	 */
-	private static String readToken(Path filepath) throws IOException {
-		// Create configuration file
-		if (Files.notExists(filepath, LinkOption.NOFOLLOW_LINKS)) {
-			Files.createFile(filepath);
-			return null;
-		} else if (Files.isDirectory(filepath, LinkOption.NOFOLLOW_LINKS))
-			throw new IllegalArgumentException(filepath.toString() + " is not a regular file!");
-		else if (!Files.isReadable(filepath))
-			throw new SecurityException("Unable to read " + filepath.toString() + ". Missing permissions!");
-		else
-			return Files.lines(filepath).filter(s -> !s.startsWith("#")).map(String::trim).findFirst().orElse("");
+	private static String readToken(Path filepath) {
+		String token = null;
+		try {
+			// Create configuration file
+			if (Files.notExists(filepath, LinkOption.NOFOLLOW_LINKS))
+				Files.createFile(filepath);
+			else if (Files.isDirectory(filepath, LinkOption.NOFOLLOW_LINKS))
+				throw new IOException(filepath.toString() + " is not a regular file!");
+			else if (!Files.isReadable(filepath))
+				throw new IOException("Unable to read " + filepath.toString() + ". Missing permissions!");
+			else
+				token = Files.lines(filepath).filter(s -> !s.startsWith("#")).map(String::trim).findFirst().orElse("");
+		} catch (IOException e) {
+			ExitCode.NO_TOKEN.programExitSilent("Failed to get token", e);
+		}
+		if(token == null || token.isBlank())
+			ExitCode.NO_TOKEN.programExitSilent("Token must not be blank");
+		return token;
 	}
 
 	public static enum LogLevel {
