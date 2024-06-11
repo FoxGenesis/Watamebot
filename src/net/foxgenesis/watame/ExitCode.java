@@ -64,12 +64,12 @@ public enum ExitCode {
 	 * 
 	 * @throws Exception
 	 */
-	public void programExit(String exitMessage, Exception thrown) throws Exception {
+	public void programExit(String exitMessage, Exception thrown) throws RuntimeException {
 		// if(exitMessage != null || thrown != null)
 		LoggerFactory.getLogger(Logger.GLOBAL_LOGGER_NAME).error(exitMessage == null ? name() : exitMessage, thrown);
 		programExit();
 		if (thrown != null)
-			throw thrown;
+			throw new RuntimeException(thrown);
 	}
 
 	/**
@@ -92,7 +92,7 @@ public enum ExitCode {
 	 * 
 	 * @throws Exception
 	 */
-	public void programExit(Exception thrown) throws Exception {
+	public void programExit(Exception thrown) throws RuntimeException {
 		programExit(null, thrown);
 	}
 
@@ -117,7 +117,7 @@ public enum ExitCode {
 	 * 
 	 * @throws Exception
 	 */
-	public void programExit(String exitMessage) throws Exception {
+	public void programExit(String exitMessage) throws RuntimeException {
 		programExit(exitMessage, null);
 	}
 
