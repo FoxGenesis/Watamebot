@@ -639,7 +639,7 @@ public class WatameBot {
 		T out = null;
 		int tries = 0;
 
-		while (++tries < maxTries) {
+		while (tries++ < maxTries) {
 			if (tries > 1) {
 				delay *= 2;
 				logger.warn("Retrying in {} seconds...", delay / 1000);
