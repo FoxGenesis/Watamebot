@@ -90,18 +90,23 @@ public class WatameBot {
 	static final WatameBot INSTANCE;
 
 	static {
+		logger.debug("Retrieving settings...");
 		settings = Main.getSettings();
 		config = settings.getConfiguration();
 
 		pushbullet = settings.getPushbullet();
-		RestAction.setDefaultFailure(
+		if(pushbullet.hasToken()) {
+			logger.debug("Setting default failure to PushBullet...");
+			RestAction.setDefaultFailure(
 				err -> pushbullet.pushPBMessage("An Error Occurred in Watame", ExceptionUtils.getStackTrace(err)));
+		}
 
 		// Initialize our configuration path
 		CONFIG_PATH = settings.getConfigPath();
 
 		// Initialize the main bot object with token
-		INSTANCE = new WatameBot(settings.getToken());
+		logger.debug("Creating WatameBot static instance...");
+		INSTANCE = new WatameBot();
 	}
 
 	/**
@@ -317,7 +322,7 @@ public class WatameBot {
 	 *
 	 * @param token - Token used to connect to discord
 	 */
-	private WatameBot(String token) {
+	private WatameBot() {
 		// Set shutdown thread
 		logger.debug("Adding shutdown hook");
 		Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "WatameBot Shutdown Thread"));
@@ -338,7 +343,7 @@ public class WatameBot {
 		propertyProvider = new PluginPropertyProviderImpl(propertyDatabase, Constants.PLUGIN_PROPERTY_CACHE_TIME);
 
 		// Create discord connection builder
-		builder = createJDA(token, null);
+		builder = createJDA(null);
 
 		// Set our instance context
 		context = new Context(builder, null, pushbullet::pushPBMessage);
@@ -523,8 +528,9 @@ public class WatameBot {
 	 *
 	 * @return connected JDA object
 	 */
-	private JDABuilder createJDA(String token, ExecutorService eventExecutor) {
-		Objects.requireNonNull(token, "Login token must not be null");
+	private JDABuilder createJDA(ExecutorService eventExecutor) {
+		logger.info("Getting token...");
+		String token = settings.getToken();
 
 		// Setup our JDA with wanted values
 		logger.debug("Creating JDA");

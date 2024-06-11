@@ -2,6 +2,7 @@ package net.foxgenesis.watame;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -58,7 +59,12 @@ public class Settings {
 	}
 
 	public String getToken() {
-		return readToken(tokenFile);
+		try {
+			return readToken(tokenFile);
+		} catch (Exception e) {
+			ExitCode.NO_TOKEN.programExit("Failed to get token", e);
+		}
+		return null;
 	}
 
 	/**
@@ -69,13 +75,17 @@ public class Settings {
 	 * @return Returns the read token
 	 *
 	 */
-	private static String readToken(Path filepath) {
-		try {
-			return Files.lines(filepath).filter(s -> !s.startsWith("#")).map(String::trim).findFirst().orElse("");
-		} catch (IOException e) {
-			ExitCode.NO_TOKEN.programExit();
+	private static String readToken(Path filepath) throws IOException {
+		// Create configuration file
+		if (Files.notExists(filepath, LinkOption.NOFOLLOW_LINKS)) {
+			Files.createFile(filepath);
 			return null;
-		}
+		} else if (Files.isDirectory(filepath, LinkOption.NOFOLLOW_LINKS))
+			throw new IllegalArgumentException(filepath.toString() + " is not a regular file!");
+		else if (!Files.isReadable(filepath))
+			throw new SecurityException("Unable to read " + filepath.toString() + ". Missing permissions!");
+		else
+			return Files.lines(filepath).filter(s -> !s.startsWith("#")).map(String::trim).findFirst().orElse("");
 	}
 
 	public static enum LogLevel {
